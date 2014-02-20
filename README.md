@@ -1,4 +1,5 @@
-pyNES - a Nintendo Entertainment System Emulator
+# pyNES 
+## A Nintendo Entertainment System Emulator
 ================================================
 
 
