@@ -47,45 +47,6 @@ class PygameDisplay(wx.Window):
         self.Unbind(event=wx.EVT_TIMER, handler=self.Update, source=self.timer)
 
 
-class OptionsInput(wx.Frame):
-    def __init__(self, parent):
-        wx.Frame.__init__(self, parent=parent, id=wx.ID_ANY)
-        self.parent = parent
-        self.SetTitle("Input Configuration")
-
-        # toolbar
-        toolbar = self.CreateToolBar(style=wx.TB_HORIZONTAL | wx.NO_BORDER |
-                                     wx.TB_FLAT | wx.TB_NODIVIDER)
-        t_save = toolbar.AddLabelTool(wx.ID_APPLY, "Save",
-                                      wx.Bitmap('save.png'),
-                                      shortHelp="Save settings")
-        t_save = toolbar.AddLabelTool(wx.ID_CANCEL, "Save",
-                                      wx.Bitmap('cancel.png'),
-                                      shortHelp="Cancel changes")
-        toolbar.Realize()
-
-        self.gamepad1 = wx.Button(parent=self, id=wx.ID_ANY,
-                                  label="Gamepad 1", name="gamepad1")
-        self.gamepad2 = wx.Button(parent=self, id=wx.ID_ANY,
-                                  label="Gamepad 2", name="gamepad2")
-
-        self.Bind(wx.EVT_BUTTON, self.OnGamepadButton, self.gamepad1)
-        self.Bind(wx.EVT_BUTTON, self.OnGamepadButton, self.gamepad2)
-
-        sizer = wx.GridSizer(rows=1, cols=2)
-        sizer.Add(self.gamepad1, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
-        sizer.Add(self.gamepad2, flag=wx.ALIGN_CENTER | wx.ALL, border=10)
-
-        self.SetSizer(sizer)
-        self.Fit()
-        self.Layout()
-        self.Show()
-
-    def OnGamepadButton(self, event):
-        btn = event.GetEventObject()
-        pub.sendMessage("Input.Gamepad", message=btn.GetName())
-
-
 class OptionsInputGamepad(wx.Frame):
     def __init__(self, parent, gamepad):
         wx.Frame.__init__(self, parent=parent, id=wx.ID_ANY,
@@ -111,23 +72,25 @@ class OptionsInputGamepad(wx.Frame):
         btns = wx.Panel(self, size=(450, 156))
         btns.SetBackgroundColour((39, 44, 39))
 
-        self.button_a = wx.Button(btns, wx.ID_ANY, "A", size=(50, 50))
-        self.button_b = wx.Button(btns, wx.ID_ANY, "B", size=(50, 50))
-        self.button_start = wx.Button(btns, wx.ID_ANY, "Start", size=(50, 25))
-        self.button_sel = wx.Button(btns, wx.ID_ANY, "Select", size=(50, 25))
+        # gamepad buttons
         self.button_up = wx.Button(btns, wx.ID_ANY, "Up", size=(50, 25))
-        self.button_down = wx.Button(btns, wx.ID_ANY, "Down", size=(50, 25))
         self.button_left = wx.Button(btns, wx.ID_ANY, "Left", size=(50, 25))
         self.button_right = wx.Button(btns, wx.ID_ANY, "Right", size=(50, 25))
+        self.button_sel = wx.Button(btns, wx.ID_ANY, "Select", size=(50, 25))
+        self.button_start = wx.Button(btns, wx.ID_ANY, "Start", size=(50, 25))
+        self.button_b = wx.Button(btns, wx.ID_ANY, "B", size=(50, 50))
+        self.button_a = wx.Button(btns, wx.ID_ANY, "A", size=(50, 50))
+        self.button_down = wx.Button(btns, wx.ID_ANY, "Down", size=(50, 25))
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer = wx.GridSizer(rows=3, cols=7)
-        sizer.Add(btns, flag=wx.LEFT | wx.RIGHT | wx.BOTTOM, border=15)
+        sizer.Add(btns, flag=wx.LEFT | wx.RIGHT | wx.BOTTOM, border=25)
         empty_cell = (0, 0)
 
         # row 1
         grid_sizer.Add(empty_cell)
-        grid_sizer.Add(self.button_up, flag=wx.ALIGN_CENTER)
+        grid_sizer.Add(self.button_up, flag=wx.ALIGN_BOTTOM |
+                       wx.ALIGN_CENTER_HORIZONTAL)
         grid_sizer.Add(empty_cell)
         grid_sizer.Add(empty_cell)
         grid_sizer.Add(empty_cell)
@@ -135,9 +98,11 @@ class OptionsInputGamepad(wx.Frame):
         grid_sizer.Add(empty_cell)
 
         # row 2
-        grid_sizer.Add(self.button_left, flag=wx.ALIGN_CENTER)
+        grid_sizer.Add(self.button_left, flag=wx.ALIGN_RIGHT |
+                       wx.ALIGN_CENTER_VERTICAL)
         grid_sizer.Add(empty_cell)
-        grid_sizer.Add(self.button_right, flag=wx.ALIGN_CENTER)
+        grid_sizer.Add(self.button_right, flag=wx.ALIGN_LEFT |
+                       wx.ALIGN_CENTER_VERTICAL)
         grid_sizer.Add(self.button_sel, flag=wx.ALIGN_CENTER)
         grid_sizer.Add(self.button_start, flag=wx.ALIGN_CENTER)
         grid_sizer.Add(self.button_b, flag=wx.ALIGN_CENTER)
@@ -145,7 +110,8 @@ class OptionsInputGamepad(wx.Frame):
 
         #row 3
         grid_sizer.Add(empty_cell)
-        grid_sizer.Add(self.button_down, flag=wx.ALIGN_CENTER)
+        grid_sizer.Add(self.button_down, flag=wx.ALIGN_TOP |
+                       wx.ALIGN_CENTER_HORIZONTAL)
         grid_sizer.Add(empty_cell)
         grid_sizer.Add(empty_cell)
         grid_sizer.Add(empty_cell)
@@ -181,10 +147,10 @@ class MainView(wx.Frame):
 
         # input submenu
         input_menu = wx.Menu()
-        m_gamepad1 = input_menu.Append(wx.ID_ANY, "Gamepad 1",
-                                       "Configure Gamepad 1")
-        m_gamepad2 = input_menu.Append(wx.ID_ANY, "Gamepad 2",
-                                       "Configure Gamepad 2")
+        m_gamepad1 = input_menu.Append(wx.ID_ANY, text="Gamepad 1",
+                                       help="Configure Gamepad 1")
+        m_gamepad2 = input_menu.Append(wx.ID_ANY, text="Gamepad 2",
+                                       help="Configure Gamepad 2")
         conf_menu.AppendMenu(wx.ID_ANY, "Input...", input_menu)
 
         m_video = conf_menu.Append(wx.ID_ANY, "Video...", "Configure video")
@@ -197,8 +163,8 @@ class MainView(wx.Frame):
         menu_bar.Append(file_menu, "&File")
 
         # option menu binds
-        self.Bind(wx.EVT_MENU, self.MenuGamepad1, m_gamepad1)
-        self.Bind(wx.EVT_MENU, self.MenuGamepad2, m_gamepad2)
+        self.Bind(wx.EVT_MENU, self.InputGamepad1, m_gamepad1)
+        self.Bind(wx.EVT_MENU, self.InputGamepad2, m_gamepad2)
         self.Bind(wx.EVT_MENU, self.Kill, m_video)
         self.Bind(wx.EVT_MENU, self.Kill, m_sound)
 
@@ -225,11 +191,11 @@ class MainView(wx.Frame):
         self.Fit()
         self.Layout()
 
-    def MenuGamepad1(self, event):
-        pub.sendMessage("Input.Gamepad", gamepad_title="Gamepad 1")
+    def InputGamepad1(self, event):
+        OptionsInputGamepad(self, "Gamepad 1")
 
-    def MenuGamepad2(self, event):
-        pub.sendMessage("Input.Gamepad", gamepad_title="Gamepad 2")
+    def InputGamepad2(self, event):
+        OptionsInputGamepad(self, "Gamepad 2")
 
     def OnSize(self, event):
         self.Layout()
@@ -242,24 +208,18 @@ class MainView(wx.Frame):
 
 class Controller(object):
     def __init__(self, app):
-        # Emulator
+        # emulator
         self.emulator = None
 
-        # Main window
+        # main window
         self.main_view = MainView(None)
 
-        # gui events
-        pub.subscribe(self.OpenOptionsInput, "Options.Input")
-        pub.subscribe(self.OpenGamepadConfig, "Input.Gamepad")
+        # bind user data to emulator (nothing yet)
+        # any time a user inputs data relevant to emulation, it should be
+        # handled by a function bound here
 
         self.main_view.Show()
 
-    def OpenOptionsInput(self, unused):
-        self.input_view = OptionsInput(None)
-        self.input_view.Show()
-
-    def OpenGamepadConfig(self, gamepad_title):
-        self.gamepad_view = OptionsInputGamepad(None, gamepad_title)
 
 if __name__ == "__main__":
     app = wx.App(False)
