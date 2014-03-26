@@ -154,29 +154,199 @@ def BEQ(cpu):
 
 # bit test
 def BIT(cpu):
-    
+    address = cpu.get_next_word()
+    result = cpu.accumulator & cpu.read_memory(address)
+    set_z_flag(cpu, result)
+
+    cpu.status[V_F] = (result & 0x40) >> 6
+    cpu.status[N_F] = (result & 0x80) >> 7
+
+    cpu.program_counter += 4
     return 4
 
 def BNE(cpu):
 def BPL(cpu):
+
+# clear carry flag
 def CLC(cpu):
+    cpu.status[C_F] = 0
+    cpu.program_counter += 2
+    return 2
+
+# clear decimal mode
 def CLD(cpu):
+    cpu.status[D_F] = 0
+    cpu.program_counter += 1
+    return 2
+
+# compare
 def CMP(cpu):
+    value = cpu.get_next_byte()
+    if cpu.accumulator >= value:
+        cpu.status[C_F] = 1
+
+    if cpu.accumulator == value:
+        cpu.status[Z_F] = 1
+
+    if (cpu.accumulator - value) < 0:
+        cpu.status[N_F] = 1
+
+    cpu.program_counter += 2
+    return 2
+
+# compare X register
 def CPX(cpu):
+    value = cpu.get_next_byte()
+    if cpu.x_register >= value:
+        cpu.status[C_F] = 1
+
+    if cpu.x_register == value:
+        cpu.status[Z_F] = 1
+
+    if (cpu.x_register - value) < 0:
+        cpu.status[N_F] = 1
+
+    cpu.program_counter += 2
+    return 2
+
+# compare Y register
 def CPY(cpu):
+    value = cpu.get_next_byte()
+    if cpu.y_register >= value:
+        cpu.status[C_F] = 1
+
+    if cpu.y_register == value:
+        cpu.status[Z_F] = 1
+
+    if (cpu.y_register - value) < 0:
+        cpu.status[N_F] = 1
+
+    cpu.program_counter += 2
+    return 2
+
+# decrement memory - absolute
 def DEC_Absolute(cpu):
+    address = cpu.get_next_word()
+    result = cpu.read_memory(address) - 1
+    cpu.write_memory(address, result)
+
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+
+    cpu.program_counter += 3
+    return 6
+
+# decrement memory - zeropage
 def DEC_ZeroPage(cpu):
+    address = cpu.get_next_byte()
+    result = cpu.read_memory(address) - 1
+    cpu.write_memory(address, result)
+
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+
+    cpu.program_counter += 2
+    return 5
+
+# decrement X register
 def DEX(cpu):
+    result = cpu.x_register - 1
+    cpu.x_register = result
+
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+
+    cpu.program_counter += 1
+    return 2
+
+# decrement Y register
 def DEY(cpu):
+    result = cpu.y_register - 1
+    cpu.y_register = result
+
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+
+    cpu.program_counter += 1
+    return 2
+
+# exclusive or - zero page
 def EOR_ZeroPage(cpu):
+    address = cpu.get_next_byte()
+    result = cpu.accumulator ^ cpu.read_memory(address)
+    cpu.accumulator = result
+    
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+
+    cpu.program_counter += 2
+    return 3
+
+# increment memory
 def INC(cpu):
+    address = cpu.get_next_word()
+    result = cpu.read_memory(address) - 1
+    cpu.write_memory(address, result)
+
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+
+    cpu.program_counter += 3
+    return 6
+
+# increment memory - zero page
 def INC_ZeroPage(cpu):
+    address = cpu.get_next_word()
+    result = cpu.read_memory(address) - 1
+    cpu.write_memory(address, result)
+
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+
+    cpu.program_counter += 2
+    return 5
+
+# increment X register
 def INX(cpu):
+    result = cpu.x_register + 1
+    cpu.x_register = result
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+    cpu.program_counter += 1
+    return 2
+
+# increment Y register    
 def INY(cpu):
+    result = cpu.y_register + 1
+    cpu.y_register = result
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+    cpu.program_counter += 1
+    return 2
+
+# jump
 def JMP(cpu):
+    address = cpu.get_next_word()
+    cpu.program_counter = address
+    return 3
+
+# jump - indirect    
 def JMP_Indirect(cpu):
+
+
 def JSR(cpu):
+
+# load accumulator - absolute
 def LDA_Absolute(cpu):
+    address = cpu.get_next_word()
+    result = cpu.read_memory(address)
+    cpu.accumulator = result
+    set_z_flag(cpu, result)
+    set_n_flag(cpu, result)
+    cpu.program_counter += 3
+    return 4
+
+# load accumlator - absolute x
 def LDA_AbsoluteX(cpu):
 def LDA_AbsoluteY(cpu):
 def LDA_Immediate(cpu):
