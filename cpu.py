@@ -6,17 +6,23 @@ import instructions
 
 class cpu:
     __init__(self, nes):
+        # cpu power up state can be found here:
+        # http://wiki.nesdev.com/w/index.php/CPU_power_up_state
+
         # program counter
         self.program_counter = 0x0
-        # stack pointer
-        self.stack_pointer = 0x10
-        # flag register
-        self.status = [0,0,0,0,0,0,0,0]
+        # stack pointer - changed init value
+        self.stack_pointer = 0xfd
+        # flag register - init to 0x34 (the list is kept in reverse bit order)
+        self.status = [0,0,1,0,1,1,0,0]
 
         # general purpose registers
         self.accumlator = 0x0
         self.x_register = 0x0
         self.y_register = 0x0
+
+        # init nes memory
+        nes.memory[0x0000:0x0800] = [0xff for i in range(0x0000, 0x7ff)]
 
         # big dictionary of NES opcodes
         self.op_codes = {

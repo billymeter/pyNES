@@ -5,7 +5,7 @@ Z_F = 1 # Zero Flag
 I_F = 2 # Interrupt enable/disable
 D_F = 3 # Decimal flag (not used)
 B_F = 4 # Software Interrupt (BRK)
-
+        # The 5th bit is not used
 V_F = 6 # Overflow flag
 N_F = 7 # Negative flag
 
@@ -110,7 +110,7 @@ def ADC_ZeroPage(cpu):
 def AND_Absolute(cpu):
     address = cpu.get_next_word()
     cpu.accumulator = cpu.accumulator & cpu.read_memory(address)
-    
+
     set_z_flag(cpu, cpu.accumulator)
     set_n_flag(cpu, cpu.accumulator)
 
@@ -122,7 +122,7 @@ def AND_Absolute(cpu):
 def AND_Immediate(cpu):
     value = cpu.get_next_byte()
     cpu.accumulator = cpu.accumulator & value
-    
+
     set_z_flag(cpu, cpu.accumulator)
     set_n_flag(cpu, cpu.accumulator)
 
@@ -275,7 +275,7 @@ def EOR_ZeroPage(cpu):
     address = cpu.get_next_byte()
     result = cpu.accumulator ^ cpu.read_memory(address)
     cpu.accumulator = result
-    
+
     set_z_flag(cpu, result)
     set_n_flag(cpu, result)
 
@@ -315,7 +315,7 @@ def INX(cpu):
     cpu.program_counter += 1
     return 2
 
-# increment Y register    
+# increment Y register
 def INY(cpu):
     result = cpu.y_register + 1
     cpu.y_register = result
@@ -330,7 +330,7 @@ def JMP(cpu):
     cpu.program_counter = address
     return 3
 
-# jump - indirect    
+# jump - indirect
 def JMP_Indirect(cpu):
 
 
