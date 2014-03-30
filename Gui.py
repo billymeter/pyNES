@@ -47,81 +47,155 @@ class PygameDisplay(wx.Window):
         self.Unbind(event=wx.EVT_TIMER, handler=self.Update, source=self.timer)
 
 
-class OptionsInputGamepad(wx.Frame):
-    def __init__(self, parent, gamepad):
-        wx.Frame.__init__(self, parent=parent, id=wx.ID_ANY,
-                          style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
-        self.parent = parent
-        self.SetTitle(gamepad)
-        self.SetBackgroundColour((221, 217, 206))
+class UserKeyDialog(wx.Dialog):
+    def __init__(self, button, *args, **kwargs):
+        wx.Dialog.__init__(self, *args, **kwargs)
+        self.SetWindowStyle(wx.SIMPLE_BORDER)
+        self.SetFocus()
+        self.button = button
 
-        # toolbar
-        toolbar = self.CreateToolBar(style=wx.TB_HORIZONTAL | wx.NO_BORDER |
-                                     wx.TB_FLAT | wx.TB_NODIVIDER)
-        toolbar.SetBackgroundColour((221, 217, 206))
-        t_save = toolbar.AddLabelTool(wx.ID_APPLY, "Save",
-                                      wx.Bitmap('save.png'),
-                                      shortHelp="Save settings")
-        t_save = toolbar.AddLabelTool(wx.ID_CANCEL, "Save",
-                                      wx.Bitmap('cancel.png'),
-                                      shortHelp="Cancel changes")
-        toolbar.Realize()
-        self.SetClientSize((460, 166))
+        # self.keyMap = {}
+        # for varName in vars(wx):
+        #     if varName.startswith("WXK_"):
+        #         self.keyMap[getattr(wx, varName)] = varName[4:]
 
-        # panel for dark area containing buttons
-        btns = wx.Panel(self, size=(450, 156))
-        btns.SetBackgroundColour((39, 44, 39))
+        # Controls
+        self.current_key = wx.StaticText(parent=self, label="Press key...")
+        # ok_btn = wx.Button(parent=self, id=wx.ID_OK)
+        # cancel_btn = wx.Button(parent=self, id=wx.ID_CANCEL)
 
-        # gamepad buttons
-        self.button_up = wx.Button(btns, wx.ID_ANY, "Up", size=(50, 25))
-        self.button_left = wx.Button(btns, wx.ID_ANY, "Left", size=(50, 25))
-        self.button_right = wx.Button(btns, wx.ID_ANY, "Right", size=(50, 25))
-        self.button_sel = wx.Button(btns, wx.ID_ANY, "Select", size=(50, 25))
-        self.button_start = wx.Button(btns, wx.ID_ANY, "Start", size=(50, 25))
-        self.button_b = wx.Button(btns, wx.ID_ANY, "B", size=(50, 50))
-        self.button_a = wx.Button(btns, wx.ID_ANY, "A", size=(50, 50))
-        self.button_down = wx.Button(btns, wx.ID_ANY, "Down", size=(50, 25))
+        # Binds
+        # self.Bind(wx.EVT_BUTTON, self.OnClose, ok_btn)
+        # self.Bind(wx.EVT_BUTTON, self.OnClose, cancel_btn)
+        self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
 
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        # Sizers
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.current_key, border=40, flag=wx.ALL)
+        # button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        # button_sizer.Add(ok_btn)
+        # button_sizer.Add(cancel_btn)
+        # sizer.Add(button_sizer, proportion=1)
+        self.SetSizer(sizer)
+        self.Fit()
+
+    def OnKey(self, event):
+        key_map = (self.button[0], {self.button[1]: event.GetKeyCode()})
+        pub.sendMessage("Pending Options.Input", key_map=key_map)
+        self.Close()
+
+
+class GamepadInput(wx.Panel):
+    def __init__(self, gamepad, *args, **kwargs):
+        wx.Panel.__init__(self, *args, **kwargs)
+        self.SetWindowStyle(wx.DOUBLE_BORDER)
+        self.gamepad = gamepad
+
+        # Add gamepad buttons
+        self.button_up = wx.Button(parent=self, label="Up", name="up",
+                                   size=(50, 25))
+        self.button_left = wx.Button(parent=self, label="Left", name="left",
+                                     size=(50, 25))
+        self.button_right = wx.Button(parent=self, label="Right", name="right",
+                                      size=(50, 25))
+        self.button_select = wx.Button(parent=self, label="Select",
+                                       name="select", size=(50, 25))
+        self.button_start = wx.Button(parent=self, label="Start", name="start",
+                                      size=(50, 25))
+        self.button_b = wx.Button(parent=self, label="B", name="b",
+                                  size=(50, 50))
+        self.button_a = wx.Button(parent=self, label="A", name="a",
+                                  size=(50, 50))
+        self.button_down = wx.Button(parent=self, label="Down", name="down",
+                                     size=(50, 25))
+
+        # BINDS
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_up)
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_left)
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_right)
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_select)
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_start)
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_b)
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_a)
+        self.Bind(wx.EVT_BUTTON, self.ButtonClicked, self.button_down)
+
+        # SIZER CONFIG
         grid_sizer = wx.GridSizer(rows=3, cols=7)
-        sizer.Add(btns, flag=wx.LEFT | wx.RIGHT | wx.BOTTOM, border=25)
         empty_cell = (0, 0)
 
-        # row 1
+        # ROW 1
         grid_sizer.Add(empty_cell)
         grid_sizer.Add(self.button_up, flag=wx.ALIGN_BOTTOM |
                        wx.ALIGN_CENTER_HORIZONTAL)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
+        # 5 empty cells
+        grid_sizer.AddMany([empty_cell, empty_cell, empty_cell, empty_cell,
+                           empty_cell])
 
-        # row 2
+        # ROW 2
         grid_sizer.Add(self.button_left, flag=wx.ALIGN_RIGHT |
                        wx.ALIGN_CENTER_VERTICAL)
         grid_sizer.Add(empty_cell)
         grid_sizer.Add(self.button_right, flag=wx.ALIGN_LEFT |
                        wx.ALIGN_CENTER_VERTICAL)
-        grid_sizer.Add(self.button_sel, flag=wx.ALIGN_CENTER)
+        grid_sizer.Add(self.button_select, flag=wx.ALIGN_CENTER)
         grid_sizer.Add(self.button_start, flag=wx.ALIGN_CENTER)
         grid_sizer.Add(self.button_b, flag=wx.ALIGN_CENTER)
         grid_sizer.Add(self.button_a, flag=wx.ALIGN_CENTER)
 
-        #row 3
+        #ROW 3
         grid_sizer.Add(empty_cell)
         grid_sizer.Add(self.button_down, flag=wx.ALIGN_TOP |
                        wx.ALIGN_CENTER_HORIZONTAL)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
-        grid_sizer.Add(empty_cell)
+        # 5 empty cells
+        grid_sizer.AddMany([empty_cell, empty_cell, empty_cell, empty_cell,
+                           empty_cell])
+
+        self.SetSizer(grid_sizer)
+
+    def ButtonClicked(self, event):
+        """ Open modal dialog to get user key """
+        btn = event.GetEventObject()
+        button = (self.gamepad, str(btn.GetName()))
+        dlg = UserKeyDialog(parent=self, button=button, title=btn.GetLabel())
+        dlg.ShowModal()
+
+
+class OptionsInput(wx.Dialog):
+    def __init__(self, *args, **kwargs):
+        wx.Dialog.__init__(self, *args, **kwargs)
+
+        # gamepad panels
+        gamepad1_name = wx.StaticText(parent=self, label="Gamepad 1")
+        self.gamepad1_panel = GamepadInput(parent=self, gamepad=1)
+        gamepad2_name = wx.StaticText(parent=self, label="Gamepad 2")
+        self.gamepad2_panel = GamepadInput(parent=self, gamepad=2)
+
+        # ok/cancel buttons
+        ok_btn = wx.Button(self, wx.ID_OK)
+        cancel_btn = wx.Button(self, wx.ID_CANCEL)
+
+        self.Bind(wx.EVT_BUTTON, self.Save, ok_btn)
+
+        # sizer stuff
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(gamepad1_name, border=10, flag=wx.TOP | wx.LEFT | wx.RIGHT)
+        sizer.Add(self.gamepad1_panel, border=10,
+                  flag=wx.LEFT | wx.RIGHT | wx.BOTTOM)
+        sizer.Add(gamepad2_name, border=10, flag=wx.TOP | wx.LEFT | wx.RIGHT)
+        sizer.Add(self.gamepad2_panel, border=10,
+                  flag=wx.LEFT | wx.RIGHT | wx.BOTTOM)
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.AddMany([ok_btn, cancel_btn])
+        sizer.Add(button_sizer, border=10, flag=wx.ALL | wx.ALIGN_RIGHT)
 
         self.SetSizer(sizer)
-        btns.SetSizer(grid_sizer)
+        self.Fit()
         self.Layout()
         self.Show()
+
+    def Save(self, event):
+        pub.sendMessage("Push Options.Input", ignored=None)
+        self.Close()
 
 
 class MainView(wx.Frame):
@@ -144,15 +218,8 @@ class MainView(wx.Frame):
                                   "Load ROM into pyNES")
         # config menu options
         conf_menu = wx.Menu()
-
-        # input submenu
-        input_menu = wx.Menu()
-        m_gamepad1 = input_menu.Append(wx.ID_ANY, text="Gamepad 1",
-                                       help="Configure Gamepad 1")
-        m_gamepad2 = input_menu.Append(wx.ID_ANY, text="Gamepad 2",
-                                       help="Configure Gamepad 2")
-        conf_menu.AppendMenu(wx.ID_ANY, "Input...", input_menu)
-
+        m_input = conf_menu.Append(wx.ID_ANY, text="Input...",
+                                   help="Configure Input")
         m_video = conf_menu.Append(wx.ID_ANY, "Video...", "Configure video")
         m_sound = conf_menu.Append(wx.ID_ANY, "Sound...", "Configure sound")
 
@@ -163,8 +230,7 @@ class MainView(wx.Frame):
         menu_bar.Append(file_menu, "&File")
 
         # option menu binds
-        self.Bind(wx.EVT_MENU, self.InputGamepad1, m_gamepad1)
-        self.Bind(wx.EVT_MENU, self.InputGamepad2, m_gamepad2)
+        self.Bind(wx.EVT_MENU, self.OnOptionsInput, m_input)
         self.Bind(wx.EVT_MENU, self.Kill, m_video)
         self.Bind(wx.EVT_MENU, self.Kill, m_sound)
 
@@ -191,11 +257,9 @@ class MainView(wx.Frame):
         self.Fit()
         self.Layout()
 
-    def InputGamepad1(self, event):
-        OptionsInputGamepad(self, "Gamepad 1")
-
-    def InputGamepad2(self, event):
-        OptionsInputGamepad(self, "Gamepad 2")
+    def OnOptionsInput(self, event):
+        frame = OptionsInput(parent=self, title="Input Settings")
+        frame.ShowModal()
 
     def OnSize(self, event):
         self.Layout()
@@ -206,24 +270,66 @@ class MainView(wx.Frame):
         self.Destroy()
 
 
-class Controller(object):
+class ViewModel(object):
     def __init__(self, app):
         # emulator
-        self.emulator = None
+        self.emulator = emu_interface_dummy()
 
         # main window
         self.main_view = MainView(None)
 
-        # bind user data to emulator (nothing yet)
-        # any time a user inputs data relevant to emulation, it should be
-        # handled by a function bound here
+        # intermediate data (e.g. unconfirmed settings)
+        self.input_settings = self.emulator.settings.input
+
+        # bind emulator data to view
+        pub.subscribe(self.pull_input_config, "Pull Options.Input")
+        pub.subscribe(self.push_input_config, "Push Options.Input")
+        pub.subscribe(self.pending_input_config, "Pending Options.Input")
 
         self.main_view.Show()
+
+    def pull_input_config(self, input_view):
+        """ Initialize and bind state for input views """
+        pass
+
+    def push_input_config(self, ignored):
+        """ Update with user changes to gamepad settings """
+        self.emulator.settings.input.update(self.input_settings)
+
+    def pending_input_config(self, key_map):
+        # ugly.. dictionary of dictionaries is not the way to go here
+        self.input_settings[key_map[0]].update(key_map[1])
+
+
+class emu_interface_dummy(object):
+    def __init__(self):
+        self.settings = dummy_settings()
+
+
+class dummy_settings(object):
+    def __init__(self):
+        gamepad1 = {'up': 'KB_UP',
+                    'down': 'KB_DOWN',
+                    'left': 'KB_LEFT',
+                    'right': 'KB_RIGHT',
+                    'start': 'KB_ENTER',
+                    'select': 'KB_BACKSPACE',
+                    'a': 'KB_X',
+                    'b': 'KB_Z'}
+        gamepad2 = {'up': None,
+                    'down': None,
+                    'left': None,
+                    'right': None,
+                    'start': None,
+                    'select': None,
+                    'a': None,
+                    'b': None}
+        self.input = {1: gamepad1, 2: gamepad2}
 
 
 if __name__ == "__main__":
     app = wx.App(False)
-    controller = Controller(app)
+    ViewModel = ViewModel(app)
     # import wx.lib.inspection
     # wx.lib.inspection.InspectionTool().Show()
     app.MainLoop()
