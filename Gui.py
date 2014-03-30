@@ -3,6 +3,7 @@ import pygame
 import sys
 import os
 from wx.lib.pubsub import pub
+import ConfigParser
 
 
 class PygameDisplay(wx.Window):
@@ -54,11 +55,6 @@ class UserKeyDialog(wx.Dialog):
         self.SetFocus()
         self.button = button
 
-        # self.keyMap = {}
-        # for varName in vars(wx):
-        #     if varName.startswith("WXK_"):
-        #         self.keyMap[getattr(wx, varName)] = varName[4:]
-
         # Controls
         self.current_key = wx.StaticText(parent=self, label="Press key...")
         # ok_btn = wx.Button(parent=self, id=wx.ID_OK)
@@ -80,8 +76,8 @@ class UserKeyDialog(wx.Dialog):
         self.Fit()
 
     def OnKey(self, event):
-        key_map = (self.button[0], {self.button[1]: event.GetKeyCode()})
-        pub.sendMessage("Pending Options.Input", key_map=key_map)
+        key = (self.button[0], self.button[1], event.GetKeyCode())
+        pub.sendMessage("Pending Options.Input", key=key)
         self.Close()
 
 
@@ -273,13 +269,23 @@ class MainView(wx.Frame):
 class ViewModel(object):
     def __init__(self, app):
         # emulator
-        self.emulator = emu_interface_dummy()
+        self.emulator = None
 
         # main window
         self.main_view = MainView(None)
 
-        # intermediate data (e.g. unconfirmed settings)
-        self.input_settings = self.emulator.settings.input
+        # utilities (should probably be factored out)
+        self.config = ConfigParser.ConfigParser()
+        try:
+            with open('settings.ini') as configfile:
+                self.config.readfp(configfile)
+        except IOError:
+            pass
+        # need to standardize key names (wx and pygame key names differ)
+        self.key_map = {}
+        for varName in vars(wx):
+            if varName.startswith("WXK_"):
+                self.key_map[getattr(wx, varName)] = varName
 
         # bind emulator data to view
         pub.subscribe(self.pull_input_config, "Pull Options.Input")
@@ -294,37 +300,22 @@ class ViewModel(object):
 
     def push_input_config(self, ignored):
         """ Update with user changes to gamepad settings """
-        self.emulator.settings.input.update(self.input_settings)
+        with open('settings.ini', 'wb') as configfile:
+            self.config.write(configfile)
 
-    def pending_input_config(self, key_map):
-        # ugly.. dictionary of dictionaries is not the way to go here
-        self.input_settings[key_map[0]].update(key_map[1])
+    def pending_input_config(self, key):
+        gamepad = 'Gamepad ' + str(key[0])
+        button = key[1]
+        try:
+            key_value = self.key_map[key[2]][4:]
+        except KeyError:
+            key_value = unichr(key[2])
 
-
-class emu_interface_dummy(object):
-    def __init__(self):
-        self.settings = dummy_settings()
-
-
-class dummy_settings(object):
-    def __init__(self):
-        gamepad1 = {'up': 'KB_UP',
-                    'down': 'KB_DOWN',
-                    'left': 'KB_LEFT',
-                    'right': 'KB_RIGHT',
-                    'start': 'KB_ENTER',
-                    'select': 'KB_BACKSPACE',
-                    'a': 'KB_X',
-                    'b': 'KB_Z'}
-        gamepad2 = {'up': None,
-                    'down': None,
-                    'left': None,
-                    'right': None,
-                    'start': None,
-                    'select': None,
-                    'a': None,
-                    'b': None}
-        self.input = {1: gamepad1, 2: gamepad2}
+        # add section if it doesn't exist; can get rid of this after adding
+        # generator for default settings file
+        if not self.config.has_section(gamepad):
+            self.config.add_section(gamepad)
+        self.config.set(gamepad, button, key_value)
 
 
 if __name__ == "__main__":
