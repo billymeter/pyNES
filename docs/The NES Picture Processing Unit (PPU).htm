@@ -1,0 +1,581 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-gb" lang="en-gb"><head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="robots" content="index, follow">
+  <meta name="keywords" content="joomla, Joomla">
+  <meta name="title" content="The NES Picture Processing Unit (PPU)">
+  <meta name="author" content="Dr. Floppy">
+  <meta name="description" content="Joomla! - the dynamic portal engine and content management system">
+  <meta name="generator" content="Joomla! 1.5 - Open Source Content Management">
+  <title>The NES Picture Processing Unit (PPU)</title>
+  <link href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_jcomments&amp;task=rss&amp;object_id=270&amp;object_group=com_content&amp;tmpl=component" rel="alternate" type="application/rss+xml" title="The NES Picture Processing Unit (PPU)">
+  <link href="http://badderhacksnet.ipage.com/badderhacks/templates/rhuk_milkyway/favicon.ico" rel="shortcut icon" type="image/x-icon">
+  <link rel="stylesheet" href="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/style.css" type="text/css">
+  <script type="text/javascript" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/jcomments-v2.js"></script>
+  <script type="text/javascript" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/ajax.js"></script>
+  <script type="text/javascript" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/mootools.js"></script>
+  <script type="text/javascript" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/caption.js"></script>
+
+
+<link rel="stylesheet" href="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/system.css" type="text/css">
+<link rel="stylesheet" href="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/general.css" type="text/css">
+<link rel="stylesheet" href="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/template.css" type="text/css">
+<link rel="stylesheet" href="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/red.css" type="text/css">
+<link rel="stylesheet" href="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/black_bg.css" type="text/css">
+<!--[if lte IE 6]>
+<link href="/badderhacks/templates/rhuk_milkyway/css/ieonly.css" rel="stylesheet" type="text/css" />
+<![endif]-->
+
+</head>
+<body _texified="true" id="page_bg" class="color_red bg_black width_fmax">
+<a name="up" id="up"></a>
+<div class="center" align="center">
+	<div id="wrapper">
+		<div id="wrapper_r">
+			<div id="header">
+				<div id="header_l">
+					<div id="header_r">
+						<div id="logo"></div>
+						
+					</div>
+				</div>
+			</div>
+
+			<div id="tabarea">
+				<div id="tabarea_l">
+					<div id="tabarea_r">
+						<div id="tabmenu">
+						<table class="pill" cellpadding="0" cellspacing="0">
+							<tbody><tr>
+								<td class="pill_l">&nbsp;</td>
+								<td class="pill_m">
+								<div id="pillmenu">
+									
+								</div>
+								</td>
+								<td class="pill_r">&nbsp;</td>
+							</tr>
+							</tbody></table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="search">
+				
+			</div>
+
+			<div id="pathway">
+				
+			</div>
+
+			<div class="clr"></div>
+
+			<div id="whitebox">
+				<div id="whitebox_t">
+					<div id="whitebox_tl">
+						<div id="whitebox_tr"></div>
+					</div>
+				</div>
+
+				<div id="whitebox_m">
+					<div id="area">
+									
+
+						<div id="leftcolumn">
+															<div class="module_menu">
+			<div>
+				<div>
+					<div>
+													<h3>Badder Menu</h3>
+											<ul class="menu"><li class="item8"><a href="http://badderhacksnet.ipage.com/badderhacks/"><span>News</span></a></li><li class="item1"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=section&amp;id=4&amp;Itemid=1"><span>ROM-Hacks</span></a></li><li class="item13"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=category&amp;id=23&amp;Itemid=13"><span>Games</span></a></li><li class="item14"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=section&amp;id=9&amp;Itemid=14"><span>Utilities</span></a></li><li class="item2"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=section&amp;id=5&amp;Itemid=2"><span>Reviews</span></a></li><li id="current" class="active item7"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=section&amp;id=6&amp;Itemid=7"><span>Der Bad Articles</span></a></li><li class="item3"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_agora&amp;Itemid=3"><span>Badder Forum</span></a></li><li class="item11"><a href="http://www.youtube.com/user/theraynexperience#g/c/9D38CC740979D709"><span>ROM-Hack Showcase</span></a></li><li class="item6"><a href="http://www.youtube.com/user/badhacksBHDN"><span>BadderHacks on YouTube</span></a></li><li class="item10"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=article&amp;id=4&amp;Itemid=10"><span>FAQ</span></a></li><li class="item4"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_weblinks&amp;view=category&amp;id=9&amp;Itemid=4"><span>Links</span></a></li><li class="item5"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_user&amp;view=login&amp;Itemid=5"><span>Login</span></a></li><li class="item9"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_contact&amp;view=contact&amp;id=1&amp;Itemid=9"><span>Contact</span></a></li><li class="item16"><a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=article&amp;id=322&amp;Itemid=16"><span>Submit a Hack</span></a></li></ul>					</div>
+				</div>
+			</div>
+		</div>
+	
+												</div>
+
+												<div id="maincolumn">
+													
+							<table class="nopad">
+								<tbody><tr valign="top">
+									<td>
+										<table class="contentpaneopen">
+<tbody><tr>
+		<td class="contentheading" width="100%">
+					The NES Picture Processing Unit (PPU)			</td>
+						<td class="buttonheading" align="right" width="100%">
+		<a href="http://badderhacksnet.ipage.com/badderhacks/index.php?view=article&amp;catid=14%3Adr-floppy&amp;id=270%3Athe-nes-picture-processing-unit-ppu&amp;format=pdf&amp;option=com_content&amp;Itemid=7" title="PDF" onclick="window.open(this.href,'win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;" rel="nofollow"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/pdf_button.png" alt="PDF"></a>		</td>
+		
+				<td class="buttonheading" align="right" width="100%">
+		<a href="http://badderhacksnet.ipage.com/badderhacks/index.php?view=article&amp;catid=14%3Adr-floppy&amp;id=270%3Athe-nes-picture-processing-unit-ppu&amp;tmpl=component&amp;print=1&amp;layout=default&amp;page=&amp;option=com_content&amp;Itemid=7" title="Print" onclick="window.open(this.href,'win2','status=no,toolbar=no,scrollbars=yes,titlebar=no,menubar=no,resizable=yes,width=640,height=480,directories=no,location=no'); return false;" rel="nofollow"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/printButton.png" alt="Print"></a>		</td>
+		
+				<td class="buttonheading" align="right" width="100%">
+		<a href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_mailto&amp;tmpl=component&amp;link=aHR0cDovL2JhZGRlcmhhY2tzbmV0LmlwYWdlLmNvbS9iYWRkZXJoYWNrcy9pbmRleC5waHA/b3B0aW9uPWNvbV9jb250ZW50JnZpZXc9YXJ0aWNsZSZpZD0yNzA6dGhlLW5lcy1waWN0dXJlLXByb2Nlc3NpbmctdW5pdC1wcHUmY2F0aWQ9MTQ6ZHItZmxvcHB5Jkl0ZW1pZD03" title="E-mail" onclick="window.open(this.href,'win2','width=400,height=350,menubar=yes,resizable=yes'); return false;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/emailButton.png" alt="E-mail"></a>		</td>
+					</tr>
+</tbody></table>
+
+<table class="contentpaneopen">
+<tbody><tr>
+	<td valign="top">
+		<span class="small">
+			Written by Dr. Floppy		</span>
+		&nbsp;&nbsp;
+	</td>
+</tr>
+
+<tr>
+	<td class="createdate" valign="top">
+		Tuesday, 24 May 2011 02:52	</td>
+</tr>
+
+
+<tr>
+<td valign="top">
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><strong><span style="text-decoration: underline;">The NES Picture Processing Unit</span></strong></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><span> </span>Ever 
+wonder how the Nintendo Entertainment System converted strings of 
+numbers into visual images onscreen? The answer is a little device known
+ as the Picture Processing Unit (PPU). By learning the ins-and-outs of 
+this delightful contraption, hackers can reap many a benefit.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p style="text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/nesboardppmini.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>Underside of NES breadboard, front side (controller inputs, etc.) facing “north”.</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><strong>I) The Big Picture </strong></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><span> </span>The NES 
+CPU has a “field of vision” consisting of 65,536 bytes, split evenly 
+between RAM and ROM. The PPU has a smaller FOV, consisting of only 
+16,384 bytes. It ranges from [$0000-3FFF], and is entirely distinct from
+ the CPU’s [$0000-FFFF] field.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/ppu_0.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>Not even the PPU is safe from the timeless lyrics of Ke$ha.</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">The PPU is further 
+broken down into four subsections: (1) Sprite Pattern Table, (2) 
+Background Pattern Table, (3) Name/Attribute Tables, and (4) Palettes.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/ppu9.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>Technically, the Sprite and B/G Tile sectors are interchangeable.</em></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>“Sprites @ $0000; B/G @ $1000” is just tradition.</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><strong>II) Pattern Tables $[0000-1FFF]</strong></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><span> </span>All 
+sprites and background images are comprised of 8x8 pixel tiles. At any 
+given time, the NES can call from two 256-member tile banks (one for 
+sprites and one for backgrounds). These tile banks are called “Pattern 
+Tables”, and they are defined in the $[0000-1FFF] range.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Each tile is defined by a
+ string of sixteen bytes. Each byte defines a single line of eight 
+pixels; since a byte is actually eight bits (0’s &amp; 1’s), it works 
+out that each <em>bit</em> assigns a value to the corresponding pixel within that line.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">NES tiles use a two 
+bit-per-pixel (2bps) motif, which means that each tile is defined by two
+ “layers” of zeros and ones. The first eight bytes of the tile 
+definition line represent the first layer; the next/last eight bytes lay
+ down the second and final layer. The 2bps value of each pixel is 
+determined by combining the Layer 2 “top” value with the Layer 1 
+“bottom” value:</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><span style="text-decoration: underline;">Layer 2 Value</span><span> </span><span style="text-decoration: underline;">Layer 1 Value</span> <span> </span><span style="text-decoration: underline;">Overall Value</span> <span style="text-decoration: underline;"><span> </span>Palette Assignment</span></p>
+<p class="MsoNormal" style="text-indent: 0.5in; line-height: 150%;">0..............<span>....</span>0<span>..................</span>00..................Color 0</p>
+<p class="MsoNormal" style="text-indent: 0.5in; line-height: 150%;">0<span>..................</span>1<span>..................</span>01<span>..............</span>....Color 1</p>
+<p class="MsoNormal" style="text-indent: 0.5in; line-height: 150%;">1<span>..................</span>0<span>..................</span>10<span>..............</span><span>....</span>Color 2</p>
+<p class="MsoNormal" style="text-indent: 0.5in; line-height: 150%;">1..................1....<span>..............</span>11..................Color 3</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/ppu_4.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>The mushroom icon tile from Super Mario Bros. 1.</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Note that <span style="text-decoration: underline;">the NES doesn’t assign actual color values to pixels at this point</span>; the pattern tables merely tell the system which numerical entry <em>within</em> a palette (discussed later) is to be assigned to each of the 64 pixels in a given tile.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><strong>III) Name Tables $[2000-2FFF]</strong></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><span> </span>NES 
+Backgrounds are handled in a way similar to old-fashioned animation. 
+Before Pixar and 3D imaging took everything over, animators had to 
+actually draw stuff by hand. But instead of drawing every single frame, 
+they merely drew the <em>moving objects</em>. The background was drawn once, and that was it. Moving characters were painted on transparencies called <em>cels</em>
+ (named after the cellulose acetate used to create them), which were 
+layered on top of the background for frame capture. The NES does the 
+same thing, with sprites assuming the role of “moving objects” and “Name
+ Tables” assuming the role of backgrounds.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Name tables are simply 
+background tile grids, 32-wide and 30-tall (the top and bottom tile rows
+ usually aren’t visible on NTSC televisions). The phrase “name table” 
+can be used to describe two things: (1) the space in PPU dedicated to 
+this data; (2) the data/background itself. While PPU space exists for up
+ to four name tables, the NES only had enough RAM to support two. 
+Fortunately, this is enough for most games to operate seamlessly.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Since only one 
+background is visible on the TV at any given time, the NES uses the 
+“invisible” background as its update farm. As SMB1-Mario moves to the 
+right, the background scrolls leftward until the first half of Screen 1 
+is no longer visible. At this point, that data is ready to be replaced 
+with new data that will create the first half of Screen 3. As Mario 
+continues another half-screen rightward, the second half of Screen-1 
+progressively vanishes to the left, being redrawn with the second half 
+of Screen-3 in the process. So by the time Screen-2 is fully visible on 
+the TV, Screen-1 has been rewritten “offstage” as Screen-3. And by the 
+time Mario scrolls Screen-3 into full view, Screen-2 will have been 
+progressively replaced with Screen-4. By constantly updating the content
+ of the “off-screen” Name Table, the NES creates the illusion of a 
+seamless, linear rectangle.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">As you may have guessed, this also works for bidirectional scrolling (i.e. <em>Monster Party</em>, where the player can backtrack to earlier parts of the level), and vertical scrolling (<em>Metroid</em>,
+ where the game swaps between horizontal and vertical every time Samus 
+goes through a door). Games with multidirectional scrolling (<em>Super Mario Bros. 3</em>,
+ wherein Mario can fly at a 45-degree angle to trigger simultaneous 
+horizontal and vertical scrolling) use a similar process, but suffer 
+from visual artifacts being visible in the periphery due to the 
+unfriendly nature of diagonal scrolling.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/nts.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>Name Table tile mapping, notated on a per-line basis.</em></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>The first and last lines ($2000 &amp; $23A0) aren’t visible on most NTSC televisions.</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">The data for the four 
+Name Tables is located at $2000, $2400, $2800 and $2C00. Each table 
+consists of thirty, 32-byte strings of data, assigning tiles 
+left-to-right, top-to-bottom. Some of you math wizards might be 
+wondering about the final 64 bytes? After all, 32 x 30 = 960, which 
+doesn’t fully account for the 1,024 bytes between $2000 and $23FF. Good 
+catch! The final four lines of each Name Table are devoted to background
+ Attributes, which is just Fred Fuchs’ way of saying “background palette
+ assignments”.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Attribute data is how 
+background palettes are applied to the actual background. So how the F 
+do we color-in 960 tiles with only 64 bytes? (If you guessed 
+“compression”, give yourself a cookie.) As it turns out, the compression
+ scheme used to apply attribute data isn’t all that bad. We only have 
+background palettes 0, 1, 2 and 3, and those values can all be 
+represented by two bits.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center">64 bytes = 512 bits = 256 palette invocations</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">960/256 = 3.75, which 
+means we have to cover 3¾ tiles with each two-bit palette specification.
+ For sanity’s sake, the NES designers decided to round up to 4, in the 
+form of 2x2 tile “blocks”. These blocks are further grouped in a 2x2 
+formation to create 32x32-pixel “attribute arenas”. Each byte in an 
+Attribute Table defines one such “arena”. And while the bytes/arenas 
+progress in traditional left <span style="font-family: Wingdings;"><span>à</span></span> right, top <span style="font-family: Wingdings;"><span>à</span></span> bottom fashion, the <em>internal</em> layout of each byte is a bit… odd.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p style="text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/attgrid3.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>SMB1’s first screen, with each 32x32 attribute “arena” labeled by defining byte location.</em></p>
+<p class="MsoNormal" style="line-height: 150%;"><span> </span></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Within a given arena, 
+it’s the lower-right (henceforth dubbed “southeast”) block which gets 
+the first palette assignment. The SW block gets the next two bits, 
+followed by the NE block. The NW block is defined last. Put another way,
+ the byte $E4 = 11100100. The PPU automatically breaks this up into 
+11-10-01-00, which corresponds to background palettes 3-2-1-0 
+(respectively). The resulting arena definition will look like this:</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><span style="text-decoration: underline;">0<span> </span>|<span> </span>1</span></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center">2<span> </span>|<span> </span>3</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">In coding attribute 
+data, I’ve found it helpful to envision the motion one uses to draw the 
+letter “Z”, only in reverse. Analyzing a byte ($E4) on the bit-level 
+(11100100), I take the first two bits (11) and apply them to the SE, the
+ next two bits (10) to the SW, the next two bits (01) to the NE, and the
+ final two bits (00) to the NW.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/ppu_z.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>Reading</em><em> the byte as 2-bit pairs from left to right: SE, SW, NE, NW</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Fortunately, most 
+backgrounds consist of arenas entirely populated by a single palette. If
+ all four blocks within an arena are to be assigned the same palette, 
+one can simply plow on thru as such:</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center">Palette 0 = <span> </span>$00 <span> </span>{00000000}</p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center">Palette 1 = <span> </span>$55 <span> </span>{01010101}</p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center">Palette 2 = <span> </span>$AA&nbsp;<span> </span>{10101010}</p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center">Palette 3 = <span> </span>$FF&nbsp;<span> </span>{11111111}</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">(Thus, when one sees ROM data that uses a lot of 0’s, 5’s, A’s and F’s, it’s probably attribute data of some kind.)</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Our final word on this 
+matter concerns how the NES handles the two “abandoned” Name Tables. As 
+previously mentioned, the NES itself only has enough supplemental 
+PPU-RAM onboard to maintain data for two active Name Tables. During 
+startup, programmers specify which of the four slots ($2000, $2400, 
+$2800, $2C00) are to be used for the primary (NT0) and secondary (NT1) 
+tables. The other two slots will function as respective “mirrors”, i.e. 
+data duplicates. The $2000 slot almost always gets chosen for NT0, but 
+the assignment of NT1 depends on the game’s primary method of scrolling.
+ In SMB1, there is only horizontal scrolling, so it makes sense to have 
+the two active Name Tables arranged in a horizontal fashion. (Without 
+going into details, just know that in-game scrolling activates a 
+seamless panning from one Name Table to the next.) Since our two active 
+NT’s are arranged horizontally, our two inactive NT’s will mirror data <em>vertically</em>.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/ppu_5.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>And games with primarily vertical scrolling tend to use *horizontal* mirroring.</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Games that utilize both forms of scrolling (but never at the same time) can switch their mirroring method as needed. <em>Metroid</em>
+ is a good example of a game which effectively uses this technique; you 
+can actually watch it happen if you pull up the Name Table Viewer before
+ going through a doorway.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/ppu6.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>It’s also a spectacularly good way to see which tiles are assigned where…</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">Finally, we should cover the main exceptions to H/V-mirroring conventions. Some games (<em>Battletoads</em>)
+ use single-screen mirroring, i.e. one screen duplicated four times 
+over. While this may at first seem like a pointless form of unnecessary 
+self-limitation, it greatly simplifies the scrolling code and opens the 
+door for certain tricks and effects (the pseudo-parallax scrolling in 
+Level 2, for example).</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">4-screen mirroring (used in <em>Gauntlet</em> and <em>Rad Racer 2</em>)
+ requires an extra 2 kB of on-cart RAM. With this, it is theoretically 
+possible to perform diagonal scrolling without artifacts, as there are <em>three</em> off-screen NT’s instead of just the usual <em>one</em>.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><strong>IV) Palettes $[3F00-3FFF]</strong></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;"><span> </span>NES tiles 
+are colored by assigning them to a palette. Each palette consists of 
+four colors chosen from the NES’ internal index. Background tiles can be
+ assigned to any of four palettes, defined at $3F00-0F. Sprite tiles can
+ be assigned to any of a separate set of four palettes, defined at 
+$3F10-1F. Now for the caveats:</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%;">The color defined at $3F00 is <em>king</em>.
+ It automatically becomes the initial entry of the remaining three B/G 
+palettes ($3F04, $3F08, $3F0C). Sprite palettes technically don’t have 
+initial color entries, as the NES automatically assigns the value of 
+“transparency” to $3F10, $3F14, $3F18 and $3F1C. As for the NES palette 
+itself, it consists of sixty-four entries, fifty-six of which are 
+unique.</p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p class="MsoNormal" style="line-height: 150%; text-align: center;"><img src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/nespal.png" border="0"></p>
+<p class="MsoNormal" style="text-align: center; line-height: 150%;" align="center"><em>The original “Nintendo 64”.</em></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+<p>Colors are referenced by numbers in the range of $00-3F, from left to
+ right, top to bottom. Note that since the NES doesn't produce RGB 
+output (although it can be modded to do so), the above image is a 
+ballpark approximation of each entry. On some TV's/emulators, Brown #08 
+(top row, middle) appears green, while Dark Red #07 (the entry to #08's 
+left) takes on a more brownish tone. It should be noted that the ten 
+entries <span style="text-decoration: line-through;">wasted</span> used 
+on Black are actually five respective copies of two slightly different 
+shades. #0D is "True Black", which developers were advised not to use 
+due to the possibility of image-burn. (#0F contains just enough 
+adulteration to avoid this risk, while remaining visually 
+indistinguishable from #0D; for this reason, #0F is usually the go-to 
+choice for "Black".) White #20 is actually an extremely light shade of 
+grey. Its representation in the above image has been deliberately 
+darkened to make it stand out better against True White #30. As for the 
+shades of gray proper, they *are* in fact four unique colors (#00 being 
+the darkest and #3D being the lightest).</p>
+<p>&nbsp;</p>
+<p style="text-align: center;">That's it! The NES Picture Processing Unit in all its visual glory!</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p style="text-align: center;"><span style="font-size: 12pt; font-family: "><em><strong>Floppyright 2011, Badderhacks.net</strong></em><br></span></p>
+<p class="MsoNormal" style="line-height: 150%;">&nbsp;</p>
+
+</td>
+</tr>
+
+<tr>
+	<td class="modifydate">
+		Last Updated on Tuesday, 24 May 2011 04:21	</td>
+</tr>
+</tbody></table>
+<span class="article_separator">&nbsp;</span>
+<script type="text/javascript">
+var jcomments=new JComments(270, 'com_content','http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_jcomments&amp;tmpl=component');
+jcomments.setList('comments-list');
+</script>
+<div id="jc">
+<div id="comments"><h4>Comments<a class="rss" href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_jcomments&amp;task=rss&amp;object_id=270&amp;object_group=com_content&amp;tmpl=component" title="RSS feed for comments to this post." target="_blank">&nbsp;</a><a class="refresh" href="#" title="Refresh comments list" onclick="jcomments.showPage(270,'com_content',0);return false;">&nbsp;</a></h4>
+<div id="comments-list" class="comments-list">
+        <div class="even" id="comment-item-417"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-417">
+<a href="#" class="vote-good" title="Good comment!" onclick="jcomments.voteComment(417, 1);return false;"></a><a href="#" class="vote-poor" title="Poor comment!" onclick="jcomments.voteComment(417, -1);return false;"></a>
+<span class="vote-good">+2</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=article&amp;id=270:the-nes-picture-processing-unit-ppu&amp;catid=14:dr-floppy&amp;Itemid=7#comment-417" id="comment-417">#3</a>
+<span class="comment-author"></span>
+<span class="comment-date">2013-04-18 14:23</span>
+<div class="comment-body" id="comment-body-417">Thanks very much. I'm 
+currently working on a NES emulator in Common Lisp and this remains the 
+best introductory piece on the PPU that I've seen.</div>
+<span class="comments-buttons">
+<a href="#" onclick="jcomments.quoteComment(417); return false;">Quote</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="odd" id="comment-item-396"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-396">
+<a href="#" class="vote-good" title="Good comment!" onclick="jcomments.voteComment(396, 1);return false;"></a><a href="#" class="vote-poor" title="Poor comment!" onclick="jcomments.voteComment(396, -1);return false;"></a>
+<span class="vote-none">0</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=article&amp;id=270:the-nes-picture-processing-unit-ppu&amp;catid=14:dr-floppy&amp;Itemid=7#comment-396" id="comment-396">#2</a>
+<span class="comment-author"></span>
+<span class="comment-date">2012-11-26 06:10</span>
+<div class="comment-body" id="comment-body-396">thank you very much!! this helped me a lot!</div>
+<span class="comments-buttons">
+<a href="#" onclick="jcomments.quoteComment(396); return false;">Quote</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+        <div class="even" id="comment-item-256"><div class="rbox"><div class="rbox_tr"><div class="rbox_tl"><div class="rbox_t">&nbsp;</div></div></div><div class="rbox_m">
+<div class="comment-box">
+<span class="comments-vote">
+	<span id="comment-vote-holder-256">
+<a href="#" class="vote-good" title="Good comment!" onclick="jcomments.voteComment(256, 1);return false;"></a><a href="#" class="vote-poor" title="Poor comment!" onclick="jcomments.voteComment(256, -1);return false;"></a>
+<span class="vote-good">+2</span>
+	</span>
+</span>
+<a class="comment-anchor" href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_content&amp;view=article&amp;id=270:the-nes-picture-processing-unit-ppu&amp;catid=14:dr-floppy&amp;Itemid=7#comment-256" id="comment-256">#1</a>
+<span class="comment-author"></span>
+<span class="comment-date">2011-07-22 02:28</span>
+<div class="comment-body" id="comment-body-256">Thanks for this great piece of text. I appreciate your work very much!</div>
+<span class="comments-buttons">
+<a href="#" onclick="jcomments.quoteComment(256); return false;">Quote</a>
+</span>
+</div><div class="clear"></div>
+</div><div class="rbox_br"><div class="rbox_bl"><div class="rbox_b">&nbsp;</div></div></div></div>
+</div>
+</div>
+<div id="comments-list-footer"><a class="refresh" href="#" title="Refresh comments list" onclick="jcomments.showPage(270,'com_content',0);return false;">Refresh comments list</a><br><a class="rss" href="http://badderhacksnet.ipage.com/badderhacks/index.php?option=com_jcomments&amp;task=rss&amp;object_id=270&amp;object_group=com_content&amp;tmpl=component" target="_blank">RSS feed for comments to this post.</a></div>
+</div>
+<h4>Add comment</h4>
+<a id="addcomments" href="#addcomments"></a>
+<form id="comments-form" name="comments-form" action="javascript:void(null);">
+<p>
+	<input id="comments-form-name" name="name" maxlength="20" size="22" tabindex="1" type="text">
+	<label for="comments-form-name">Name (required)</label>
+</p>
+<p>
+	<input id="comments-form-email" name="email" size="22" tabindex="2" type="text">
+	<label for="comments-form-email">E-mail (required)</label>
+</p>
+<p>
+	<input id="comments-form-homepage" name="homepage" size="22" tabindex="3" type="text">
+	<label for="comments-form-homepage">Website</label>
+</p>
+<p>
+	<div class="smiles"><img class="smile" alt=":D" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/laugh.gif"><img class="smile" alt=":lol:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/lol.gif"><img class="smile" alt=":-)" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/smile.gif"><img class="smile" alt=";-)" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/wink.gif"><img class="smile" alt=":cool:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/cool.gif"><img class="smile" alt=":-|" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/normal.gif"><img class="smile" alt=":-*" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/whistling.gif"><img class="smile" alt=":oops:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/redface.gif"><img class="smile" alt=":sad:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/sad.gif"><img class="smile" alt=":cry:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/cry.gif"><img class="smile" alt=":o" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/surprised.gif"><img class="smile" alt=":-?" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/confused.gif"><img class="smile" alt=":-x" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/sick.gif"><img class="smile" alt=":eek:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/shocked.gif"><img class="smile" alt=":zzz" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/sleeping.gif"><img class="smile" alt=":P" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/tongue.gif"><img class="smile" alt=":roll:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/rolleyes.gif"><img class="smile" alt=":sigh:" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/unsure.gif"></div><textarea id="comments-form-comment" name="comment" cols="65" rows="8" tabindex="5"></textarea><div class="grippie"><span class="counter"> <span>1000</span>  symbols left</span></div>
+</p>
+<p>
+	<input class="checkbox" id="comments-form-subscribe" name="subscribe" value="1" tabindex="5" type="checkbox">
+	<label for="comments-form-subscribe">Notify me of follow-up comments</label><br>
+</p>
+<p>
+	<img class="captcha" onclick="jcomments.clear('captcha');" id="comments-form-captcha-image" name="captcha-image" src="The%20NES%20Picture%20Processing%20Unit%20%28PPU%29_files/index.jpg" alt="Security code" height="60" width="120"><br>
+	<span class="captcha" onclick="jcomments.clear('captcha');">Refresh</span><br>
+	<input class="captcha" id="comments-form-captcha" name="captcha-refid" size="5" tabindex="6" type="text"><br>
+</p>
+<div id="comments-form-buttons">
+	<div class="btn" id="comments-form-send"><div><a href="#" tabindex="7" onclick="jcomments.saveComment();return false;" title="Send (Ctrl+Enter)">Send</a></div></div>
+	<div class="btn" id="comments-form-cancel" style="display:none;"><div><a href="#" tabindex="8" onclick="return false;" title="Cancel">Cancel</a></div></div>
+	<div style="clear:both;"></div>
+</div>
+	<input name="object_id" value="270" type="hidden">
+	<input name="object_group" value="com_content" type="hidden">
+</form>
+
+<script type="text/javascript">
+function JCommentsInitializeForm()
+{
+	var jcEditor = new JCommentsEditor('comments-form-comment', true);
+	jcEditor.initSmiles('http://badderhacksnet.ipage.com/badderhacks/components/com_jcomments/images/smiles');
+	jcEditor.addSmile(':D','laugh.gif');
+	jcEditor.addSmile(':lol:','lol.gif');
+	jcEditor.addSmile(':-)','smile.gif');
+	jcEditor.addSmile(';-)','wink.gif');
+	jcEditor.addSmile(':cool:','cool.gif');
+	jcEditor.addSmile(':-|','normal.gif');
+	jcEditor.addSmile(':-*','whistling.gif');
+	jcEditor.addSmile(':oops:','redface.gif');
+	jcEditor.addSmile(':sad:','sad.gif');
+	jcEditor.addSmile(':cry:','cry.gif');
+	jcEditor.addSmile(':o','surprised.gif');
+	jcEditor.addSmile(':-?','confused.gif');
+	jcEditor.addSmile(':-x','sick.gif');
+	jcEditor.addSmile(':eek:','shocked.gif');
+	jcEditor.addSmile(':zzz','sleeping.gif');
+	jcEditor.addSmile(':P','tongue.gif');
+	jcEditor.addSmile(':roll:','rolleyes.gif');
+	jcEditor.addSmile(':sigh:','unsure.gif');
+	jcEditor.addCounter(1000, '', ' symbols left', 'counter');
+	jcomments.setForm(new JCommentsForm('comments-form', jcEditor));
+}
+setTimeout(JCommentsInitializeForm, 100);
+</script>
+<div id="comments-footer" align="center"><a href="http://www.joomlatune.com/" title="JComments" target="_blank">JComments</a></div>
+<script type="text/javascript">
+jcomments.setAntiCache(1,0,0);
+</script> 
+</div>
+										
+									</td>
+																	</tr>
+							</tbody></table>
+
+						</div>
+						<div class="clr"></div>
+					</div>
+					<div class="clr"></div>
+				</div>
+
+				<div id="whitebox_b">
+					<div id="whitebox_bl">
+						<div id="whitebox_br"></div>
+					</div>
+				</div>
+			</div>
+
+			<div id="footerspacer"></div>
+		</div>
+
+		<div id="footer">
+			<div id="footer_l">
+				<div id="footer_r">
+					<p id="syndicate">
+						
+					</p>
+					<p id="power_by">
+	 				 	Powered by <a href="http://www.joomla.org/">Joomla!</a>.
+						valid <a href="http://validator.w3.org/check/referer">XHTML</a> and <a href="http://jigsaw.w3.org/css-validator/check/referer">CSS</a>.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+
+</body></html>

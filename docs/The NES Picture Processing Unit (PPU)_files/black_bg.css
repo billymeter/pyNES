@@ -1,0 +1,26 @@
+/* black */
+#page_bg {
+	background: #333;
+         background: #f7f7f7 url(../images/black/hackborder.jpg) 0 0 repeat;
+}
+div#wrapper {
+		background: #070707 url(../images/black/mw_shadow_l.png) 0 0 repeat-y;
+}
+
+div#wrapper_r {
+	background: url(../images/black/mw_shadow_r.png) 100% 0 repeat-y;
+}
+
+
+
+div#footer {
+	background: #070707 url(../images/black/mw_footer_b.png) 0 100% repeat-x;
+}
+
+div#footer_l {
+	background: url(../images/black/mw_footer_b_l.png) 0 0 no-repeat;
+}
+
+div#footer_r {
+	background: url(../images/black/mw_footer_b_r.png) 100% 0 no-repeat;
+}
