@@ -1,3 +1,4 @@
+from wx.lib.pubsub import pub
 from pygame_display import *
 from options_dialogs import *
 
@@ -17,20 +18,28 @@ class MainView(wx.Frame):
         # CONSTRUCTORS #
         # file menu options
         file_menu = wx.Menu()
-        m_exit = file_menu.Append(wx.ID_EXIT, "Exit\tAlt-X", "Exit pyNES.")
-        m_load = file_menu.Append(wx.ID_OPEN, "&Load ROM\tAlt-L",
-                                  "Load ROM into pyNES")
+        m_load = file_menu.Append(id=wx.ID_OPEN, text="Load ROM\tCtrl-O",
+                                  help="Load ROM into pyNES")
+        m_exit = file_menu.Append(id=wx.ID_EXIT, text="Exit\tCtrl-Q",
+                                  help="Exit pyNES.")
+
         # config menu options
         conf_menu = wx.Menu()
-        m_input = conf_menu.Append(wx.ID_ANY, text="Input...",
+        m_input = conf_menu.Append(id=wx.ID_ANY, text="Input...",
                                    help="Configure Input")
-        m_video = conf_menu.Append(wx.ID_ANY, "Video...", "Configure video")
-        m_sound = conf_menu.Append(wx.ID_ANY, "Sound...", "Configure sound")
+        m_video = conf_menu.Append(id=wx.ID_ANY, text="Video...",
+                                   help="Configure video")
+        m_sound = conf_menu.Append(id=wx.ID_ANY, text="Sound...",
+                                   help="Configure sound")
 
         # BINDS #
+        self.Bind(wx.EVT_MENU_OPEN, self.RequestPause)
+        self.Bind(wx.EVT_MENU_CLOSE, self.RequestUnpause)
+        self.display.Bind(wx.EVT_KILL_FOCUS, self.RequestPause)
+        self.display.Bind(wx.EVT_SET_FOCUS, self.RequestUnpause)
         # file menu binds
         self.Bind(wx.EVT_MENU, self.Kill, m_exit)
-        self.Bind(wx.EVT_MENU, self.Kill, m_load)
+        self.Bind(wx.EVT_MENU, self.OnLoadRom, m_load)
         menu_bar.Append(file_menu, "&File")
 
         # option menu binds
@@ -61,14 +70,36 @@ class MainView(wx.Frame):
         self.Fit()
         self.Layout()
 
+    def RequestStop(self, event):
+        pub.sendMessage("Stop Emulation")
+
+    def RequestStart(self, event):
+        pub.sendMessage("Start Emulation")
+
+    def RequestPause(self, event):
+        pub.sendMessage("Pause Emulation")
+
+    def RequestUnpause(self, event):
+        pub.sendMessage("Unpause Emulation")
+
+    def OnLoadRom(self, event):
+        dlg = wx.FileDialog(parent=self, style=wx.FD_OPEN,
+                            wildcard="NES files (*.nes) | *.nes")
+        if dlg.ShowModal() == wx.ID_OK:
+            pub.sendMessage("Load ROM", rom_path=dlg.GetPath())
+            pub.sendMessage("Start Emulation")
+        dlg.Destroy()
+
     def OnOptionsInput(self, event):
-        frame = OptionsInput(parent=self, title="Input Settings")
-        frame.ShowModal()
+        dlg = OptionsInput(parent=self, title="Input Settings")
+        if dlg.ShowModal() == wx.ID_OK:
+            pub.sendMessage("Push Options.Input")
 
     def OnSize(self, event):
         self.Layout()
 
     def Kill(self, event):
+        pub.sendMessage("Stop Emulation")
         self.display.Kill(event)
         pygame.quit()
         self.Destroy()

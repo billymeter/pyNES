@@ -1,8 +1,31 @@
 import sys
 import os
-from wx.lib.pubsub import pub
+import threading
 import ConfigParser
+from wx.lib.pubsub import pub
 from view.wx_view import *
+from view.pygame_display import *
+
+
+class EmulatorThread(threading.Thread):
+    def __init__(self, rom_path):
+        threading.Thread.__init__(self)
+        self.emulator = None
+        self.running = False
+        self.rom_path = rom_path
+        self.paused = False
+
+    def run(self):
+        import time
+        self.running = True
+        while self.running:
+            if self.paused:
+                print 'do nada'
+                time.sleep(1)
+            else:
+                print 'self.emulator.run()'
+                time.sleep(1)
+        print "done running"
 
 
 class Controller(object):
@@ -157,7 +180,7 @@ class Controller(object):
     """
     def __init__(self, app):
         # emulator
-        self.emulator = None
+        self.emu_thread = EmulatorThread(None)
 
         # main window
         self.main_view = MainView(None)
@@ -171,17 +194,39 @@ class Controller(object):
             with open('error.log', 'a') as error_log:
                 error_log.write(e.message + '\n')
 
-        # bind emulator data to view
-        pub.subscribe(self.pull_input_config, "Pull Options.Input")
+        # Listen for messages from the view
+        pub.subscribe(self.start_emulation, "Start Emulation")
+        pub.subscribe(self.stop_emulation, "Stop Emulation")
+        pub.subscribe(self.pause_emulation, "Pause Emulation")
+        pub.subscribe(self.unpause_emulation, "Unpause Emulation")
+
+        pub.subscribe(self.load_rom, "Load ROM")
         pub.subscribe(self.push_input_config, "Push Options.Input")
         pub.subscribe(self.pending_input_config, "Pending Options.Input")
 
         self.main_view.Show()
 
-    def pull_input_config(self, input_view):
-        pass
+    def start_emulation(self):
+        if self.emu_thread.rom_path:
+            self.emu_thread.start()
+        else:
+            with open('error.log', 'a') as error_log:
+                error_log.write('Tried to start emulation before ROM loaded\n')
 
-    def push_input_config(self, ignored):
+    def stop_emulation(self):
+        self.emu_thread.running = False
+
+    def pause_emulation(self):
+        self.emu_thread.paused = True
+
+    def unpause_emulation(self):
+        self.emu_thread.paused = False
+
+    def load_rom(self, rom_path):
+        """ Send ROM to emulator """
+        self.emu_thread.rom_path = rom_path
+
+    def push_input_config(self):
         """ Update with user changes to gamepad settings """
         with open('settings.ini', 'wb') as configfile:
             self.config.write(configfile)
