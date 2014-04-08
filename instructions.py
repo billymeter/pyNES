@@ -285,7 +285,7 @@ def EOR_ZeroPage(cpu):
 # increment memory
 def INC(cpu):
     address = cpu.get_next_word()
-    result = cpu.read_memory(address) - 1
+    result = cpu.read_memory(address) + 1
     cpu.write_memory(address, result)
 
     set_z_flag(cpu, result)
@@ -297,7 +297,7 @@ def INC(cpu):
 # increment memory - zero page
 def INC_ZeroPage(cpu):
     address = cpu.get_next_word()
-    result = cpu.read_memory(address) - 1
+    result = cpu.read_memory(address) + 1
     cpu.write_memory(address, result)
 
     set_z_flag(cpu, result)
@@ -357,9 +357,45 @@ def LDX_AbsoluteY(cpu):
 def LDX_Immediate(cpu):
 def LDY_Absolute(cpu):
 def LDY_Immediate(cpu):
+
+# logical shift right - accumulator
 def LSR_Accumulat(cpu):
+    result = cpu.accumulator >> 1
+    
+    set_z_flag(cpu, result)
+    cpu.status[C_F] = cpu.accumulator & 0x1
+    cpu.status[N_F] = cpu.accumulator & 0x80
+    
+    cpu.accumulator = result
+    cpu.program_counter += 1
+    return 2
+
+# logical or - immediate
 def ORA_Immediate(cpu):
+    value = cpu.get_next_byte()
+    result = cpu.accumulator | value
+
+    set_z_flag(cpu, result)
+    cpu.status[N_F] = result & 0x80
+    cpu.accumulator = result
+
+    cpu.program_counter += 2
+    return 2
+
+# logical or - zero page
 def ORA_ZeroPage(cpu):
+    address = cpu.get_next_byte()
+    value = cpu.read_memory(address)
+    result = cpu.accumulator | value
+
+    set_z_flag(cpu, result)
+    cpu.status[N_F] = result & 0x80
+
+    cpu.accumulator = result
+    cpu.program_counter += 2
+    return 3
+
+# Push Accumulator
 def PHA(cpu):
 def PLA(cpu):
 def ROL_Accumulat(cpu):

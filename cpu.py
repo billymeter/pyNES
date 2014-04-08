@@ -92,3 +92,9 @@ class cpu:
             "0xf8" : instructions.SED,
             "0xf9" : instructions.SBC_AbsoluteY
         }
+
+    def read_memory(address):
+
+    def write_memory(address, value):
+
+    
