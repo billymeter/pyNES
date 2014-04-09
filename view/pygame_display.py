@@ -4,9 +4,9 @@ import pygame
 
 
 class PygameDisplay(wx.Window):
-    def __init__(self, parent, ID):
-        wx.Window.__init__(self, parent, ID)
-        self.parent = parent
+    def __init__(self, *args, **kwargs):
+        wx.Window.__init__(self, *args, **kwargs)
+        self.parent = kwargs['parent']
         self.hwnd = self.GetHandle()
         os.environ['SDL_VIDEODRIVER'] = 'windib'
         os.environ['SDL_WINDOWID'] = str(self.hwnd)

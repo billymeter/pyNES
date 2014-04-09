@@ -141,17 +141,17 @@ class OptionsInput(wx.Dialog):
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)
 
-        # gamepad panels
+        # Gamepad panels
         gamepad1_name = wx.StaticText(parent=self, label="Gamepad 1")
         self.gamepad1_panel = GamepadInput(parent=self, player=1)
         gamepad2_name = wx.StaticText(parent=self, label="Gamepad 2")
         self.gamepad2_panel = GamepadInput(parent=self, player=2)
 
-        # ok/cancel buttons
+        # Ok/cancel buttons
         ok_btn = wx.Button(self, wx.ID_OK)
         cancel_btn = wx.Button(self, wx.ID_CANCEL)
 
-        # sizer stuff
+        # Configure sizers
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(gamepad1_name, border=10, flag=wx.TOP | wx.LEFT | wx.RIGHT)
         sizer.Add(self.gamepad1_panel, border=10,
@@ -165,5 +165,46 @@ class OptionsInput(wx.Dialog):
 
         self.SetSizer(sizer)
         self.Fit()
-        self.Layout()
-        self.Show()
+
+
+class OptionsVideo(wx.Dialog):
+    def __init__(self, *args, **kwargs):
+        wx.Dialog.__init__(self, *args, **kwargs)
+
+        # Dict to convert slider values to display strings
+        self.slider_dict = {
+            0: '512 x 480',
+            1: '1024 x 960',
+            2: '1536 x 1440',
+            3: '2048 x 1920'
+        }
+
+        # Slider widget for resolution selection
+        slider_title = wx.StaticText(parent=self, label="Choose resolution:")
+        res_slider = wx.Slider(parent=self, minValue=0, maxValue=3)
+        self.res_val = wx.StaticText(parent=self, label=self.slider_dict[res_slider.GetValue()])
+
+        # Ok/cancel buttons
+        ok_btn = wx.Button(self, wx.ID_OK)
+        cancel_btn = wx.Button(self, wx.ID_CANCEL)
+
+        # Bind resolution scroll event
+        self.Bind(wx.EVT_SCROLL, self.OnSlider)
+
+        # Configure sliders
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        res_sizer = wx.BoxSizer(wx.VERTICAL)
+        res_sizer.Add(slider_title)
+        res_sizer.Add(res_slider)
+        res_sizer.Add(self.res_val, flag=wx.ALIGN_CENTER)
+        sizer.Add(res_sizer, flag=wx.ALL, border=10)
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.AddMany([ok_btn, cancel_btn])
+        sizer.Add(button_sizer, border=10, flag=wx.ALL | wx.ALIGN_RIGHT)
+
+        self.SetSizer(sizer)
+        self.Fit()
+
+    def OnSlider(self, event):
+        val = event.GetEventObject().GetValue()
+        self.res_val.SetLabel(self.slider_dict[val])

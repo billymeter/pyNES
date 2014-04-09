@@ -179,13 +179,10 @@ class Controller(object):
             EURO                 euro
     """
     def __init__(self, app):
-        # emulator
         self.emu_thread = EmulatorThread(None)
-
-        # main window
         self.main_view = MainView(None)
 
-        # emulator settings parser
+        # Emulator config parser
         self.config = ConfigParser.ConfigParser()
         try:
             with open('settings.ini') as configfile:
@@ -194,12 +191,13 @@ class Controller(object):
             with open('error.log', 'a') as error_log:
                 error_log.write(e.message + '\n')
 
-        # Listen for messages from the view
+        # Assign emulation start/stop listeners
         pub.subscribe(self.start_emulation, "Start Emulation")
         pub.subscribe(self.stop_emulation, "Stop Emulation")
         pub.subscribe(self.pause_emulation, "Pause Emulation")
         pub.subscribe(self.unpause_emulation, "Unpause Emulation")
 
+        # Assign emulation state-config listeners
         pub.subscribe(self.load_rom, "Load ROM")
         pub.subscribe(self.push_input_config, "Push Options.Input")
         pub.subscribe(self.pending_input_config, "Pending Options.Input")
