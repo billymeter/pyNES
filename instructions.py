@@ -395,7 +395,6 @@ def ORA_ZeroPage(cpu):
     cpu.program_counter += 2
     return 3
 
-# Push Accumulator
 def PHA(cpu):
 def PLA(cpu):
 def ROL_Accumulat(cpu):

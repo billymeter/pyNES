@@ -97,4 +97,6 @@ class cpu:
 
     def write_memory(address, value):
 
-    
+    def get_next_byte():
+
+    def get_next_word():
