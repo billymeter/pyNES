@@ -3,6 +3,7 @@ from wx.lib.pubsub import pub
 
 
 class UserKeyDialog(wx.Dialog):
+    """ Dialog which captures and returns user keys """
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)
         self.SetWindowStyle(wx.SIMPLE_BORDER)
@@ -23,10 +24,12 @@ class UserKeyDialog(wx.Dialog):
         self.Fit()
 
     def OnKey(self, event):
+        """ Capture key event and return KeyCode """
         self.EndModal(event.GetKeyCode())
 
 
 class GamepadInput(wx.Panel):
+    """ Gamepad input panel """
     def __init__(self, player, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
         self.SetWindowStyle(wx.DOUBLE_BORDER)
@@ -101,7 +104,7 @@ class GamepadInput(wx.Panel):
         self.SetSizer(grid_sizer)
 
     def ButtonClicked(self, event):
-        """ Open modal dialog to get user key """
+        """ Open dialog to get user key """
 
         # We need the button object
         btn = event.GetEventObject()
@@ -138,6 +141,7 @@ class GamepadInput(wx.Panel):
 
 
 class OptionsInput(wx.Dialog):
+    """ Dialog for input settings """
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)
 
@@ -168,6 +172,7 @@ class OptionsInput(wx.Dialog):
 
 
 class OptionsVideo(wx.Dialog):
+    """ Dialog for video settings """
     def __init__(self, *args, **kwargs):
         wx.Dialog.__init__(self, *args, **kwargs)
 
@@ -206,5 +211,6 @@ class OptionsVideo(wx.Dialog):
         self.Fit()
 
     def OnSlider(self, event):
+        """ Catch slider scroll event and update GUI """
         val = event.GetEventObject().GetValue()
         self.res_val.SetLabel(self.slider_dict[val])

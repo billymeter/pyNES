@@ -8,6 +8,7 @@ from view.pygame_display import *
 
 
 class EmulatorThread(threading.Thread):
+    """ Thread for emulator computations """
     def __init__(self, rom_path):
         threading.Thread.__init__(self)
         self.emulator = None
@@ -30,19 +31,20 @@ class EmulatorThread(threading.Thread):
 
 class Controller(object):
     """
-    A view should pass settings and display information to this model by using
+    The GUI should pass settings and display information to this model by using
     wx.lib.pubsub.pub.sendMessage(topic, message).
     The following (topic, message) pairs are needed:
         topic                       message
-        "Pending Options.Input"     (gamepad #, button name, key value)
+        "Load ROM"                  '/path/to/ROM'
+        "Pending Options.Input"     (player, button name, key value)
         "Push Options.Input"        None
 
     Notes:
-        "gamepad #" should be:
+        "player" should be:
             1 or 2
         "button name" should be one of the following values:
             up, down, left, right, a, b, select, start
-        "key value" should be one of the following values:
+        "key value" should be one of the following KeyASCII values:
             KeyASCII     ASCII   Common Name
             BACKSPACE    \b      backspace
             TAB          \t      tab
@@ -205,6 +207,7 @@ class Controller(object):
         self.main_view.Show()
 
     def start_emulation(self):
+        """ Initialize emulation thread """
         if self.emu_thread.rom_path:
             self.emu_thread.start()
         else:
@@ -212,30 +215,34 @@ class Controller(object):
                 error_log.write('Tried to start emulation before ROM loaded\n')
 
     def stop_emulation(self):
+        """ Stop emulation thread """
         self.emu_thread.running = False
 
     def pause_emulation(self):
+        """ Pause emulation thread """
         self.emu_thread.paused = True
 
     def unpause_emulation(self):
+        """ Unpause emulation thread """
         self.emu_thread.paused = False
 
     def load_rom(self, rom_path):
-        """ Send ROM to emulator """
+        """ Give ROM path to emulator """
         self.emu_thread.rom_path = rom_path
 
     def push_input_config(self):
-        """ Update with user changes to gamepad settings """
+        """ Write user changes to settings file """
         with open('settings.ini', 'wb') as configfile:
             self.config.write(configfile)
 
     def pending_input_config(self, key):
+        """ Write pending changes to config parser without writing to file """
         gamepad = 'Gamepad ' + str(key[0])
         button = key[1]
         key_value = key[2]
 
-        # add section if it doesn't exist; can get rid of this after adding
-        # generator for default settings file
+        # add section if it doesn't exist; can get rid of this after providing
+        # a default settings file
         if not self.config.has_section(gamepad):
             self.config.add_section(gamepad)
         self.config.set(gamepad, button, key_value)
