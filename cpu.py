@@ -100,3 +100,7 @@ class cpu:
     def get_next_byte():
 
     def get_next_word():
+
+    def push_stack(value):
+
+    def pop_stack():
