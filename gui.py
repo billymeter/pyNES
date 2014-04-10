@@ -249,6 +249,7 @@ class Controller(object):
 
 
 if __name__ == "__main__":
+    """ main """
     app = wx.App(False)
     controller = Controller(app)
     # import wx.lib.inspection
