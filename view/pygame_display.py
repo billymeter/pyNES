@@ -1,3 +1,4 @@
+import sys
 import os
 import wx
 import pygame
@@ -8,7 +9,8 @@ class PygameDisplay(wx.Window):
         wx.Window.__init__(self, *args, **kwargs)
         self.parent = kwargs['parent']
         self.hwnd = self.GetHandle()
-        os.environ['SDL_VIDEODRIVER'] = 'windib'
+        if sys.platform == "win32":
+            os.environ['SDL_VIDEODRIVER'] = 'windib'
         os.environ['SDL_WINDOWID'] = str(self.hwnd)
 
         self.SetInitialSize((512, 480))
@@ -43,5 +45,4 @@ class PygameDisplay(wx.Window):
         # Unbind methods which call Redraw() method
         self.Unbind(event=wx.EVT_PAINT, handler=self.OnPaint)
         self.Unbind(event=wx.EVT_TIMER, handler=self.Update, source=self.timer)
-
-
+        pygame.quit()

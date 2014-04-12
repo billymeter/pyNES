@@ -104,5 +104,4 @@ class MainView(wx.Frame):
     def Kill(self, event):
         pub.sendMessage("Stop Emulation")
         self.display.Kill(event)
-        pygame.quit()
         self.Destroy()
