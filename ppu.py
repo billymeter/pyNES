@@ -5,7 +5,6 @@ from collections import namedtuple
 from utils import *
 import numpy as np
 
-
 ''' Constants '''
 MirrorType = enum('Vertical', 'Horizontal', 'SingleUpper', 'SingleLower')
 AttrTable = (0x23c0, 0x27c0, 0x2bc0, 0x2fc0)
@@ -174,13 +173,9 @@ class PPU:
         self.vram_addr = np.uint16(0)
         self.vram_addr_buffer = np.uint16(0)
         self.sprite_ram_addr = np.uint16(0)
-        self.fine_x = np.uint8(0)
         self.data = np.uint8(0)
+        self.fine_x = np.uint8(0)
         self.first_write = 0
-        self.v = [0] * 15    # Current VRAM address
-        self.t = [0] * 15    # Temporary VRAM address
-        self.x = [0] * 3     # Fine X scroll
-        self.w = 0           # First or second write toggle
 
         # memory maps
         # PPUCTRL = 0x0       # $2000
@@ -258,6 +253,20 @@ class PPU:
         """ Handle a read to PPUSTATUS ($2002) """
         self.first_write = 0
 
+    def oamaddr_write(self, v):
+        """ Handle a write to OAMADDR ($2003) """
+        self.sprite_ram_addr = v
+
+    def oamdata_write(self, v):
+        """ Handle a write to OAMDATA ($2004) """
+        self.sprite_ram[self.sprite_ram_addr] = v
+        self.sprite_ram_addr += 1
+        self.sprite_ram_addr %= 0x100
+
+    def oamdata_read(self):
+        """ Handle a read to OAMDATA ($2004) """
+        return self.sprite_ram[self.sprite_ram_addr]
+
     def ppuscroll_write(self, v):
         """ Handle a write to PPUSCROLL ($2005) """
         '''
@@ -269,7 +278,7 @@ class PPU:
             vram_addr_buffer: CBA..HG FED..... = d: HGFEDCBA
             write_toggle:                      = 0
         '''
-        if not self.first_write:
+        if self.first_write:
             self.vram_addr_buffer = self.vram_addr_buffer & 0x7FE0
             self.vram_addr_buffer = self.vram_addr_buffer | ((v & 0xF8) >> 3)
             self.fine_x = v & 0x07
@@ -292,7 +301,7 @@ class PPU:
             vram_addr                          = vram_addr_buffer
             write_toggle:                      = 0
         '''
-        if not self.w:
+        if self.first_write:
             self.vram_addr_buffer = self.vram_addr_buffer & 0xFF
             self.vram_addr_buffer = self.vram_addr_buffer | ((v & 0x3F) << 8)
         else:
@@ -300,3 +309,11 @@ class PPU:
             self.vram_addr_buffer = self.vram_addr_buffer | v
             self.vram_addr = self.vram_addr_buffer
         self.first_write = not self.first_write
+
+    def ppudata_write(self, v):
+        """ Handle a write to PPUDATA ($2007) """
+        pass
+
+    def ppudata_read(self):
+        """ Handle a read to PPUDATA ($2007) """
+        pass
