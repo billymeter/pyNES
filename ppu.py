@@ -176,7 +176,7 @@ class PPU:
         self.sprite_ram_addr = np.uint16(0)
         self.fine_x = np.uint8(0)
         self.data = np.uint8(0)
-        self.write_toggle = 0
+        self.first_write = 0
         self.v = [0] * 15    # Current VRAM address
         self.t = [0] * 15    # Temporary VRAM address
         self.x = [0] * 3     # Fine X scroll
@@ -256,7 +256,7 @@ class PPU:
 
     def ppustatus_read(self):
         """ Handle a read to PPUSTATUS ($2002) """
-        self.write_toggle = 0
+        self.first_write = 0
 
     def ppuscroll_write(self, v):
         """ Handle a write to PPUSCROLL ($2005) """
@@ -269,7 +269,7 @@ class PPU:
             vram_addr_buffer: CBA..HG FED..... = d: HGFEDCBA
             write_toggle:                      = 0
         '''
-        if not self.write_toggle:
+        if not self.first_write:
             self.vram_addr_buffer = self.vram_addr_buffer & 0x7FE0
             self.vram_addr_buffer = self.vram_addr_buffer | ((v & 0xF8) >> 3)
             self.fine_x = v & 0x07
@@ -277,7 +277,7 @@ class PPU:
             self.vram_addr_buffer = self.vram_addr_buffer & 0xC1F
             self.vram_addr_buffer = (self.vram_addr_buffer |
                                     (((v & 0xF8) << 2) | ((v & 0x07) << 12)))
-        self.write_toggle = not self.write_toggle
+        self.first_write = not self.first_write
 
     def ppuaddr_write(self, v):
         """ Handle a write to PPUADDR ($2006) """
@@ -299,4 +299,4 @@ class PPU:
             self.vram_addr_buffer = self.vram_addr_buffer & 0x7F00
             self.vram_addr_buffer = self.vram_addr_buffer | v
             self.vram_addr = self.vram_addr_buffer
-        self.write_toggle = not self.write_toggle
+        self.first_write = not self.first_write
