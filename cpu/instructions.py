@@ -2,7 +2,8 @@ def ADC(cpu, mode, op1=None, op2=None):
     '''
     Add with carry
     '''
-    value, bytes = mode()
+    extra_cycles = 0
+    value, page_crossed = mode.read(cpu, op1, op2)
     value += cpu.registers['a'].read() + cpu.registers['p'].get_status('carry')
 
     cpu.registers.set_status('carry', value > 0xff)
@@ -10,14 +11,32 @@ def ADC(cpu, mode, op1=None, op2=None):
     cpu.registers.set_status('zero', value & 0xff)
     cpu.set_status('overflow', total != cpu.registers['a'].read())
 
-    return
+    if page_crossed:
+        extra_cycles = 1
+
+    return extra_cycles
     
-
-
 def AND(cpu, mode, op1=None, op2=None):
+    '''Logical AND'''
+    extra_cycles = 0
+    value, page_crossed = mode.read(cpu, op1, op2)
+    a = cpu.registers['a'].read()
+
+    result = a & value
+    cpu.registers['a'].write(result)
+    if (result & 0xff) == 0:
+        cpu.set_status('zero', 1)
+    if (result >> 7 & 0x1):
+        cpu.set_status('negative', 1)
+
+    if page_crossed:
+        extra_cycles = 1
+
+    return extra_cycles
+
 def ASL(cpu, mode, op1=None, op2=None):
     '''Arithmetic shift left'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     bit7 = value & 0x80
     cpu.set_status('carry', bit7)
 
@@ -33,7 +52,7 @@ def ASL(cpu, mode, op1=None, op2=None):
 
 def BCC(cpu, mode, op1=None, op2=None):
     '''Branch if carry clear'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['carry'] == 0:
@@ -52,7 +71,7 @@ def BCC(cpu, mode, op1=None, op2=None):
 
 def BCS(cpu, mode, op1=None, op2=None):
     '''Branch if carry set'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['carry'] == 1:
@@ -71,7 +90,7 @@ def BCS(cpu, mode, op1=None, op2=None):
 
 def BEQ(cpu, mode, op1=None, op2=None):
     '''Branch if equal'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['zero'] == 1:
@@ -90,7 +109,7 @@ def BEQ(cpu, mode, op1=None, op2=None):
 
 def BIT(cpu, mode, op1=None, op2=None):
     '''Bit test'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
     value &= a
 
@@ -105,7 +124,7 @@ def BIT(cpu, mode, op1=None, op2=None):
 def BMI(cpu, mode, op1=None, op2=None):
     '''Branch if minus'''
     '''Branch if equal'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['negative'] == 1:
@@ -124,7 +143,7 @@ def BMI(cpu, mode, op1=None, op2=None):
 
 def BNE(cpu, mode, op1=None, op2=None):
     '''Branch if not equal'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['zero'] == 0:
@@ -143,7 +162,7 @@ def BNE(cpu, mode, op1=None, op2=None):
 
 def BPL(cpu, mode, op1=None, op2=None):
     '''Branch if positive'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['negative'] == 0:
@@ -163,7 +182,7 @@ def BPL(cpu, mode, op1=None, op2=None):
 def BRK(cpu, mode, op1=None, op2=None):
 def BVC(cpu, mode, op1=None, op2=None):
     '''Branch if overflow clear'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['overflow'] == 0:
@@ -182,7 +201,7 @@ def BVC(cpu, mode, op1=None, op2=None):
 
 def BVS(cpu, mode, op1=None, op2=None):
     '''Branch if overflow set'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
     if cpu.get_status['overflow'] == 1:
@@ -237,7 +256,7 @@ def DEY(cpu, mode, op1=None, op2=None):
 
 def EOR(cpu, mode, op1=None, op2=None):
     '''Exclusive OR'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
     extra_cycles = 0
 
@@ -282,7 +301,7 @@ def JSR(cpu, mode, op1=None, op2=None):
 
 def LDA(cpu, mode, op1=None, op2=None):
     '''Load accumulator'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['a'].write(value)
     extra_cycles = 0
 
@@ -298,7 +317,7 @@ def LDA(cpu, mode, op1=None, op2=None):
 
 def LDX(cpu, mode, op1=None, op2=None):
     '''Load X register'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['x'].write(value)
     extra_cycles = 0
 
@@ -314,7 +333,7 @@ def LDX(cpu, mode, op1=None, op2=None):
 
 def LDY(cpu, mode, op1=None, op2=None):
     '''Load Y register'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['y'].write(value)
     extra_cycles = 0
 
@@ -335,7 +354,7 @@ def NOP(cpu, mode, op1=None, op2=None):
 
 def ORA(cpu, mode, op1=None, op2=None):
     '''Logical Inclusive OR'''
-    value, page_crossed = mode()
+    value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
     extra_cycles = 0
 

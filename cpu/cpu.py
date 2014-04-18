@@ -22,12 +22,14 @@ class CPU:
             # use one copy rather than mirroring them all since we have a
             # mod operator
             elif 0x0 <= addr < 0x2000:
-                base_addr = addr % 0x800
-                return self.memory[base_addr]
+                #base_addr = addr % 0x800
+                #return self.memory[base_addr]
+                return self.memory[addr]
             # I/O Registers, mirrored a bunch of times
             elif 0x2000 <= addr < 0x4000:
-                base_addr = (addr - 0x2000) % 0x8
-                return self.memory[base_addr + 0x2000]
+                #base_addr = (addr - 0x2000) % 0x8
+                #return self.memory[base_addr + 0x2000]
+                return self.memory[addr]
             # Unmirrored I/O registers, Expansion ROM, and Save RAM
             elif 0x4000 <= addr < 0x8000:
                 return self.memory[addr]
@@ -42,12 +44,14 @@ class CPU:
             # use one copy rather than mirroring them all since we have a
             # mod operator
             elif 0x0 <= addr < 0x2000:
-                base_addr = addr % 0x800
-                self.memory[base_addr] = value
+                #base_addr = addr % 0x800
+                #self.memory[base_addr] = value
+                self.memory[addr] = value
             # I/O Registers, mirrored a bunch of times
             elif 0x2000 <= addr < 0x4000:
-                base_addr = (addr - 0x2000) % 0x8
-                self.memory[base_addr + 0x2000] = value
+                #base_addr = (addr - 0x2000) % 0x8
+                #self.memory[base_addr + 0x2000] = value
+                self.memory[addr] = value
             # Unmirrored I/O registers
             elif 0x4000 <= addr < 0x4020:
                 self.memory[addr] = value
