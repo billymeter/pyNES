@@ -490,8 +490,7 @@ class PPU(object):
                     set_bit(self.status, StatusBit.InVblank)
                 if self.nmi_on_vblank == 1 and not self.ignore_nmi:
                     # request interrupt from CPU!
-                    # cpu.request_interrupt()
-                    pass
+                    self._nes.cpu.set_status('interrupt', 1)
                 self.render_output()
         elif self.scanline == 260:
             if self.cycle == 1:
@@ -572,7 +571,7 @@ class PPU(object):
     def get_bg_tbl_address(self, v):
         table = 1 if self.background_tbl_addr else 0
 
-        return table | (v << 4) | self.vram_addr >> 12
+        return v | (v << 4) | self.vram_addr >> 12
 
     def evaluate_sprites(self):
         if self.sprite_size:
