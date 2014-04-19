@@ -35,13 +35,39 @@ class Cartridge(object):
         if (rom[6] >> 1) & 0x1:
             self.battery = True
 
+        self.data = rom[16:]
+
         # The lower 4 bits of the mapper come from bits rom[6].4-7,
         # and the upper 4 bits come from rom[7].4-7.
         mapper = (rom[6] >> 4) | (rom[7] & 0xf0)
 
         # only nrom mapper (mapper 0) is currently supported
-        if mapper != 0:
+        if mapper == 0:
+            self.load_nrom()
+        else:
             logger.error("Unsupported memory mapper")
-            raise Exception('ROM file uses unsupported memory mapper')
+            raise Exception("Unsupported memory mapper")
 
-        self.data = rom[16:]
+    def load_nrom(self):
+        self.prg_banks = [[] for i in range(self.prg_bank_count)]
+
+        # add prg banks from data
+        for i in range(self.prg_bank_count):
+            bank = [0] * 0x4000
+            for offset in range(0x4000):
+                bank[offset] = self.data[(0x4000 * i) + offset]
+            self.prg_banks[i] = bank
+
+        # add chr banks from data (they're after prg banks)
+        chr_rom = self.data[0x4000 * len(self.prg_banks):]
+
+        if self.chr_bank_count > 0:
+            self.chr_banks = [[] for i in range(self.chr_bank_count)]
+        else:
+            self.chr_banks = [[]]
+
+        for i in range(len(self.chr_banks)):
+            self.chr_banks[i] = [0] * 0x2000
+
+            for byte in range(0x2000):
+                self.chr_banks[i][byte] = chr_rom[byte]

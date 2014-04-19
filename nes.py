@@ -1,7 +1,7 @@
 '''
 The entry point for the emulator
 '''
-import cpu
+import cpu.cpu
 import ppu
 import cartridge
 
