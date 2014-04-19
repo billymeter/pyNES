@@ -60,7 +60,7 @@ class AddressingMode:
         def write(cpu, op1, op2=None, value):
             return None, False
 
-    class Implicit:
+    class Implied:
         byte_size = 1
         def read(cpu, op1=None, op2=None):
             return None, False
