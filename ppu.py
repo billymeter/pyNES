@@ -205,13 +205,13 @@ class PPU(object):
         self.vram_addr = 0
         self.vram_addr_buffer = 0
         self.sprite_ram_addr = 0
-        self.data = 0
+        self.vram_data = 0
         self.fine_x = 0
         self.vram_addr_latch = 0
         self.shift16_1 = 0
         self.shift16_2 = 0
-        self.shift8_1 = 0
-        self.shift8_2 = 0
+        # self.shift8_1 = 0
+        # self.shift8_2 = 0
 
         # other state
         self.frame_count = 0
@@ -421,12 +421,12 @@ class PPU(object):
     def ppudata_read(self):
         """ Handle a read to PPUDATA ($2007) """
         if 0x2000 <= self.vram_addr < 0x3000:
-            data = self.vram_data_buffer
+            self.vram_data = self.vram_data_buffer
             self.vram_data_buffer = self.nametables.read(self.vram_addr)
         elif self.vram_addr < 0x3f00:
-            data = self.vram_data_buffer
+            self.vram_data = self.vram_data_buffer
 
-            if self.vram_Addr < 0x2000:
+            if self.vram_addr < 0x2000:
                 self.vram_data_buffer = self.patterntables.read(self.vram_addr)
             else:
                 self.vram_data_buffer = self.vram[self.vram_addr]
@@ -440,7 +440,7 @@ class PPU(object):
             address = self.vram_addr
             if address & 0xf == 0:
                 address = 0
-            data = self.palette_ram[address & 0x1f]
+            self.vram_data = self.palette_ram[address & 0x1f]
 
         self.inc_vram_address()
 
@@ -572,7 +572,7 @@ class PPU(object):
     def get_bg_tbl_address(self, v):
         table = 1 if self.background_tbl_addr else 0
 
-        return v | (v << 4) | self.vram_addr >> 12
+        return table | (v << 4) | self.vram_addr >> 12
 
     def evaluate_sprites(self):
         if self.sprite_size:
