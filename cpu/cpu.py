@@ -6,6 +6,9 @@ import numpy as np
 from cpu import instructions
 from cpu.addressmodes import *
 
+logging.basicConfig(filename='cpu.log', level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
 class CPU:
     '''
     CPU emulation
@@ -110,10 +113,11 @@ class CPU:
 
 
     ####
-    def __init__(self, nes):
+    def __init__(self, nes, cart):
         self._nes = nes
         self.memory = CPU.Memory(nes)
-        self.cycles = 0
+        self._cycles = 0
+        self._cart = cart
 
         # Create the CPU registers
         self.registers = {'pc': CPU.Register(np.uint16), 'sp': CPU.Register(np.uint8),
@@ -291,6 +295,29 @@ class CPU:
             0xfd: CPU.Instruction(self, instructions.SBC, Absolute_X, 4),
             0xfe: CPU.Instruction(self, instructions.INC, Absolute_X, 7)
         }
+
+    def execute(self):
+        # fetch
+        pc = cpu.registers['pc'].read()
+        opcode = cpu.memory.read(pc)
+        
+        # decode
+        operands = self.opcodes[opcode]._addressing.byte_size
+        ops = [None, None]
+        for i in range(operands):
+            if i == 0: continue # skip instruction opcode
+            ops[i] = cpu.memory.read(pc + i) # fill in operands
+        # update program counter
+        cpu.registers['pc'].write(pc + operands)
+
+        #execute
+        return self.op[opcode](self, ops[0], ops[1])
+        #self._cycles += cycles
+
+    def run(self):
+        while True:
+            cycles = execute()
+            self._cycles += cycles
 
     # status methods
     def get_status(self, flag):
