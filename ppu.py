@@ -5,7 +5,7 @@ from collections import namedtuple
 from utils import *
 
 ''' Constants '''
-MirrorType = enum('Vertical', 'Horizontal', 'SingleUpper', 'SingleLower')
+MirrorType = enum('Horizontal', 'Vertical', 'SingleUpper', 'SingleLower')
 # PatternTablePos = (0x0000, 0x1000)
 PATTERN_TABLE_SIZE = 0x1000
 # AttrTablePos = (0x23c0, 0x27c0, 0x2bc0, 0x2fc0)
@@ -114,15 +114,15 @@ class NameTables(object):
     def set_mirroring(self, m):
         self.mirroring = m
 
-        if self.mirroring == MirrorType.Vertical:
-            self.logical_tables[0] = self.nametable0
-            self.logical_tables[1] = self.nametable1
-            self.logical_tables[2] = self.nametable0
-            self.logical_tables[3] = self.nametable1
-        elif self.mirroring == MirrorType.Horizontal:
+        if self.mirroring == MirrorType.Horizontal:
             self.logical_tables[0] = self.nametable0
             self.logical_tables[1] = self.nametable0
             self.logical_tables[2] = self.nametable1
+            self.logical_tables[3] = self.nametable1
+        elif self.mirroring == MirrorType.Vertical:
+            self.logical_tables[0] = self.nametable0
+            self.logical_tables[1] = self.nametable1
+            self.logical_tables[2] = self.nametable0
             self.logical_tables[3] = self.nametable1
         elif self.mirroring == MirrorType.SingleUpper:
             self.logical_tables[0] = self.nametable0
@@ -421,10 +421,10 @@ class PPU(object):
     def ppudata_read(self):
         """ Handle a read to PPUDATA ($2007) """
         if 0x2000 <= self.vram_addr < 0x3000:
-            self.vram_data = self.vram_data_buffer
+            data = self.vram_data_buffer
             self.vram_data_buffer = self.nametables.read(self.vram_addr)
         elif self.vram_addr < 0x3f00:
-            self.vram_data = self.vram_data_buffer
+            data = self.vram_data_buffer
 
             if self.vram_addr < 0x2000:
                 self.vram_data_buffer = self.patterntables.read(self.vram_addr)
@@ -440,9 +440,11 @@ class PPU(object):
             address = self.vram_addr
             if address & 0xf == 0:
                 address = 0
-            self.vram_data = self.palette_ram[address & 0x1f]
+            data = self.palette_ram[address & 0x1f]
 
         self.inc_vram_address()
+
+        return data
 
     def dma_write(self, v):
         """ Handle a write to $4014 """

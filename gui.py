@@ -5,28 +5,33 @@ import ConfigParser
 from wx.lib.pubsub import pub
 from view.wx_view import *
 from view.pygame_display import *
+import nes
 
 
 class EmulatorThread(threading.Thread):
     """ Thread for emulator computations """
     def __init__(self, rom_path):
         threading.Thread.__init__(self)
-        self.emulator = None
+        self.emulator = nes.NES()
         self.running = False
         self.rom_path = rom_path
         self.paused = False
+        self.save = False
+
+        with open(rom_path, 'rb') as rom:
+            self.emulator.load_rom(rom)
 
     def run(self):
-        import time
         self.running = True
         while self.running:
-            if self.paused:
-                print 'do nada'
-                time.sleep(1)
-            else:
-                print 'self.emulator.run()'
-                time.sleep(1)
-        print "done running"
+            while self.paused:
+                if self.save:
+                    self.emulator.save_state()
+                    self.save = False
+            self.emulator.step()
+        if self.save:
+            self.emulator.save_state()
+            self.save = False
 
 
 class Controller(object):
