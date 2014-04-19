@@ -57,14 +57,14 @@ def BCC(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['carry'] == 0:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
@@ -76,14 +76,14 @@ def BCS(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['carry'] == 1:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
@@ -95,14 +95,14 @@ def BEQ(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['zero'] == 1:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
@@ -129,14 +129,14 @@ def BMI(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['negative'] == 1:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
@@ -148,14 +148,14 @@ def BNE(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['zero'] == 0:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
@@ -167,19 +167,33 @@ def BPL(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['negative'] == 0:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
 def BRK(cpu, mode, op1=None, op2=None):
+    '''Force Interrupt'''
+    pc = cpu.registers['pc'].read()
+    cpu.push_stack(pc & 0xff)
+    cpu.push_stack(pc >> 8)
+    cpu.push_stack(cpu.registers['p'].read())
+
+    irq = cpu.memory.read(0xfffe)
+    irq |= cpu.memory.read(0xffff)
+
+    cpu.registers['pc'].write(irq)
+    cpu.set_status('break', 1)
+
+    return 0
+
 def BVC(cpu, mode, op1=None, op2=None):
     '''Branch if overflow clear'''
     value, page_crossed = mode.read(cpu, op1, op2)
@@ -187,14 +201,14 @@ def BVC(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['overflow'] == 0:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
@@ -206,14 +220,14 @@ def BVS(cpu, mode, op1=None, op2=None):
 
     if cpu.get_status['overflow'] == 1:
         # see if we are going into a new page
-        page = value / 0x800
-        pc = cpu.registers['pc'].read()
-        newpage = (pc + value) / 0x800
+        #page = value / 0x800
+        #pc = cpu.registers['pc'].read()
+        #newpage = (pc + value) / 0x800
 
-        if newpage == page:
-            extra_cycles = 1
-        else:
+        if page_crossed:
             extra_cycles = 2
+        else:
+            extra_cycles = 1
 
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
@@ -239,9 +253,68 @@ def CLV(cpu, mode, op1=None, op2=None):
     return 0
 
 def CMP(cpu, mode, op1=None, op2=None):
+    '''Compare'''
+    extra_cycles = 0
+    value, page_crossed = mode.read(cpu, op1, op2)
+    a = cpu.registers['a'].read()
+    result = a - value
+
+    if a >= value:
+        cpu.set_status('carry', 1)
+    if a == value:
+        cpu.set_status('zero', 1)
+    if (result >> 7 & 0x1):
+        cpu.set_status('negative', 1)
+
+    if page_crossed:
+        extra_cycles = 1
+
+    return extra_cycles
+
 def CPX(cpu, mode, op1=None, op2=None):
+    '''Compare X register'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    x = cpu.registers['x'].read()
+    result = x - value
+    
+    if x >= value:
+        cpu.set_status('carry', 1)
+    if x == value:
+        cpu.set_status('zero', 1)
+    if (result >> 7 & 0x1):
+        cpu.set_status('negative', 1)
+
+    return 0
+
 def CPY(cpu, mode, op1=None, op2=None):
+    '''Compare Y register'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    y = cpu.registers['y'].read()
+    result = y - value
+    
+    if y >= value:
+        cpu.set_status('carry', 1)
+    if y == value:
+        cpu.set_status('zero', 1)
+    if (result >> 7 & 0x1):
+        cpu.set_status('negative', 1)
+
+    return 0
+
 def DEC(cpu, mode, op1=None, op2=None):
+    '''Decrement memory'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    
+    result = (value - 1) & 0xff
+    mode.write(cpu, op1, op2, result)
+
+    if result == 0:
+        cpu.set_status('zero', 1)
+
+    if result >> 7:
+        cpu.set_status('negative', 1)
+    return 0
+
 def DEX(cpu, mode, op1=None, op2=None):
     '''Decrement X register'''
     value = cpu.registers['x'].read()
@@ -260,7 +333,7 @@ def EOR(cpu, mode, op1=None, op2=None):
     a = cpu.registers['a'].read()
     extra_cycles = 0
 
-    result = a ^ value
+    result = (a ^ value) & 0xff
     if result == 0:
         cpu.set_status('zero', 1)
     if result >> 7:
@@ -272,6 +345,19 @@ def EOR(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def INC(cpu, mode, op1=None, op2=None):
+    '''Increment memory'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    
+    result = (value + 1) & 0xff
+    mode.write(cpu, op1, op2, result)
+
+    if result == 0:
+        cpu.set_status('zero', 1)
+
+    if result >> 7:
+        cpu.set_status('negative', 1)
+    return 0
+
 def INX(cpu, mode, op1=None, op2=None):
     '''Increment X register'''
     value = cpu.registers['x'].read()
@@ -295,7 +381,10 @@ def JSR(cpu, mode, op1=None, op2=None):
     address = mode()
     pc = cpu.registers['pc'].read()
 
-    cpu.push_stack(pc + 3)
+    pc += 3
+    cpu.push_stack(pc & 0xff)
+    cpu.push_stack(pc >> 8)
+
     cpu.registers['pc'].write(address)
     return 0
 
@@ -348,6 +437,19 @@ def LDY(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def LSR(cpu, mode, op1=None, op2=None):
+    '''Logical Shift Right'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+
+    result = (value >> 1) & 0xff
+    mode.write(cpu, op1, op2, result)
+
+    cpu.set_status('carry', value & 0x1)
+    if value == 0:
+        cpu.set_status('zero', 1)
+    if value >> 7:
+        cpu.set_status('negative', 1)
+    return 0
+
 def NOP(cpu, mode, op1=None, op2=None):
     '''No operation'''
     return 0
@@ -355,7 +457,6 @@ def NOP(cpu, mode, op1=None, op2=None):
 def ORA(cpu, mode, op1=None, op2=None):
     '''Logical Inclusive OR'''
     value, page_crossed = mode.read(cpu, op1, op2)
-    a = cpu.registers['a'].read()
     extra_cycles = 0
 
     result |= value
@@ -407,11 +508,45 @@ def PLP(cpu, mode, op1=None, op2=None):
     return 0
 
 def ROL(cpu, mode, op1=None, op2=None):
+    '''Rotate Left'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    bit7 = value >> 7
+    carry = cpu.get_status('carry')
+    result = (value << 1) & 0xff
+    result = (result & 0xfe) | carry
+
+    mode.write(cpu, op1, op2, result)
+
+    cpu.set_status('carry', bit7)
+    if result == 0:
+        cpu.set_status('zero', 1)
+    if result >> 7:
+        cpu.set_status('negative', 1)
+    return 0
+
 def ROR(cpu, mode, op1=None, op2=None):
+    '''Rotate Right'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    bit0 = value & 0x1
+    carry = cpu.get_status('carry')
+    result = (value >> 1) & 0xff
+    result = (result & 0x7f) | (carry << 7)
+
+    mode.write(cpu, op1, op2, result)
+
+    cpu.set_status('carry', bit0)
+    if result == 0:
+        cpu.set_status('zero', 1)
+    if result >> 7:
+        cpu.set_status('negative', 1)
+    return 0
+
 def RTI(cpu, mode, op1=None, op2=None):
     '''Return from interrupt'''
     p = cpu.pop_stack()
     pc = cpu.pop_stack()
+    pc = pc << 8
+    pc |= cpu.pop_stack()
 
     cpu.registers['p'].write(p)
     cpu.registers['pc'].write(pc)
@@ -430,11 +565,35 @@ def RTI(cpu, mode, op1=None, op2=None):
 def RTS(cpu, mode, op1=None, op2=None):
     '''Return from subroutine'''
     pc = cpu.pop_stack()
+    pc = pc << 8
+    pc |= cpu.pop_stack()
+
     cpu.registers['pc'].write(pc)
 
     return 0
 
 def SBC(cpu, mode, op1=None, op2=None):
+    '''Subtract with carry'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    extra_cycles = 0
+
+    a = cpu.registers['a'].read()
+    c = cpu.get_status('carry')
+    result = a - value - (1 - c)
+
+    cpu.registers['a'].write(result)
+    if result < 0:
+        cpu.set_status('carry', 0)
+        cpu.set_status('overflow', 1)
+    if result == 0:
+        cpu.set_status('zero', 1)
+    if (result & 0xff) >> 7:
+        cpu.set_status('negative', 1)
+
+    if page_crossed:
+        extra_cycles = 1
+    return extra_cycles
+
 def SEC(cpu, mode, op1=None, op2=None):
     '''Set Carry flag'''
     cpu.set_status('carry', 1)
@@ -451,8 +610,23 @@ def SEI(cpu, mode, op1=None, op2=None):
     return 0
 
 def STA(cpu, mode, op1=None, op2=None):
+    '''Store accumulator'''
+    a = cpu.registers['a'].read()
+    mode.write(cpu, op1, op2, a)
+    return 0
+
 def STX(cpu, mode, op1=None, op2=None):
+    '''Store X register'''
+    x = cpu.registers['x'].read()
+    mode.write(cpu, op1, op2, x)
+    return 0
+    
 def STY(cpu, mode, op1=None, op2=None):
+    '''Store Y register'''
+    y = cpu.registers['y'].read()
+    mode.write(cpu, op1, op2, y)
+    return 0
+    
 def TAX(cpu, mode, op1=None, op2=None):
     '''Transfer accumulator to X'''
     a = cpu.registers['a'].read()

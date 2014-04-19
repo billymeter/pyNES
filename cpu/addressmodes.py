@@ -1,4 +1,12 @@
 class AddressingMode:
+    class Accumulator:
+        byte_size = 1
+        def read(cpu, op1=None, op2=None):
+            return cpu.registers['a'].read(), False
+        def write(cpu, op1=None, op2=None, value):
+            cpu.registers['a'].write(value)
+            return True
+
     class Absolute:
         byte_size = 3
         def read(cpu, op1, op2):
