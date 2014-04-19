@@ -289,9 +289,7 @@ class CPU:
             0xf6: CPU.Instruction(self, instructions.INC, Zero_Page_X, 6),
             0xf8: CPU.Instruction(self, instructions.SED, Implied, 2),
             0xfd: CPU.Instruction(self, instructions.SBC, Absolute_X, 4),
-            0xfe: CPU.Instruction(self, instructions.INC, Absolute_X, 7),
-
-            
+            0xfe: CPU.Instruction(self, instructions.INC, Absolute_X, 7)
         }
 
     # status methods
