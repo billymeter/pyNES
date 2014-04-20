@@ -29,7 +29,7 @@ class CPU:
             elif 0x0 <= addr < 0x2000:
                 #base_addr = addr % 0x800
                 #return self.memory[base_addr]
-                return self.memory[addr]
+                return self._memory[addr]
             # I/O Registers, mirrored a bunch of times
             elif 0x2000 <= addr < 0x4000:
                 #base_addr = (addr - 0x2000) % 0x8
@@ -38,11 +38,11 @@ class CPU:
                 return self._nes.ppu.read_register(0x2000 + offset)
             # Unmirrored I/O registers, Expansion ROM, and Save RAM
             elif 0x4000 <= addr < 0x8000:
-                return self.memory[addr]
+                return self._memory[addr]
             # Cartridge ROM
             elif 0x8000 <= addr < 0x10000:
                 # return the cartridge ROM value
-                self._nes.rom.read_prg(addr)
+                return self._nes.rom.read_prg(addr)
 
         def write(self, addr, value):
             if addr < 0x0 or addr > 0xffff:
