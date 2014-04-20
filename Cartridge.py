@@ -60,8 +60,12 @@ class Cartridge(object):
         for i in range(self.prg_bank_count):
             bank = [0] * 0x4000
             for offset in range(0x4000):
-                bank[offset] = self.data[(0x4000 * i) + offset]
+                bank[offset] = frombyte(self.data[(0x4000 * i) + offset])
             self.prg_banks[i] = bank
+        # with open('prgdump.txt', 'w') as out:
+        #     for bank in self.prg_banks:
+        #         for byte in bank:
+        #             out.write(byte)
 
         # add chr banks from data (they're after prg banks)
         chr_rom = self.data[0x4000 * len(self.prg_banks):]
@@ -76,20 +80,24 @@ class Cartridge(object):
 
             if self.chr_bank_count > 0:
                 for offset in range(0x1000):
-                    bank[offset] = chr_rom[(0x1000 * i) + offset]
+                    bank[offset] = frombyte(chr_rom[(0x1000 * i) + offset])
             self.chr_banks[i] = bank
+        # with open('chrdump.txt', 'w') as out:
+        #     for bank in self.chr_banks:
+        #         for byte in bank:
+        #             out.write(byte)
 
-    def read_prg(self, address, size=1):
+    def read_prg(self, address):
         offset = address & 0x3fff
         if address >= 0xc000:
-            return self.prg_banks[len(self.prg_banks)-1][offset:offset + size]
+            return self.prg_banks[len(self.prg_banks)-1][offset]
 
         return self.prg_banks[0][offset]
 
-    def read_chr(self, address, size=1):
+    def read_chr(self, address):
         offset = address & 0xfff
         if address >= 0x1000:
-            return self.chr_banks[len(self.chr_banks)-1][offset:offset + size]
+            return self.chr_banks[len(self.chr_banks)-1][offset]
 
         return self.chr_banks[0][address & 0xfff]
 
@@ -99,3 +107,10 @@ class Cartridge(object):
             return
 
         self.chr_banks[0][address & 0xfff] = value
+
+    def read_tile(self, address):
+        offset = address & 0xfff
+        if address >= 0x1000:
+            return self.chr_banks[len(self.chr_banks)-1][offset:offset + 16]
+
+        return self.chr_banks[0][offset:offset + 16]
