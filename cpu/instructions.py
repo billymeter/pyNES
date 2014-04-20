@@ -4,12 +4,12 @@ def ADC(cpu, mode, op1=None, op2=None):
     '''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
-    value += cpu.registers['a'].read() + cpu.registers['p'].get_status('carry')
+    value += cpu.registers['a'].read() + cpu.get_status('carry')
 
-    cpu.registers.set_status('carry', value > 0xff)
+    cpu.set_status('carry', value > 0xff)
     cpu.registers['a'].write(value)
-    cpu.registers.set_status('zero', value & 0xff)
-    cpu.set_status('overflow', total != cpu.registers['a'].read())
+    cpu.set_status('zero', value & 0xff)
+    cpu.set_status('overflow', value != cpu.registers['a'].read())
 
     if page_crossed:
         extra_cycles = 1
@@ -55,7 +55,7 @@ def BCC(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['carry'] == 0:
+    if cpu.get_status('carry') == 0:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -65,7 +65,8 @@ def BCC(cpu, mode, op1=None, op2=None):
             extra_cycles = 2
         else:
             extra_cycles = 1
-
+    
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
@@ -74,7 +75,7 @@ def BCS(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['carry'] == 1:
+    if cpu.get_status('carry') == 1:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -84,7 +85,8 @@ def BCS(cpu, mode, op1=None, op2=None):
             extra_cycles = 2
         else:
             extra_cycles = 1
-
+    
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
@@ -93,7 +95,7 @@ def BEQ(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['zero'] == 1:
+    if cpu.get_status('zero') == 1:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -104,6 +106,7 @@ def BEQ(cpu, mode, op1=None, op2=None):
         else:
             extra_cycles = 1
 
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
@@ -127,7 +130,7 @@ def BMI(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['negative'] == 1:
+    if cpu.get_status('negative') == 1:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -138,6 +141,7 @@ def BMI(cpu, mode, op1=None, op2=None):
         else:
             extra_cycles = 1
 
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
@@ -146,7 +150,7 @@ def BNE(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['zero'] == 0:
+    if cpu.get_status('zero') == 0:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -157,6 +161,7 @@ def BNE(cpu, mode, op1=None, op2=None):
         else:
             extra_cycles = 1
 
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
@@ -165,7 +170,7 @@ def BPL(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['negative'] == 0:
+    if cpu.get_status('negative') == 0:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -176,12 +181,14 @@ def BPL(cpu, mode, op1=None, op2=None):
         else:
             extra_cycles = 1
 
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
 def BRK(cpu, mode, op1=None, op2=None):
     '''Force Interrupt'''
     pc = cpu.registers['pc'].read()
+    print "[DEBUG] - [BRK] pc: {}".format(pc)
     cpu.push_stack(pc & 0xff)
     cpu.push_stack(pc >> 8)
     cpu.push_stack(cpu.registers['p'].read())
@@ -199,7 +206,7 @@ def BVC(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['overflow'] == 0:
+    if cpu.get_status('overflow') == 0:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -210,6 +217,7 @@ def BVC(cpu, mode, op1=None, op2=None):
         else:
             extra_cycles = 1
 
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
@@ -218,7 +226,7 @@ def BVS(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status['overflow'] == 1:
+    if cpu.get_status('overflow') == 1:
         # see if we are going into a new page
         #page = value / 0x800
         #pc = cpu.registers['pc'].read()
@@ -229,6 +237,7 @@ def BVS(cpu, mode, op1=None, op2=None):
         else:
             extra_cycles = 1
 
+    pc = cpu.registers['pc'].read()
     cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
@@ -372,16 +381,20 @@ def INY(cpu, mode, op1=None, op2=None):
 
 def JMP(cpu, mode, op1=None, op2=None):
     '''Jump'''
-    address = mode()
+    address, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['pc'].write(address)
     return 0
 
 def JSR(cpu, mode, op1=None, op2=None):
     '''Jump to subroutine'''
-    address = mode()
+    address, page_crossed = mode.read(cpu, op1, op2)
     pc = cpu.registers['pc'].read()
+    print " [DEBUG] [IN JSR] sp:{:04X}".format(cpu.registers['sp'].read())
 
+    # we want to push the next instruction to the stack, not the JSR instruction
+    # again, so increment it
     pc += 3
+    print " [DEBUG] [IN JSR] pc:{:04X}".format(pc)
     cpu.push_stack(pc & 0xff)
     cpu.push_stack(pc >> 8)
 
@@ -459,11 +472,13 @@ def ORA(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    result |= value
+    a = cpu.registers['a'].read()
+
+    result = a | value
     if result == 0:
         cpu.set_status('zero', 1)
     if result >> 7:
-        spu.set_status('negative', 1)
+        cpu.set_status('negative', 1)
 
     if page_crossed:
         extra_cycles = 1

@@ -11,6 +11,8 @@ from addressmodes import *
 logging.basicConfig(filename='cpu.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+f=open("cpu.log","w")
+
 class CPU:
     '''
     CPU emulation
@@ -21,15 +23,13 @@ class CPU:
             self._memory = bytearray(0x10000)
 
         def read(self, addr):
-            if addr < 0x0 or addr > 0xffff:
-                raise Exception("Out of memory bounds read at {:#06x}".format(addr))
             # The Zero Page, Stack, and RAM mirrored 4 times, we will only
             # use one copy rather than mirroring them all since we have a
             # mod operator
-            elif 0x0 <= addr < 0x2000:
+            if 0x0 <= addr < 0x2000:
                 #base_addr = addr % 0x800
                 #return self.memory[base_addr]
-                return self._memory[addr]
+                return self._memory[addr] & 0xff
             # I/O Registers, mirrored a bunch of times
             elif 0x2000 <= addr < 0x4000:
                 #base_addr = (addr - 0x2000) % 0x8
@@ -38,11 +38,13 @@ class CPU:
                 return self._nes.ppu.read_register(0x2000 + offset)
             # Unmirrored I/O registers, Expansion ROM, and Save RAM
             elif 0x4000 <= addr < 0x8000:
-                return self._memory[addr]
+                return self._memory[addr] & 0xff
             # Cartridge ROM
             elif 0x8000 <= addr < 0x10000:
                 # return the cartridge ROM value
-                return self._nes.rom.read_prg(addr)
+                return (self._nes.rom.read_prg(addr) & 0xff)
+            else:
+                raise Exception("Out of memory bounds read at {:#06x}".format(addr))
 
         def write(self, addr, value):
             if addr < 0x0 or addr > 0xffff:
@@ -75,15 +77,19 @@ class CPU:
 
 
     class Register:
-        def __init__(self, typ):
-            self._typ = typ
-            self._value = 0xff
+        def __init__(self, size):
+            self._size = size
+            self._value = 0x00
 
         def read(self):
-            return self._typ(self._value)
+            return self._value
 
         def write(self, value):
-            self._value = self._typ(value)
+            if self._size == 8:
+                bits = 0xff
+            else:
+                bits = 0xffff
+            self._value = value & bits
 
         def assign_bit(self, bit_number, set_it):
             if set_it:
@@ -92,7 +98,7 @@ class CPU:
                 self._value &= ~(0x1 << bit_number)
 
         def adjust(self, value=1):
-            self._value = self._typ(self._value + value)
+            self.write(self._value + value)
 
 
     class Instruction:
@@ -120,9 +126,9 @@ class CPU:
         self._cart = cart
 
         # Create the CPU registers
-        self.registers = {'pc': CPU.Register(np.uint16), 'sp': CPU.Register(np.uint8),
-                          'a': CPU.Register(np.uint8), 'x': CPU.Register(np.uint8),
-                          'y': CPU.Register(np.uint8), 'p': CPU.Register(np.uint8)}
+        self.registers = {'pc': CPU.Register(16), 'sp': CPU.Register(8),
+                          'a': CPU.Register(8), 'x': CPU.Register(8),
+                          'y': CPU.Register(8), 'p': CPU.Register(8)}
 
         # Bit positions in the status register
         self.status = {'carry': 0, 'zero': 1, 'interrupt': 2, 'decimal': 3,
@@ -296,30 +302,45 @@ class CPU:
             0xfe: CPU.Instruction(self, instructions.INC, AddressingMode.Absolute_X, 7)
         }
 
+        self.registers['pc'].write(0xc000)
+        self.registers['p'].write(0x24)
+        self.registers['sp'].write(0xfd)
+
     def execute(self):
         # fetch
+        
         pc = self.registers['pc'].read()
+        print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
         opcode = self.memory.read(pc)
 
+        print " [DEBUG] OPCODE: {:X}".format(opcode)
         # decode
         operands = self.opcodes[opcode]._addressing.byte_size
         ops = [None, None]
+        
         for i in range(operands):
             if i == 0: continue # skip instruction opcode
-            ops[i] = self.memory.read(pc + i) # fill in operands
+            ops[i-1] = self.memory.read(pc + i) # fill in operands
         # update program counter
+        print " [DEBUG] OP1:{} OP2:{}\n [DEBUG] OLD PC: {:X} NEW PC: {:X}".format(ops[0] if ops[0] == None else hex(ops[0]),
+                                                                                  ops[1] if ops[1] == None else hex(ops[1]),
+                                                                                  pc, pc+operands)
         self.registers['pc'].write(pc + operands)
 
         #execute
+        f.write("{:04X}  {:02X} {} {}                             A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:Not implemented\n".format(pc, opcode, 
+                                                            "  " if ops[0] == None else "{:02X}".format(ops[0]), "  " if ops[1] == None else "{:02X}".format(ops[1]),
+                            self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(), 
+                            self.registers['p'].read(), self.registers['sp'].read(), self._cycles))
+        print "[DEBUG] ------------------------\n" 
         cycles = self.opcodes[opcode](ops[0], ops[1])
-        logger.debug(pc, opcode, ops[0], ops[1])
         return cycles
         #self._cycles += cycles
 
     def run(self):
         while True:
-            cycles = execute()
-            self._cycles += cycles
+            cycles = self.execute()
+            self._cycles = (self._cycles + cycles * 3) % 335 # times 3 for ppu multiplier
 
     # status methods
     def get_status(self, flag):
@@ -331,8 +352,8 @@ class CPU:
 
     # Stack methods
     def push_stack(self, value):
-        self.registers['sp'].adjust(-1)
-        self.memory.write(0x100 + self.registers['sp'].read(), value)
+        debug = self.registers['sp'].adjust(value=-1)
+        self.memory.write(self.registers['sp'].read(), value)#+ 0x100, value)
 
     def pop_stack(self):
         result = self.memory.read(self.registers['sp'].read())
