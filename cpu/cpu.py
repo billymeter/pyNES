@@ -8,7 +8,7 @@ import instructions
 from addressmodes import *
 
 
-logging.basicConfig(filename='cpu.log', level=logging.ERROR)
+logging.basicConfig(filename='cpu.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class CPU:
@@ -53,7 +53,7 @@ class CPU:
             elif 0x0 <= addr < 0x2000:
                 #base_addr = addr % 0x800
                 #self.memory[base_addr] = value
-                self.memory[addr] = value
+                self._memory[addr] = value
             # I/O Registers, mirrored a bunch of times
             elif 0x2000 <= addr < 0x4000:
                 #base_addr = (addr - 0x2000) % 0x8
@@ -62,13 +62,13 @@ class CPU:
                 return self._nes.ppu.read_register(0x2000 + offset)
             # Unmirrored I/O registers
             elif 0x4000 <= addr < 0x4020:
-                self.memory[addr] = value
+                self._memory[addr] = value
             # Expansion ROM cannot be written to
             elif 0x4020 <= addr < 0x6000:
                 raise Exception("Cannot write to Expansion ROM at address {:#06x}!".format(addr))
             # Save RAM
             elif 0x6000 <= addr < 0x8000:
-                self.memory[addr] = value
+                self._memory[addr] = value
             # Cartridge ROM
             elif 0x8000 <= addr < 0x10000:
                 raise Exception("Cannot write to ROM at address {:#06x}!".format(addr))
@@ -102,14 +102,9 @@ class CPU:
             self._addressing = addr_mode
             self._cycles = cycles
 
-        def __call__(self, memory):
-            # get the operands from memory:
-            ops = [0, 0]
-            for i in range(self._addressing.size):
-                if i == 0: continue # skip over opcode to get operands
-                ops[i-1] = mem[i]
+        def __call__(self, op1, op2):
 
-            extra_cycles = self._instruction(self._cpu, self._addressing, ops[0], ops[1])
+            extra_cycles = self._instruction(self._cpu, self._addressing, op1, op2)
 
             #pc = self._cpu.registers['pc'].read()
             #self._cpu.registers['pc'].write(pc + self._addressing.byte_size)
@@ -303,20 +298,22 @@ class CPU:
 
     def execute(self):
         # fetch
-        pc = cpu.registers['pc'].read()
-        opcode = cpu.memory.read(pc)
+        pc = self.registers['pc'].read()
+        opcode = self.memory.read(pc)
 
         # decode
         operands = self.opcodes[opcode]._addressing.byte_size
         ops = [None, None]
         for i in range(operands):
             if i == 0: continue # skip instruction opcode
-            ops[i] = cpu.memory.read(pc + i) # fill in operands
+            ops[i] = self.memory.read(pc + i) # fill in operands
         # update program counter
-        cpu.registers['pc'].write(pc + operands)
+        self.registers['pc'].write(pc + operands)
 
         #execute
-        return self.op[opcode](self, ops[0], ops[1])
+        cycles = self.opcodes[opcode](ops[0], ops[1])
+        logger.debug(pc, opcode, ops[0], ops[1])
+        return cycles
         #self._cycles += cycles
 
     def run(self):
