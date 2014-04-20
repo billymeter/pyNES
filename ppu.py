@@ -88,22 +88,6 @@ rgb_palette = [(0x1D << 2, 0x1D << 2, 0x1D << 2),
                (0x00 << 2, 0x00 << 2, 0x00 << 2)]
 
 
-# class PatternTables(object):
-#     """
-#     Pattern tables occupy 0x0000 through 0x1fff in PPU memory map.
-#     """
-#     def __init__(self):
-#         self.logical_tables = [[0] * PATTERN_TABLE_SIZE,
-#                                [0] * PATTERN_TABLE_SIZE]
-
-#     def write(self, addr, value):
-#         self.logical_tables[(addr & 0x1000) >> 12][addr & 0xfff] = value
-
-#     def read(self, addr, size=1):
-#         offset = addr & 0xfff
-#         return self.logical_tables[(addr & 0x1000) >> 12][offset:offset + size]
-
-
 class NameTables(object):
     """
     Name table occupy 0x2000 through 0x2fff in PPU memory map, and are
