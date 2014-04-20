@@ -1,5 +1,5 @@
 from wx.lib.pubsub import pub
-from pygame_display import *
+from game_display import *
 from options_dialogs import *
 
 
@@ -8,8 +8,8 @@ class MainView(wx.Frame):
         wx.Frame.__init__(self, *args, **kwargs)
         self.SetTitle("pyNES")
 
-        # Pygame display for emulator
-        self.display = PygameDisplay(parent=self)
+        # Display for emulator
+        self.display = Display(parent=self)
 
         # Menu bar
         menu_bar = wx.MenuBar()
@@ -103,5 +103,4 @@ class MainView(wx.Frame):
 
     def Kill(self, event):
         pub.sendMessage("Stop Emulation")
-        self.display.Kill(event)
         self.Destroy()
