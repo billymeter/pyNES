@@ -3,7 +3,7 @@ class AddressingMode:
         byte_size = 1
         def read(cpu, op1=None, op2=None):
             return cpu.registers['a'].read(), False
-        def write(cpu, op1=None, op2=None, value):
+        def write(cpu, op1=None, op2=None, value=0):
             cpu.registers['a'].write(value)
             return True
 
@@ -57,7 +57,7 @@ class AddressingMode:
         def read(cpu, op1, op2=None):
             return op1, False
 
-        def write(cpu, op1, op2=None, value):
+        def write(cpu, op1, op2=None, value=0):
             return None, False
 
     class Implied:
@@ -65,7 +65,7 @@ class AddressingMode:
         def read(cpu, op1=None, op2=None):
             return None, False
 
-        def write(cpu, op1=None, op2=None, value):
+        def write(cpu, op1=None, op2=None, value=0):
             return None
 
     class Indirect:
@@ -87,7 +87,7 @@ class AddressingMode:
             addr = (op1 + cpu.registers['x'].read()) % 0x100
             return addr, False
 
-        def write(cpu, op1, op2=None, value):
+        def write(cpu, op1, op2=None, value=0):
             return None
 
     class Indirect_Y:
@@ -98,10 +98,10 @@ class AddressingMode:
             if addr > (addr % 0x100):
                 # page crossed
                 page_crossed = True
-            
+
             return addr, page_crossed
-            
-        def write(cpu, op1, op2=None, value):
+
+        def write(cpu, op1, op2=None, value=0):
             return None
 
     class Relative:
@@ -109,7 +109,7 @@ class AddressingMode:
         def read(cpu, op1, op2=None):
             return op1, False
 
-        def write(cpu, op1, op2=None, value):
+        def write(cpu, op1, op2=None, value=0):
             return None
 
     class Zero_Page:
@@ -118,7 +118,7 @@ class AddressingMode:
             value = cpu.memory.read(op1)
             return value, False
 
-        def write(cpu, op1, op2=None, value):
+        def write(cpu, op1, op2=None, value=0):
             cpu.memory.write(op1, value)
             return True
 
@@ -130,7 +130,7 @@ class AddressingMode:
             value = cpu.memory.read(addr)
             return value, False
 
-        def write(cpu, op1, op2=None, value):
+        def write(cpu, op1, op2=None, value=0):
             # zero page wrap around
             addr = (op1 + cpu.registers['x'].read()) % 0x100
             cpu.memory.write(addr, value)
@@ -144,7 +144,7 @@ class AddressingMode:
             value = cpu.memory.read(addr)
             return value, False
 
-        def write(cpu, op1, op2=None, value):
+        def write(cpu, op1, op2=None, value=0):
             # zero page wrap around
             addr = (op1 + cpu.registers['y'].read()) % 0x100
             cpu.memory.write(addr, value)

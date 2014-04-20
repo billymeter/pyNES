@@ -1,17 +1,16 @@
 '''
 The entry point for the emulator
 '''
-import cpu.cpu
+from cpu import cpu
 import ppu
 import cartridge
 
 
 class NES(object):
-    # NES memory bank goes from 0x0 to 0xFFFF
-    self.memory = bytearray(0x10000)
-    self.cpu = cpu.CPU(self)
-    self.ppu = ppu.PPU(self)
-    self.rom = None
+    def __init__(self):
+        self.cpu = cpu.CPU(self)
+        self.ppu = ppu.PPU(self)
+        self.rom = None
 
     def save_state(self):
         pass
@@ -20,10 +19,11 @@ class NES(object):
         pass
 
     def step(self):
-        cycles = self.cpu.step()
+        # cycles = self.cpu.step()
 
-        for i in range(3 * cycles):
+        # for i in range(3 * cycles):
+        for i in range(3):
             self.ppu.step()
 
     def load_rom(self, rom_data):
-        self.rom = cartridge.Cartridge(rom_data)
+        self.rom = cartridge.Cartridge(self, rom_data)

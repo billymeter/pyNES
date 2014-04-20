@@ -18,8 +18,10 @@ class EmulatorThread(threading.Thread):
         self.paused = False
         self.save = False
 
+    def load_rom(self, rom_path):
+        self.rom_path = rom_path
         with open(rom_path, 'rb') as rom:
-            self.emulator.load_rom(rom)
+            self.emulator.load_rom(rom.read())
 
     def run(self):
         self.running = True
@@ -233,7 +235,7 @@ class Controller(object):
 
     def load_rom(self, rom_path):
         """ Give ROM path to emulator """
-        self.emu_thread.rom_path = rom_path
+        self.emu_thread.load_rom(rom_path)
 
     def push_input_config(self):
         """ Write user changes to settings file """

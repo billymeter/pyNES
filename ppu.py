@@ -3,6 +3,10 @@ Picture Processing Unit
 '''
 from collections import namedtuple
 from utils import *
+import logging
+
+logging.basicConfig(filename='errors.log', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 ''' Constants '''
 MirrorType = enum('Horizontal', 'Vertical', 'SingleUpper', 'SingleLower')
@@ -84,20 +88,20 @@ rgb_palette = [(0x1D << 2, 0x1D << 2, 0x1D << 2),
                (0x00 << 2, 0x00 << 2, 0x00 << 2)]
 
 
-class PatternTables(object):
-    """
-    Pattern tables occupy 0x0000 through 0x1fff in PPU memory map.
-    """
-    def __init__(self):
-        self.logical_tables = [[0] * PATTERN_TABLE_SIZE,
-                               [0] * PATTERN_TABLE_SIZE]
+# class PatternTables(object):
+#     """
+#     Pattern tables occupy 0x0000 through 0x1fff in PPU memory map.
+#     """
+#     def __init__(self):
+#         self.logical_tables = [[0] * PATTERN_TABLE_SIZE,
+#                                [0] * PATTERN_TABLE_SIZE]
 
-    def write(self, addr, value):
-        self.logical_tables[(addr & 0x1000) >> 12][addr & 0xfff] = value
+#     def write(self, addr, value):
+#         self.logical_tables[(addr & 0x1000) >> 12][addr & 0xfff] = value
 
-    def read(self, addr, size=0):
-        offset = addr & 0xfff
-        return self.logical_tables[(addr & 0x1000) >> 12][offset:offset + size]
+#     def read(self, addr, size=1):
+#         offset = addr & 0xfff
+#         return self.logical_tables[(addr & 0x1000) >> 12][offset:offset + size]
 
 
 class NameTables(object):
@@ -142,7 +146,6 @@ class NameTables(object):
         return self.logical_tables[(addr & 0xc00) >> 10][addr & 0x3ff]
 
 
-Pixel = namedtuple('Pixel', 'color value index')
 SpriteData = namedtuple('SpriteData', 'y tiles attributes x')
 
 
@@ -155,12 +158,18 @@ class PPU(object):
         self.palette_ram = [0] * 0x20
         self.nametables = NameTables()
         # pattern tables aren't actually in the ppu, they're on the cartridge
-        self.patterntables = PatternTables()
+        # self.patterntables = PatternTables()
         # still confused about sprites; not sure if this is good
         self.sprite_data = SpriteData([0] * 64, [0] * 64, [0] * 64, [0] * 64)
+        self.sprite_data = {
+            'y': [0] * 64,
+            'tiles': [0] * 64,
+            'attributes': [0] * 64,
+            'x': [0] * 64
+        }
 
         # render states
-        self.palette_buffer = [Pixel(0, 0, 0)] * 61440
+        self.palette_buffer = [{'color': 0, 'value': 0, 'index': 0}] * 61440
         self.frame_buffer = [0] * 61408
         self.frame = [0] * 61408
 
@@ -413,7 +422,7 @@ class PPU(object):
         elif self.vram_addr >= 0x2000 and self.vram_addr < 0x3000:
             self.nametables.write(self.vram_addr, v)
         elif self.vram_addr < 0x2000:
-            self.patterntables.write(self.vram_addr, v)
+            self._nes.rom.write_chr(self.vram_addr, v)
         else:
             self.vram[self.vram_addr & 0x3fff] = v
         self.inc_vram_address()
@@ -427,7 +436,7 @@ class PPU(object):
             data = self.vram_data_buffer
 
             if self.vram_addr < 0x2000:
-                self.vram_data_buffer = self.patterntables.read(self.vram_addr)
+                self.vram_data_buffer = self._nes.rom.read_chr(self.vram_addr)
             else:
                 self.vram_data_buffer = self.vram[self.vram_addr]
         else:
@@ -524,7 +533,7 @@ class PPU(object):
             for k in range(8):
                 fb_row = self.scanline*256 + ((x * 8) + k)
                 pixel = self.palette_buffer[fb_row]
-                if pixel.value != 0:
+                if pixel['value'] != 0:
                     continue
 
                 current = (15 - k - self.fine_x)
@@ -536,9 +545,9 @@ class PPU(object):
                 else:
                     palette = self.get_background_entry(attr_buffer, pxvalue)
 
-                pixel.color = rgb_palette[palette % 64]
-                pixel.value = pxvalue
-                pixel.index = -1
+                pixel['color'] = rgb_palette[palette % 64]
+                pixel['value'] = pxvalue
+                pixel['index'] = -1
 
             attr = attr_buffer
 
@@ -582,14 +591,14 @@ class PPU(object):
             sprite_height = 8
 
         sprite_count = 0
-        for i, y in zip(range(len(self.sprite_data.y)), self.sprite_data.y):
+        for i, y in zip(range(len(self.sprite_data['y'])), self.sprite_data['y']):
             if (y > (self.scanline - 1) - sprite_height and
                     y + (sprite_height - 1) < (self.scanline - 1) + sprite_height):
-                attr_val = self.sprite_data.attributes[i] & 0x3
-                tile = self.sprite_data.tiles[i]
+                attr_val = self.sprite_data['attributes'][i] & 0x3
+                tile = self.sprite_data['tiles'][i]
                 c = (self.scanline - 1) - y
 
-                y_flip = self.sprite_data.attributes[i] >> 7
+                y_flip = self.sprite_data['attributes'][i] >> 7
                 if y_flip:
                     y_coord = y + ((sprite_height - 1) - c)
                 else:
@@ -598,8 +607,8 @@ class PPU(object):
                 if self.sprite_size:
                     s = self.get_sprite_tbl_address(tile)
 
-                    top = self.patterntables.read(s, 16)
-                    bottom = self.patterntables.read(s + 16, 16)
+                    top = self._nes.rom.read_chr(s, 16)
+                    bottom = self._nes.rom.read_chr(s + 16, 16)
 
                     if c > 7 and y_flip:
                         tile = top
@@ -613,10 +622,10 @@ class PPU(object):
                         tile = top
                 else:
                     s = self.get_sprite_tbl_address(tile)
-                    tile = self.patterntables.read(s, 16)
+                    tile = self._nes.rom.read_chr(s, 16)
 
                 self.mux_tile([tile[c], tile[c+8]],
-                              self.sprite_data.x[i], y_coord,
+                              self.sprite_data['x'][i], y_coord,
                               attr_val, i)
                 sprite_count += 1
 
@@ -626,7 +635,7 @@ class PPU(object):
                 #         break
 
     def mux_tile(self, tiles, x, y, palette_index, index):
-        attr = self.sprite_data.attributes[index]
+        attr = self.sprite_data['attributes'][index]
         is_sprite0 = (index == 0)
         for b in range(8):
             if (attr >> 6) & 1:
@@ -651,23 +660,23 @@ class PPU(object):
                 priority = (attr >> 5) & 0x1
 
                 hit = self._nes.cpu.read(0x2002) & 0x40
-                if px.value != 0 and is_sprite0 and not hit:
+                if px['value'] != 0 and is_sprite0 and not hit:
                     # sprite 0 has been hit
                     set_bit(self.status, StatusBit.Sprite0Hit)
 
-                if -1 < px.index < index:
+                if -1 < px['index'] < index:
                     # higher priority sprite is already rendered here; skip
                     continue
-                elif px.value != 0 and priority == 1:
+                elif px['value'] != 0 and priority == 1:
                     # pixel is already rendered and priority 1 indicates
                     # that this should be skipped
                     continue
 
                 pal = self.palette_ram[0x10 + (palette_index * 0x4) + pixel]
 
-                px.color = rgb_palette[pal % 64]
-                px.value = pixel
-                px.index = index
+                self.palette_buffer[fb_row]['color'] = rgb_palette[pal % 64]
+                self.palette_buffer[fb_row]['value'] = pixel
+                self.palette_buffer[fb_row]['index'] = index
 
     def get_sprite_tbl_address(self, tile):
         if self.sprite_size:
@@ -693,28 +702,33 @@ class PPU(object):
             self.nametables.write(address - 0x1000, v)
 
     def render_output(self):
-        for i in range(len(self.palette_buffer), -1, -1):
+        for i in range(len(self.palette_buffer)-1, -1, -1):
             y = i / 256
             x = i - (y * 256)
             buffer_px = self.palette_buffer[i]
-            color = buffer_px.color
+            color = buffer_px['color']
 
-            # overscan?
+            # overscan
+            if y < 8 or y > 231 or x < 8 or x > 247:
+                continue
+            else:
+                y -= 8
+                x -= 8
 
             width = 240
             self.frame_buffer[(y * width) + x] = color << 8
-            buffer_px.value = 0
-            buffer_px.index = -1
+            buffer_px['value'] = 0
+            buffer_px['index'] = -1
         self.frame = self.frame_buffer
 
     def update_sprite_buffer(self, address, v):
         i = address / 4
         bit = address % 4
         if bit == 0:
-            self.sprite_data.y[i] = v
+            self.sprite_data['y'][i] = v
         elif bit == 1:
-            self.sprite_data.tiles[i] = v
+            self.sprite_data['tiles'][i] = v
         elif bit == 2:
-            self.sprite_data.attributes[i] = v
+            self.sprite_data['attributes'][i] = v
         elif bit == 3:
-            self.sprite_data.x[i] = v
+            self.sprite_data['x'][i] = v

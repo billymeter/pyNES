@@ -15,7 +15,7 @@ def ADC(cpu, mode, op1=None, op2=None):
         extra_cycles = 1
 
     return extra_cycles
-    
+
 def AND(cpu, mode, op1=None, op2=None):
     '''Logical AND'''
     extra_cycles = 0
@@ -276,7 +276,7 @@ def CPX(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     x = cpu.registers['x'].read()
     result = x - value
-    
+
     if x >= value:
         cpu.set_status('carry', 1)
     if x == value:
@@ -291,7 +291,7 @@ def CPY(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     y = cpu.registers['y'].read()
     result = y - value
-    
+
     if y >= value:
         cpu.set_status('carry', 1)
     if y == value:
@@ -304,7 +304,7 @@ def CPY(cpu, mode, op1=None, op2=None):
 def DEC(cpu, mode, op1=None, op2=None):
     '''Decrement memory'''
     value, page_crossed = mode.read(cpu, op1, op2)
-    
+
     result = (value - 1) & 0xff
     mode.write(cpu, op1, op2, result)
 
@@ -347,7 +347,7 @@ def EOR(cpu, mode, op1=None, op2=None):
 def INC(cpu, mode, op1=None, op2=None):
     '''Increment memory'''
     value, page_crossed = mode.read(cpu, op1, op2)
-    
+
     result = (value + 1) & 0xff
     mode.write(cpu, op1, op2, result)
 
@@ -560,7 +560,7 @@ def RTI(cpu, mode, op1=None, op2=None):
     cpu.set_status('overflow', p >> 6 & 0x1)
     cpu.set_status('negative', p >> 7)
 
-    return 0 
+    return 0
 
 def RTS(cpu, mode, op1=None, op2=None):
     '''Return from subroutine'''
@@ -620,13 +620,13 @@ def STX(cpu, mode, op1=None, op2=None):
     x = cpu.registers['x'].read()
     mode.write(cpu, op1, op2, x)
     return 0
-    
+
 def STY(cpu, mode, op1=None, op2=None):
     '''Store Y register'''
     y = cpu.registers['y'].read()
     mode.write(cpu, op1, op2, y)
     return 0
-    
+
 def TAX(cpu, mode, op1=None, op2=None):
     '''Transfer accumulator to X'''
     a = cpu.registers['a'].read()
@@ -686,4 +686,4 @@ def TYA(cpu, mode, op1=None, op2=None):
         cpu.set_status('negative', 1)
 
     cpu.registers['a'].write(y)
-    return 0'
+    return 0

@@ -1,7 +1,12 @@
 import logging
+import struct
 
 logging.basicConfig(filename='errors.log', level=logging.ERROR)
 logger = logging.getLogger(__name__)
+
+
+def frombyte(byte):
+    return struct.unpack('b', byte)[0]
 
 
 class Cartridge(object):
@@ -15,31 +20,31 @@ class Cartridge(object):
             raise Exception('Attempted to load an invalid ROM file')
 
         # check for MS-DOS EOF
-        if rom[3] != 0x1a:
+        if struct.unpack('b', rom[3])[0] != 0x1a:
             logger.error("Invalid ROM file")
             raise Exception('Attempted to load an invalid ROM file')
 
         # size of prg rom banks in 16KB units
-        self.prg_bank_count = rom[4]
+        self.prg_bank_count = frombyte(rom[4])
         # size of chr rom banks in 8KB units
-        self.chr_bank_count = rom[5]
+        self.chr_bank_count = frombyte(rom[5])
 
         # set mirroring for this rom in the ppu
-        if rom[6] & 0x1:
+        if frombyte(rom[6]) & 0x1:
             # vertical mirroring
             self._nes.ppu.nametables.set_mirroring(1)
         else:
             # horizontal mirroring
             self._nes.ppu.nametables.set_mirroring(0)
 
-        if (rom[6] >> 1) & 0x1:
+        if (frombyte(rom[6]) >> 1) & 0x1:
             self.battery = True
 
         self.data = rom[16:]
 
         # The lower 4 bits of the mapper come from bits rom[6].4-7,
         # and the upper 4 bits come from rom[7].4-7.
-        mapper = (rom[6] >> 4) | (rom[7] & 0xf0)
+        mapper = (frombyte(rom[6]) >> 4) | (frombyte(rom[7]) & 0xf0)
 
         # only nrom mapper (mapper 0) is currently supported
         if mapper == 0:
@@ -62,12 +67,35 @@ class Cartridge(object):
         chr_rom = self.data[0x4000 * len(self.prg_banks):]
 
         if self.chr_bank_count > 0:
-            self.chr_banks = [[] for i in range(self.chr_bank_count)]
+            self.chr_banks = [[] for i in range(self.chr_bank_count)*2]
         else:
-            self.chr_banks = [[]]
+            self.chr_banks = [[], []]
 
         for i in range(len(self.chr_banks)):
-            self.chr_banks[i] = [0] * 0x2000
+            bank = [0] * 0x1000
 
-            for byte in range(0x2000):
-                self.chr_banks[i][byte] = chr_rom[byte]
+            if self.chr_bank_count > 0:
+                for offset in range(0x1000):
+                    bank[offset] = chr_rom[(0x1000 * i) + offset]
+            self.chr_banks[i] = bank
+
+    def read_prg(address, size=1):
+        offset = address & 0x3fff
+        if address >= 0xc000:
+            return self.prg_banks[len(self.prg_banks)-1][offset:offset + size]
+
+        return self.prg_banks[0][offset]
+
+    def read_chr(address, size=1):
+        offset = address & 0xfff
+        if address >= 0x1000:
+            return self.chr_banks[len(self.chr_banks)-1][offset:offset + size]
+
+        return self.chr_banks[0][address & 0xfff]
+
+    def write_chr(address, value):
+        if address >= 0x1000:
+            self.chr_banks[len(self.chr_banks)-1][address & 0xfff] = value
+            return
+
+        self.chr_banks[0][address & 0xfff] = value
