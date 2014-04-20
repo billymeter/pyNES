@@ -3,6 +3,7 @@ NES CPU: Ricoh 2A05
 '''
 
 import numpy as np
+import logging
 import instructions
 from addressmodes import *
 
@@ -304,7 +305,7 @@ class CPU:
         # fetch
         pc = cpu.registers['pc'].read()
         opcode = cpu.memory.read(pc)
-        
+
         # decode
         operands = self.opcodes[opcode]._addressing.byte_size
         ops = [None, None]
@@ -340,6 +341,3 @@ class CPU:
         result = self.memory.read(self.registers['sp'].read())
         self.registers['sp'].adjust()
         return result
-
-    def step(self):
-        pass
