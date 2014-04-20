@@ -79,21 +79,21 @@ class Cartridge(object):
                     bank[offset] = chr_rom[(0x1000 * i) + offset]
             self.chr_banks[i] = bank
 
-    def read_prg(address, size=1):
+    def read_prg(self, address, size=1):
         offset = address & 0x3fff
         if address >= 0xc000:
             return self.prg_banks[len(self.prg_banks)-1][offset:offset + size]
 
         return self.prg_banks[0][offset]
 
-    def read_chr(address, size=1):
+    def read_chr(self, address, size=1):
         offset = address & 0xfff
         if address >= 0x1000:
             return self.chr_banks[len(self.chr_banks)-1][offset:offset + size]
 
         return self.chr_banks[0][address & 0xfff]
 
-    def write_chr(address, value):
+    def write_chr(self, address, value):
         if address >= 0x1000:
             self.chr_banks[len(self.chr_banks)-1][address & 0xfff] = value
             return
