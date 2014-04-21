@@ -109,9 +109,10 @@ def BIT(cpu, mode, op1=None, op2=None):
     '''BIT'''
     value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
-    value &= a
-
-    cpu.set_status('zero', value == 0)
+    
+    result = a & value
+    print "                    [DEBUG] [BIT] A:{:X} value:{:X} result:{:X}".format(a, value, result)
+    cpu.set_status('zero', result == 0)
     cpu.set_status('negative', value >> 7)
     cpu.set_status('overflow', (value >> 6) & 0x1 )
 
@@ -182,6 +183,7 @@ def BPL(cpu, mode, op1=None, op2=None):
 
 def BRK(cpu, mode, op1=None, op2=None):
     '''BRK'''
+    raise SystemExit
     pc = cpu.registers['pc'].read()
     print "[DEBUG] - [BRK] pc: {}".format(pc)
     cpu.push_stack(pc & 0xff)
@@ -265,12 +267,9 @@ def CMP(cpu, mode, op1=None, op2=None):
     a = cpu.registers['a'].read()
     result = a - value
 
-    if a >= value:
-        cpu.set_status('carry', 1)
-    if a == value:
-        cpu.set_status('zero', 1)
-    if (result >> 7 & 0x1):
-        cpu.set_status('negative', 1)
+    cpu.set_status('carry', a >= value)
+    cpu.set_status('zero', a == value)
+    cpu.set_status('negative', result >> 7)
 
     if page_crossed:
         extra_cycles = 1
@@ -283,12 +282,9 @@ def CPX(cpu, mode, op1=None, op2=None):
     x = cpu.registers['x'].read()
     result = x - value
 
-    if x >= value:
-        cpu.set_status('carry', 1)
-    if x == value:
-        cpu.set_status('zero', 1)
-    if (result >> 7 & 0x1):
-        cpu.set_status('negative', 1)
+    cpu.set_status('carry', x >= value)
+    cpu.set_status('zero', x == value)
+    cpu.set_status('negative', result >> 7)
 
     return 0
 
@@ -298,12 +294,9 @@ def CPY(cpu, mode, op1=None, op2=None):
     y = cpu.registers['y'].read()
     result = y - value
 
-    if y >= value:
-        cpu.set_status('carry', 1)
-    if y == value:
-        cpu.set_status('zero', 1)
-    if (result >> 7 & 0x1):
-        cpu.set_status('negative', 1)
+    cpu.set_status('carry', y >= value)
+    cpu.set_status('zero', y == value)
+    cpu.set_status('negative', result >> 7)
 
     return 0
 
@@ -337,6 +330,7 @@ def EOR(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     result = (a ^ value) & 0xff
+    cpu.registers['a'].write(result)
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
 
@@ -378,12 +372,10 @@ def JSR(cpu, mode, op1=None, op2=None):
     '''JSR'''
     address, page_crossed = mode.read(cpu, op1, op2)
     pc = cpu.registers['pc'].read()
-    print " [DEBUG] [IN JSR] sp:{:04X}".format(cpu.registers['sp'].read())
-
-    # we want to push the next instruction to the stack, not the JSR instruction
-    # again, so increment it
-    #pc += 3
+    
     print " [DEBUG] [IN JSR] pc:{:04X}".format(pc)
+    print " [DEBUG] [IN JSR] sp:{:04X}".format(cpu.registers['sp'].read())
+    print " [DEBUG] [IN JSR - PUSHED to STACK] {:02X}{:02X}\n\n".format(pc & 0xff, pc >> 8)
     cpu.push_stack(pc & 0xff)
     cpu.push_stack(pc >> 8)
 
@@ -395,8 +387,6 @@ def LDA(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['a'].write(value)
     extra_cycles = 0
-
-    print " [DEBUG] [LDA] op1={:X} op2={} value is {}".format(op1, op2, value)
 
     result = value
     cpu.set_status('zero', result == 0)
@@ -459,6 +449,7 @@ def ORA(cpu, mode, op1=None, op2=None):
     a = cpu.registers['a'].read()
 
     result = a | value
+    cpu.registers['a'].write(result)
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
 
@@ -475,6 +466,7 @@ def PHA(cpu, mode, op1=None, op2=None):
 def PHP(cpu, mode, op1=None, op2=None):
     '''PHP'''
     p = cpu.registers['p'].read()
+    p |= 0x1 << 4
     cpu.push_stack(p)
     return 0
 
@@ -496,8 +488,8 @@ def PLP(cpu, mode, op1=None, op2=None):
     cpu.set_status('zero', p >> 1 & 0x1)
     cpu.set_status('interrupt', p >> 2 & 0x1)
     cpu.set_status('decimal', p >> 3 & 0x1)
-    cpu.set_status('break', p >> 4 & 0x1)
-
+    cpu.set_status('break', 0) # p >> 4 & 0x1)
+    cpu.set_status('unused', 1)
     cpu.set_status('overflow', p >> 6 & 0x1)
     cpu.set_status('negative', p >> 7)
     return 0
@@ -534,7 +526,6 @@ def ROR(cpu, mode, op1=None, op2=None):
 
 def RTI(cpu, mode, op1=None, op2=None):
     '''RTI'''
-    p = cpu.pop_stack()
     pc = cpu.pop_stack()
     pc = pc << 8
     pc |= cpu.pop_stack()
@@ -560,7 +551,7 @@ def RTS(cpu, mode, op1=None, op2=None):
     pc |= cpu.pop_stack()
 
     cpu.registers['pc'].write(pc)
-
+    print " [DEBUG] pc:{:04X}".format(pc)
     return 0
 
 def SBC(cpu, mode, op1=None, op2=None):

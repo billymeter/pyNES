@@ -132,7 +132,7 @@ class CPU:
 
         # Bit positions in the status register
         self.status = {'carry': 0, 'zero': 1, 'interrupt': 2, 'decimal': 3,
-                       'break': 4, 'overflow': 6, 'negative': 7}
+                       'break': 4, 'unused': 5, 'overflow': 6, 'negative': 7}
 
         self.opcodes = {
             0x00: CPU.Instruction(self, instructions.BRK, AddressingMode.Implied, 7),
@@ -314,7 +314,7 @@ class CPU:
         print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
         opcode = self.memory.read(pc)
 
-        print " [DEBUG] OPCODE: {:X} (DEC:{})".format(opcode, opcode)
+        print " [DEBUG] OPCODE: {:X} ({})".format(opcode, self.opcodes[opcode]._instruction.__doc__)
 
         # decode
         operands = self.opcodes[opcode]._addressing.byte_size
@@ -324,9 +324,9 @@ class CPU:
             if i == 0: continue # skip instruction opcode
             ops[i-1] = self.memory.read(pc + i) # fill in operands
         # update program counter
-        print " [DEBUG] OP1:{} OP2:{}\n [DEBUG] OLD PC: {:X} NEW PC: {:X}".format(ops[0] if ops[0] == None else hex(ops[0]),
-                                                                                  ops[1] if ops[1] == None else hex(ops[1]),
-                                                                                  pc, pc+operands)
+        #print " [DEBUG] OP1:{} OP2:{}\n [DEBUG] OLD PC: {:X} NEW PC: {:X}".format(ops[0] if ops[0] == None else hex(ops[0]),
+        #                                                                          ops[1] if ops[1] == None else hex(ops[1]),
+        #                                                                          pc, pc+operands)
         self.registers['pc'].write(pc + operands)
 
         #execute
@@ -357,7 +357,7 @@ class CPU:
 
     # Stack methods
     def push_stack(self, value):
-        debug = self.registers['sp'].adjust(value=-1)
+        self.registers['sp'].adjust(value=-1)
         self.memory.write(self.registers['sp'].read(), value)#+ 0x100, value)
 
     def pop_stack(self):
