@@ -55,7 +55,6 @@ class Display(wx.Window):
             if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.KEYDOWN:
-                print event.key
                 for button in self.gamepad1:
                     if event.key == self.gamepad1[button]:
                         self.nes.parse_input(button)
