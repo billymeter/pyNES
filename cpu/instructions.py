@@ -4,15 +4,25 @@ def ADC(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     c = cpu.get_status('carry')
     a = cpu.registers['a'].read()
-    result =  value + a + c
-    overflow = ( ((a >> 6) & 0x1) and ((value >> 6) & 0x1) and not ((result >> 6) & 0x1 ) or ( not ((a >> 6) & 0x1) and  not ((value >> 6) & 0x1 and ((result >> 6) & 0x1))) )
+    result = value + a + c
+    overflow = (((a >> 6) & 0x1) and ((value >> 6) & 0x1) and not ((result >> 6) & 0x1) or (not ((a >> 6) & 0x1) and not ((value >> 6) & 0x1 and ((result >> 6) & 0x1))))
     print "************************************************  [DEBUG] [ADC] overflow: {} carry: {}".format(overflow, overflow)
-    cpu.registers['a'].write(result)
-    cpu.set_status('carry', overflow) #((a >> 6) & 0x1) and (result >> 7) )
+    # cpu.registers['a'].write(result)
+    # cpu.set_status('carry', overflow) #((a >> 6) & 0x1) and (result >> 7) )
+    # cpu.set_status('zero', (result & 0xff) == 0)
+    # cpu.set_status('overflow', overflow)
+    # cpu.set_status('negative', result >> 7 & 0x1)
+
+    cpu.set_status('negative', result & 0x80 == 0x80)
+    cpu.set_status('zero', result == 0x0)
+    if ((a ^ value) & 0x80 == 0) and ((a ^ result) & 0x80 == 0x80):
+        cpu.set_status('overflow', 1)
+    else:
+        cpu.set_status('overflow', 0)
     c2 = cpu.get_status('carry')
-    cpu.set_status('zero', (result & 0xff) == 0)
-    cpu.set_status('overflow', overflow)
-    cpu.set_status('negative', result >> 7 & 0x1)
+    cpu.set_status('carry', a + value + c2 > 0xff)
+
+    cpu.registers['a'].write(result & 0xff)
 
     if page_crossed:
         extra_cycles = 1
