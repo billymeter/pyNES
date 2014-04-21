@@ -154,7 +154,7 @@ class CPU:
             0x1d: CPU.Instruction(self, instructions.ORA, AddressingMode.Absolute_X, 4),
             0x1e: CPU.Instruction(self, instructions.ASL, AddressingMode.Absolute_X, 7),
 
-            0x20: CPU.Instruction(self, instructions.JSR, AddressingMode.Absolute, 6),
+            0x20: CPU.Instruction(self, instructions.JSR, AddressingMode.JMP_Absolute, 6),
             0x21: CPU.Instruction(self, instructions.AND, AddressingMode.Indirect_X, 6),
             0x24: CPU.Instruction(self, instructions.BIT, AddressingMode.Zero_Page, 3),
             0x25: CPU.Instruction(self, instructions.AND, AddressingMode.Zero_Page, 3),
@@ -182,7 +182,7 @@ class CPU:
             0x48: CPU.Instruction(self, instructions.PHA, AddressingMode.Implied, 3),
             0x49: CPU.Instruction(self, instructions.EOR, AddressingMode.Immediate, 2),
             0x4a: CPU.Instruction(self, instructions.LSR, AddressingMode.Accumulator, 2),
-            0x4c: CPU.Instruction(self, instructions.JMP, AddressingMode.Absolute, 3),
+            0x4c: CPU.Instruction(self, instructions.JMP, AddressingMode.JMP_Absolute, 3),
             0x4d: CPU.Instruction(self, instructions.EOR, AddressingMode.Absolute, 4),
             0x4e: CPU.Instruction(self, instructions.LSR, AddressingMode.Absolute, 6),
 

@@ -415,6 +415,7 @@ def LDA(cpu, mode, op1=None, op2=None):
     cpu.registers['a'].write(value)
     extra_cycles = 0
 
+    print "         [DEBUG] [LDA] value:{:X} value@value:{:X}".format(value, cpu.memory.read(value))
     result = value
     cpu.set_status('zero', (result & 0xff) == 0)
     cpu.set_status('negative', (result & 0xff) >> 7)

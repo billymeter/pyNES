@@ -13,7 +13,7 @@ class AddressingMode:
         byte_size = 3
         @classmethod
         def read(self, cpu, op1, op2):
-            value = op2 << 8 | op1 #cpu.memory.read(op2 << 8 | op1)
+            value = cpu.memory.read(op2 << 8 | op1) #cpu.memory.read(op2 << 8 | op1)
             return value, False
         
         @classmethod
@@ -122,6 +122,18 @@ class AddressingMode:
         @classmethod
         def write(self, cpu, op1, op2=None, value=0):
             return None
+
+    class JMP_Absolute:
+        byte_size = 3
+        @classmethod
+        def read(self, cpu, op1, op2):
+            value = op2 << 8 | op1 #cpu.memory.read(op2 << 8 | op1)
+            return value, False
+        
+        @classmethod
+        def write(self, cpu, op1, op2, value):
+            addr = op2 << 8 | op1
+            cpu.memory.write(addr, value)
 
     class Relative:
         byte_size = 2
