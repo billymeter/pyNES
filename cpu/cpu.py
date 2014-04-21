@@ -20,7 +20,8 @@ class CPU:
     class Memory:
         def __init__(self, nes):
             self._nes = nes
-            self._memory = [0] * 0xffff #bytearray(0x10000)
+            self._memory = bytearray(0x10000)
+            self._memory[0x100:0x200] = [0xff] * 0xff
 
         def read(self, addr):
             # The Zero Page, Stack, and RAM mirrored 4 times, we will only
@@ -311,15 +312,15 @@ class CPU:
         # fetch
 
         pc = self.registers['pc'].read()
-        print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
+        #print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
         opcode = self.memory.read(pc)
 
-        print " [DEBUG] OPCODE: {:X} ({})".format(opcode, self.opcodes[opcode]._instruction.__doc__)
+        #print " [DEBUG] OPCODE: {:X} ({})".format(opcode, self.opcodes[opcode]._instruction.__doc__)
 
         # decode
         operands = self.opcodes[opcode]._addressing.byte_size
         ops = [None, None]
-        print " [DEBUG] OPERAND COUNT: {}".format(operands)
+        #print " [DEBUG] OPERAND COUNT: {}".format(operands)
         for i in range(operands):
             if i == 0: continue # skip instruction opcode
             ops[i-1] = self.memory.read(pc + i) # fill in operands
@@ -335,7 +336,7 @@ class CPU:
                                                             self.opcodes[opcode]._instruction.__doc__,
                             self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(),
                             self.registers['p'].read(), self.registers['sp'].read(), self._cycles))
-        print "[DEBUG] ------------------------\n"
+        #print "[DEBUG] ------------------------\n"
         cycles = self.opcodes[opcode](ops[0], ops[1])
         return cycles
         #self._cycles += cycles
@@ -351,16 +352,14 @@ class CPU:
         return (self.registers['p'].read() >> pos) & 0x1
 
     def set_status(self, flag, value):
-        print " [DEBUG] Status BEFORE set: {:X}".format(self.registers['p'].read())
         self.registers['p'].assign_bit(self.status[flag], value)
-        print " [DEBUG] Status AFTER set: {:X}".format(self.registers['p'].read())
 
     # Stack methods
     def push_stack(self, value):
+        self.memory.write(0x100 + self.registers['sp'].read(), value)#+ 0x100, value)
         self.registers['sp'].adjust(value=-1)
-        self.memory.write(self.registers['sp'].read(), value)#+ 0x100, value)
 
     def pop_stack(self):
-        result = self.memory.read(self.registers['sp'].read())
-        self.registers['sp'].adjust()
+        self.registers['sp'].adjust(value=1)
+        result = self.memory.read(0x100 + self.registers['sp'].read())
         return result

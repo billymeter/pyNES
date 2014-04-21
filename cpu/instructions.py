@@ -5,13 +5,8 @@ def ADC(cpu, mode, op1=None, op2=None):
     c = cpu.get_status('carry')
     a = cpu.registers['a'].read()
     result = value + a + c
-    overflow = (((a >> 6) & 0x1) and ((value >> 6) & 0x1) and not ((result >> 6) & 0x1) or (not ((a >> 6) & 0x1) and not ((value >> 6) & 0x1 and ((result >> 6) & 0x1))))
-    print "************************************************  [DEBUG] [ADC] overflow: {} carry: {}".format(overflow, overflow)
-    # cpu.registers['a'].write(result)
-    # cpu.set_status('carry', overflow) #((a >> 6) & 0x1) and (result >> 7) )
-    # cpu.set_status('zero', (result & 0xff) == 0)
-    # cpu.set_status('overflow', overflow)
-    # cpu.set_status('negative', result >> 7 & 0x1)
+    
+    
 
     cpu.set_status('negative', result & 0x80 == 0x80)
     cpu.set_status('zero', result & 0xff == 0x0)
@@ -126,7 +121,6 @@ def BIT(cpu, mode, op1=None, op2=None):
     a = cpu.registers['a'].read()
 
     result = a & value
-    print "                    [DEBUG] [BIT] A:{:X} value:{:X} result:{:X}".format(a, value, result)
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', value >> 7)
     cpu.set_status('overflow', (value >> 6) & 0x1 )
@@ -198,9 +192,11 @@ def BPL(cpu, mode, op1=None, op2=None):
 
 def BRK(cpu, mode, op1=None, op2=None):
     '''BRK'''
-    raise SystemExit
+    
     pc = cpu.registers['pc'].read()
-    print "[DEBUG] - [BRK] pc: {}".format(pc)
+
+    raise SystemExit
+
     cpu.push_stack(pc & 0xff)
     cpu.push_stack(pc >> 8)
     cpu.push_stack(cpu.registers['p'].read())
@@ -400,9 +396,6 @@ def JSR(cpu, mode, op1=None, op2=None):
     address, page_crossed = mode.read(cpu, op1, op2)
     pc = cpu.registers['pc'].read()
 
-    print " [DEBUG] [IN JSR] pc:{:04X}".format(pc)
-    print " [DEBUG] [IN JSR] sp:{:04X}".format(cpu.registers['sp'].read())
-    print " [DEBUG] [IN JSR - PUSHED to STACK] {:02X}{:02X}\n\n".format(pc & 0xff, pc >> 8)
     cpu.push_stack(pc & 0xff)
     cpu.push_stack(pc >> 8)
 
@@ -415,7 +408,6 @@ def LDA(cpu, mode, op1=None, op2=None):
     cpu.registers['a'].write(value)
     extra_cycles = 0
 
-    print "         [DEBUG] [LDA] value:{:X} value@value:{:X}".format(value, cpu.memory.read(value))
     result = value
     cpu.set_status('zero', (result & 0xff) == 0)
     cpu.set_status('negative', (result & 0xff) >> 7)
@@ -429,6 +421,7 @@ def LDX(cpu, mode, op1=None, op2=None):
     '''LDX'''
     value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['x'].write(value)
+
     extra_cycles = 0
     result = value
     cpu.set_status('zero', (result & 0xff) == 0)
@@ -443,6 +436,7 @@ def LDY(cpu, mode, op1=None, op2=None):
     '''LDY'''
     value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['y'].write(value)
+
     extra_cycles = 0
     result = value
     cpu.set_status('zero', (result & 0xff) == 0)
@@ -580,7 +574,6 @@ def RTS(cpu, mode, op1=None, op2=None):
     pc |= cpu.pop_stack()
 
     cpu.registers['pc'].write(pc)
-    print " [DEBUG] pc:{:04X}".format(pc)
     return 0
 
 def SBC(cpu, mode, op1=None, op2=None):
@@ -590,8 +583,6 @@ def SBC(cpu, mode, op1=None, op2=None):
     c = cpu.get_status('carry')
     a = cpu.registers['a'].read()
     result = a - value - (1 - c)
-    overflow = (((a >> 6) & 0x1) and ((value >> 6) & 0x1) and not ((result >> 6) & 0x1) or (not ((a >> 6) & 0x1) and not ((value >> 6) & 0x1 and ((result >> 6) & 0x1))))
-    print "************************************************  [DEBUG] [SBC] overflow: {} carry: {}".format(overflow, overflow)
 
     cpu.set_status('negative', result & 0x80 == 0x80)
     cpu.set_status('zero', result & 0xff == 0x0)
@@ -600,7 +591,6 @@ def SBC(cpu, mode, op1=None, op2=None):
     else:
         cpu.set_status('overflow', 0)
     
-    #cpu.set_status('overflow', value > 0x100)
     cpu.set_status('carry', result >> 8 == 0)
 
     cpu.registers['a'].write(result & 0xff)
@@ -609,23 +599,6 @@ def SBC(cpu, mode, op1=None, op2=None):
         extra_cycles = 1
 
     return extra_cycles
-    # value, page_crossed = mode.read(cpu, op1, op2)
-    # extra_cycles = 0
-
-    # a = cpu.registers['a'].read()
-    # c = cpu.get_status('carry')
-    # result = a - value - (1 - c)
-
-    # cpu.registers['a'].write(result)
-    # if result < 0:
-    #     cpu.set_status('carry', 0)
-    #     cpu.set_status('overflow', 1)
-    # cpu.set_status('zero', result == 0)
-    # cpu.set_status('negative', result >> 7)
-
-    # if page_crossed:
-    #     extra_cycles = 1
-    # return extra_cycles
 
 def SEC(cpu, mode, op1=None, op2=None):
     '''SEC'''
