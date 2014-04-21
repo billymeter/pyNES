@@ -7,6 +7,7 @@ from view.wx_view import *
 from view.game_display import *
 from view.options_dialogs import *
 import nes
+from utils import key_to_pykey
 
 
 class EmulatorThread(threading.Thread):
@@ -16,6 +17,7 @@ class EmulatorThread(threading.Thread):
         self.daemon = True
         self.nes = nes.NES()
         self.nes.ppu.display = display
+        display.nes = self.nes
         self.running = False
         self.rom_path = rom_path
         self.paused = False
@@ -73,7 +75,24 @@ class Controller(object):
         pub.subscribe(self.push_input_config, "Push Options.Input")
         pub.subscribe(self.pending_input_config, "Pending Options.Input")
 
+        self.load_defaults()
+
         self.main_view.Show()
+
+    def load_defaults(self):
+        self.set_gamepads()
+
+    def set_gamepads(self):
+        try:
+            for item in self.config.items('Gamepad 1'):
+                self.main_view.display.gamepad1[item[0]] = key_to_pykey[item[1]]
+        except ConfigParser.NoSectionError:
+            pass
+        try:
+            for item in self.config.items('Gamepad 2'):
+                self.main_view.display.gamepad1[item[0]] = key_to_pykey[item[1]]
+        except ConfigParser.NoSectionError:
+            pass
 
     def start_emulation(self):
         """ Initialize emulation thread """
@@ -103,6 +122,7 @@ class Controller(object):
         """ Write user changes to settings file """
         with open('settings.ini', 'wb') as configfile:
             self.config.write(configfile)
+        self.set_gamepads()
 
     def pending_input_config(self, key):
         """ Write pending changes to config parser without writing to file """
