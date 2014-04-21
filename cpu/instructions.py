@@ -375,8 +375,8 @@ def INX(cpu, mode, op1=None, op2=None):
     '''INX'''
     value = cpu.registers['x'].read()
     value += 1
-    cpu.set_status('zero', value == 0)
-    cpu.set_status('negative', value >> 7)
+    cpu.set_status('zero', (value & 0xff) == 0)
+    cpu.set_status('negative', (value & 0xff) >> 7)
     cpu.registers['x'].write(value)
     return 0
 
@@ -416,8 +416,8 @@ def LDA(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     result = value
-    cpu.set_status('zero', result == 0)
-    cpu.set_status('negative', result >> 7)
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('negative', (result & 0xff) >> 7)
 
     if page_crossed:
         extra_cycles = 1
@@ -430,8 +430,8 @@ def LDX(cpu, mode, op1=None, op2=None):
     cpu.registers['x'].write(value)
     extra_cycles = 0
     result = value
-    cpu.set_status('zero', result == 0)
-    cpu.set_status('negative', result >> 7)
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('negative', (result & 0xff) >> 7)
 
     if page_crossed:
         extra_cycles = 1
@@ -444,8 +444,8 @@ def LDY(cpu, mode, op1=None, op2=None):
     cpu.registers['y'].write(value)
     extra_cycles = 0
     result = value
-    cpu.set_status('zero', result == 0)
-    cpu.set_status('negative', result >> 7)
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('negative', (result & 0xff) >> 7)
 
     if page_crossed:
         extra_cycles = 1
@@ -460,8 +460,8 @@ def LSR(cpu, mode, op1=None, op2=None):
     mode.write(cpu, op1, op2, result)
 
     cpu.set_status('carry', value & 0x1)
-    cpu.set_status('zero', result == 0)
-    cpu.set_status('negative', result >> 7)
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('negative', (result & 0xff) >> 7)
     return 0
 
 def NOP(cpu, mode, op1=None, op2=None):
