@@ -4,7 +4,7 @@ The entry point for the emulator
 import logging
 from cpu import cpu
 import ppu
-import Cartridge
+import cartridge
 
 logging.basicConfig(filename='nes.log', level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -15,7 +15,6 @@ class NES(object):
         self.rom = None
         self.cpu = cpu.CPU(self, self.rom)
         self.ppu = ppu.PPU(self)
-        self.i = 0
 
     def save_state(self):
         pass
@@ -30,4 +29,4 @@ class NES(object):
             self.ppu.step()
 
     def load_rom(self, rom_data):
-        self.rom = Cartridge.Cartridge(self, rom_data)
+        self.rom = cartridge.Cartridge(self, rom_data)
