@@ -20,7 +20,7 @@ class CPU:
     class Memory:
         def __init__(self, nes):
             self._nes = nes
-            self._memory = bytearray(0x10000)
+            self._memory = [0] * 0xffff #bytearray(0x10000)
 
         def read(self, addr):
             # The Zero Page, Stack, and RAM mirrored 4 times, we will only
@@ -298,6 +298,7 @@ class CPU:
             0xf5: CPU.Instruction(self, instructions.SBC, AddressingMode.Zero_Page_X, 4),
             0xf6: CPU.Instruction(self, instructions.INC, AddressingMode.Zero_Page_X, 6),
             0xf8: CPU.Instruction(self, instructions.SED, AddressingMode.Implied, 2),
+            0xf9: CPU.Instruction(self, instructions.SBC, AddressingMode.Absolute_Y, 4),
             0xfd: CPU.Instruction(self, instructions.SBC, AddressingMode.Absolute_X, 4),
             0xfe: CPU.Instruction(self, instructions.INC, AddressingMode.Absolute_X, 7)
         }
@@ -313,11 +314,12 @@ class CPU:
         print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
         opcode = self.memory.read(pc)
 
-        print " [DEBUG] OPCODE: {:X}".format(opcode)
+        print " [DEBUG] OPCODE: {:X} (DEC:{})".format(opcode, opcode)
+
         # decode
         operands = self.opcodes[opcode]._addressing.byte_size
         ops = [None, None]
-        
+        print " [DEBUG] OPERAND COUNT: {}".format(operands)
         for i in range(operands):
             if i == 0: continue # skip instruction opcode
             ops[i-1] = self.memory.read(pc + i) # fill in operands
@@ -328,8 +330,9 @@ class CPU:
         self.registers['pc'].write(pc + operands)
 
         #execute
-        f.write("{:04X}  {:02X} {} {}                             A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:Not implemented\n".format(pc, opcode, 
+        f.write("{:04X}  {:02X} {} {}  {}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:\n".format(pc, opcode, 
                                                             "  " if ops[0] == None else "{:02X}".format(ops[0]), "  " if ops[1] == None else "{:02X}".format(ops[1]),
+                                                            self.opcodes[opcode]._instruction.__doc__,
                             self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(), 
                             self.registers['p'].read(), self.registers['sp'].read(), self._cycles))
         print "[DEBUG] ------------------------\n" 
@@ -340,7 +343,7 @@ class CPU:
     def run(self):
         while True:
             cycles = self.execute()
-            self._cycles = (self._cycles + cycles * 3) % 335 # times 3 for ppu multiplier
+            self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
 
     # status methods
     def get_status(self, flag):
@@ -348,7 +351,9 @@ class CPU:
         return (self.registers['p'].read() >> pos) & 0x1
 
     def set_status(self, flag, value):
+        print " [DEBUG] Status BEFORE set: {:X}".format(self.registers['p'].read())
         self.registers['p'].assign_bit(self.status[flag], value)
+        print " [DEBUG] Status AFTER set: {:X}".format(self.registers['p'].read())
 
     # Stack methods
     def push_stack(self, value):

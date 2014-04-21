@@ -11,7 +11,6 @@ class AddressingMode:
 
     class Absolute:
         byte_size = 3
-        
         @classmethod
         def read(self, cpu, op1, op2):
             value = op2 << 8 | op1 #cpu.memory.read(op2 << 8 | op1)
@@ -75,6 +74,7 @@ class AddressingMode:
         byte_size = 1
         @classmethod
         def read(self, cpu, op1=None, op2=None):
+            ""
             return None, False
 
         @classmethod
