@@ -1,13 +1,9 @@
 '''
 The entry point for the emulator
 '''
-import logging
 from cpu import cpu
 import ppu
 import cartridge
-
-logging.basicConfig(filename='nes.log', level=logging.ERROR)
-logger = logging.getLogger(__name__)
 
 
 class NES(object):
@@ -30,3 +26,6 @@ class NES(object):
 
     def load_rom(self, rom_data):
         self.rom = cartridge.Cartridge(self, rom_data)
+
+    def parse_input(self, button):
+        print "parsed!"
