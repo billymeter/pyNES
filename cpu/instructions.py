@@ -14,7 +14,7 @@ def ADC(cpu, mode, op1=None, op2=None):
     # cpu.set_status('negative', result >> 7 & 0x1)
 
     cpu.set_status('negative', result & 0x80 == 0x80)
-    cpu.set_status('zero', result == 0x0)
+    cpu.set_status('zero', result & 0xff == 0x0)
     if ((a ^ value) & 0x80 == 0) and ((a ^ result) & 0x80 == 0x80):
         cpu.set_status('overflow', 1)
     else:
