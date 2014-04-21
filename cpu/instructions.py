@@ -329,13 +329,19 @@ def DEC(cpu, mode, op1=None, op2=None):
 def DEX(cpu, mode, op1=None, op2=None):
     '''DEX'''
     value = cpu.registers['x'].read()
-    cpu.registers['x'].write(value - 1)
+    value -= 1
+    cpu.set_status('zero', value == 0)
+    cpu.set_status('negative', value >> 7)
+    cpu.registers['x'].write(value)
     return 0
 
 def DEY(cpu, mode, op1=None, op2=None):
     '''DEY'''
     value = cpu.registers['y'].read()
-    cpu.registers['y'].write(value - 1)
+    value -= 1
+    cpu.set_status('zero', value == 0)
+    cpu.set_status('negative', value >> 7)
+    cpu.registers['y'].write(value)
     return 0
 
 def EOR(cpu, mode, op1=None, op2=None):
@@ -368,17 +374,19 @@ def INC(cpu, mode, op1=None, op2=None):
 def INX(cpu, mode, op1=None, op2=None):
     '''INX'''
     value = cpu.registers['x'].read()
+    value += 1
     cpu.set_status('zero', value == 0)
     cpu.set_status('negative', value >> 7)
-    cpu.registers['x'].write(value + 1)
+    cpu.registers['x'].write(value)
     return 0
 
 def INY(cpu, mode, op1=None, op2=None):
     '''INY'''
     value = cpu.registers['y'].read()
-    cpu.set_status('zero', value == 0)
-    cpu.set_status('negative', value >> 7)
-    cpu.registers['y'].write(value + 1)
+    value += 1
+    cpu.set_status('zero', (value & 0xff) == 0)
+    cpu.set_status('negative', (value & 0xff) >> 7)
+    cpu.registers['y'].write(value)
     return 0
 
 def JMP(cpu, mode, op1=None, op2=None):
@@ -586,13 +594,13 @@ def SBC(cpu, mode, op1=None, op2=None):
 
     cpu.set_status('negative', result & 0x80 == 0x80)
     cpu.set_status('zero', result & 0xff == 0x0)
-    if ((a ^ value) & 0x80 == 0) and ((a ^ result) & 0x80 == 0x80):
+    if ((a ^ value) & 0x80 != 0) and ((a ^ result) & 0x80 != 0):
         cpu.set_status('overflow', 1)
     else:
         cpu.set_status('overflow', 0)
     
     #cpu.set_status('overflow', value > 0x100)
-    cpu.set_status('carry', not(value > a))
+    cpu.set_status('carry', result >> 8 == 0)
 
     cpu.registers['a'].write(result & 0xff)
 
