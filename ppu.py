@@ -154,8 +154,8 @@ class PPU(object):
 
         # render states
         self.palette_buffer = [{'color': 0, 'value': 0, 'index': 0}] * 61440
-        self.frame_buffer = [0] * 61408
-        self.frame = [0] * 61408
+        self.frame_buffer = [0] * 61440
+        self.display = None
 
         ''' Flags (Reg 1) '''
         # Execute NMI on VBlank. 0=Disable, 1=Enable
@@ -689,21 +689,26 @@ class PPU(object):
         for i in range(len(self.palette_buffer)-1, -1, -1):
             y = i / 256
             x = i - (y * 256)
-            buffer_px = self.palette_buffer[i]
-            color = buffer_px['color']
+            color = self.palette_buffer[i]['color']
 
             # overscan
-            if y < 8 or y > 231 or x < 8 or x > 247:
-                continue
-            else:
-                y -= 8
-                x -= 8
+            # if y < 8 or y > 231 or x < 8 or x > 247:
+            #     continue
+            # else:
+            #     y -= 8
+            #     x -= 8
 
-            width = 240
+            width = 256
             self.frame_buffer[(y * width) + x] = color << 8
-            buffer_px['value'] = 0
-            buffer_px['index'] = -1
-        self.frame = self.frame_buffer
+            self.palette_buffer[i]['value'] = 0
+            self.palette_buffer[i]['index'] = -1
+        # from random import randrange
+        # i = randrange(256)
+        for y in range(240):
+            for x in range(256):
+                self.display.surface[x, y] = self.frame_buffer[y*256 + x]
+                # self.display.surface[x, y] = i
+        self.display.DrawGame()
 
     def update_sprite_buffer(self, address, v):
         i = address / 4
