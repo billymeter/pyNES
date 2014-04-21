@@ -5,14 +5,17 @@ import ConfigParser
 from wx.lib.pubsub import pub
 from view.wx_view import *
 from view.game_display import *
+from view.options_dialogs import *
 import nes
 
 
 class EmulatorThread(threading.Thread):
     """ Thread for emulator computations """
-    def __init__(self, rom_path):
+    def __init__(self, rom_path, display):
         threading.Thread.__init__(self)
-        self.emulator = nes.NES()
+        self.daemon = True
+        self.nes = nes.NES()
+        self.nes.ppu.display = display
         self.running = False
         self.rom_path = rom_path
         self.paused = False
@@ -21,18 +24,18 @@ class EmulatorThread(threading.Thread):
     def load_rom(self, rom_path):
         self.rom_path = rom_path
         with open(rom_path, 'rb') as rom:
-            self.emulator.load_rom(rom.read())
+            self.nes.load_rom(rom.read())
 
     def run(self):
         self.running = True
         while self.running:
             while self.paused:
                 if self.save:
-                    self.emulator.save_state()
+                    self.nes.save_state()
                     self.save = False
-            self.emulator.step()
+            self.nes.step()
         if self.save:
-            self.emulator.save_state()
+            self.nes.save_state()
             self.save = False
 
 
@@ -47,8 +50,8 @@ class Controller(object):
         "Push Options.Input"        None
     """
     def __init__(self, app):
-        self.emu_thread = EmulatorThread(None)
         self.main_view = MainView(None)
+        self.emu_thread = EmulatorThread(None, self.main_view.display)
 
         # Emulator config parser
         self.config = ConfigParser.ConfigParser()
