@@ -4,6 +4,7 @@ The entry point for the emulator
 from cpu import cpu
 import ppu
 import cartridge
+import apu
 
 
 class NES(object):
@@ -11,6 +12,8 @@ class NES(object):
         self.rom = None
         self.cpu = cpu.CPU(self, self.rom)
         self.ppu = ppu.PPU(self)
+        self.apu = apu.APU(self)
+
 
     def save_state(self):
         pass

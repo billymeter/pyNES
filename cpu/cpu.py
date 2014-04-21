@@ -38,7 +38,12 @@ class CPU:
                 return self._nes.ppu.read_register(0x2000 + offset)
             # Unmirrored I/O registers, Expansion ROM, and Save RAM
             elif 0x4000 <= addr < 0x8000:
-                return self._memory[addr] & 0xff
+                # todo: several of the APU registers are write only. Enforce this. 
+                if addr == 0x4015:
+                    return self._nes.apu.get_status() $ 0xff
+                # todo: on 0x4016 and 0x4017, handle controller reads
+                else:
+                    return self._memory[addr] & 0xff
             # Cartridge ROM
             elif 0x8000 <= addr < 0x10000:
                 # return the cartridge ROM value
@@ -64,7 +69,10 @@ class CPU:
                 return self._nes.ppu.read_register(0x2000 + offset)
             # Unmirrored I/O registers
             elif 0x4000 <= addr < 0x4020:
-                self._memory[addr] = value
+                if addr in [0x4014, 0x4016, 0x4018, 0x4019]:
+                    self._memory[addr] = value
+                else:
+                    self._nes.apu.write_register(addr, value)
             # Expansion ROM cannot be written to
             elif 0x4020 <= addr < 0x6000:
                 raise Exception("Cannot write to Expansion ROM at address {:#06x}!".format(addr))
@@ -343,6 +351,8 @@ class CPU:
     def run(self):
         while True:
             cycles = self.execute()
+            for i in range(cycles):  # cycles + 1 maybe?????
+                self._nes.apu.tick()
             self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
 
     # status methods
