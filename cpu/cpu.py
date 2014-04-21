@@ -309,7 +309,7 @@ class CPU:
 
     def execute(self):
         # fetch
-        
+
         pc = self.registers['pc'].read()
         print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
         opcode = self.memory.read(pc)
@@ -330,12 +330,12 @@ class CPU:
         self.registers['pc'].write(pc + operands)
 
         #execute
-        f.write("{:04X}  {:02X} {} {}  {}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:\n".format(pc, opcode, 
+        f.write("{:04X}  {:02X} {} {}  {}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:\n".format(pc, opcode,
                                                             "  " if ops[0] == None else "{:02X}".format(ops[0]), "  " if ops[1] == None else "{:02X}".format(ops[1]),
                                                             self.opcodes[opcode]._instruction.__doc__,
-                            self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(), 
+                            self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(),
                             self.registers['p'].read(), self.registers['sp'].read(), self._cycles))
-        print "[DEBUG] ------------------------\n" 
+        print "[DEBUG] ------------------------\n"
         cycles = self.opcodes[opcode](ops[0], ops[1])
         return cycles
         #self._cycles += cycles

@@ -2,12 +2,17 @@ def ADC(cpu, mode, op1=None, op2=None):
     '''ADC'''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
-    value += cpu.registers['a'].read() + cpu.get_status('carry')
-
-    cpu.set_status('carry', value > 0xff)
-    cpu.registers['a'].write(value)
-    cpu.set_status('zero', value & 0xff)
-    cpu.set_status('overflow', value != cpu.registers['a'].read())
+    c = cpu.get_status('carry')
+    a = cpu.registers['a'].read()
+    result =  value + a + c
+    overflow = ( ((a >> 6) & 0x1) and ((value >> 6) & 0x1) and not ((result >> 6) & 0x1 ) or ( not ((a >> 6) & 0x1) and  not ((value >> 6) & 0x1 and ((result >> 6) & 0x1))) )
+    print "************************************************  [DEBUG] [ADC] overflow: {} carry: {}".format(overflow, overflow)
+    cpu.registers['a'].write(result)
+    cpu.set_status('carry', overflow) #((a >> 6) & 0x1) and (result >> 7) )
+    c2 = cpu.get_status('carry')
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('overflow', overflow)
+    cpu.set_status('negative', result >> 7 & 0x1)
 
     if page_crossed:
         extra_cycles = 1
@@ -22,10 +27,10 @@ def AND(cpu, mode, op1=None, op2=None):
 
     result = a & value
     cpu.registers['a'].write(result)
-    
+
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
-    
+
     if page_crossed:
         extra_cycles = 1
 
@@ -61,7 +66,7 @@ def BCC(cpu, mode, op1=None, op2=None):
             extra_cycles = 2
         else:
             extra_cycles = 1
-    
+
     if not cpu.get_status('carry'):
         pc = cpu.registers['pc'].read()
         cpu.registers['pc'].write(pc + value)
@@ -77,7 +82,7 @@ def BCS(cpu, mode, op1=None, op2=None):
             extra_cycles = 2
         else:
             extra_cycles = 1
-    
+
     if cpu.get_status('carry'):
         pc = cpu.registers['pc'].read()
         cpu.registers['pc'].write(pc + value)
@@ -109,7 +114,7 @@ def BIT(cpu, mode, op1=None, op2=None):
     '''BIT'''
     value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
-    
+
     result = a & value
     print "                    [DEBUG] [BIT] A:{:X} value:{:X} result:{:X}".format(a, value, result)
     cpu.set_status('zero', result == 0)
@@ -372,7 +377,7 @@ def JSR(cpu, mode, op1=None, op2=None):
     '''JSR'''
     address, page_crossed = mode.read(cpu, op1, op2)
     pc = cpu.registers['pc'].read()
-    
+
     print " [DEBUG] [IN JSR] pc:{:04X}".format(pc)
     print " [DEBUG] [IN JSR] sp:{:04X}".format(cpu.registers['sp'].read())
     print " [DEBUG] [IN JSR - PUSHED to STACK] {:02X}{:02X}\n\n".format(pc & 0xff, pc >> 8)
