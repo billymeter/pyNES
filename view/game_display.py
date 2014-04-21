@@ -8,6 +8,7 @@ class Display(wx.Window):
     def __init__(self, *args, **kwargs):
         wx.Window.__init__(self, *args, **kwargs)
         self.parent = kwargs['parent']
+        self.nes = None
         self.hwnd = self.GetHandle()
         if sys.platform == "win32":
             os.environ['SDL_VIDEODRIVER'] = 'windib'
@@ -17,8 +18,28 @@ class Display(wx.Window):
 
         pygame.display.init()
         self.screen = pygame.display.set_mode((256, 240), pygame.HWSURFACE)
-        self.surface = pygame.PixelArray(self.screen)
         self.size = self.GetSizeTuple()
+
+        self.gamepad1 = {
+            'up': 0,
+            'down': 0,
+            'left': 0,
+            'right': 0,
+            'a': 0,
+            'b': 0,
+            'select': 0,
+            'start': 0
+        }
+        self.gamepad2 = {
+            'up': 0,
+            'down': 0,
+            'left': 0,
+            'right': 0,
+            'a': 0,
+            'b': 0,
+            'select': 0,
+            'start': 0
+        }
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -30,10 +51,25 @@ class Display(wx.Window):
         self.timer.Start(self.timespacing, False)
 
     def Update(self, event):
-        pass
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            elif event.type == pygame.KEYDOWN:
+                print event.key
+                for button in self.gamepad1:
+                    if event.key == self.gamepad1[button]:
+                        self.nes.parse_input(button)
+                for button in self.gamepad2:
+                    if event.key == self.gamepad2[button]:
+                        self.nes.parse_input(button)
+        self.Redraw()
 
-    def DrawGame(self):
+    def Redraw(self):
         pygame.display.update()
+
+    def NewFrame(self, buffer):
+            # pygame.pixelcopy.array_to_surface(self.screen, buffer)
+            pygame.surfarray.blit_array(self.screen, buffer)
 
     def OnPaint(self, event):
         self.Redraw()

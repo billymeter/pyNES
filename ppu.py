@@ -4,6 +4,7 @@ Picture Processing Unit
 from collections import namedtuple
 from utils import *
 import logging
+import numpy as np
 
 logging.basicConfig(filename='errors.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -154,7 +155,7 @@ class PPU(object):
 
         # render states
         self.palette_buffer = [{'color': 0, 'value': 0, 'index': 0}] * 61440
-        self.frame_buffer = [0] * 61440
+        self.frame_buffer = np.array([[0] * 240] * 256, ndmin=2, dtype=np.uint32)
         self.display = None
 
         ''' Flags (Reg 1) '''
@@ -699,16 +700,14 @@ class PPU(object):
             #     x -= 8
 
             width = 256
-            self.frame_buffer[(y * width) + x] = color << 8
+            self.frame_buffer[x][y] = color << 8
             self.palette_buffer[i]['value'] = 0
             self.palette_buffer[i]['index'] = -1
         # from random import randrange
         # i = randrange(256)
-        for y in range(240):
-            for x in range(256):
-                self.display.surface[x, y] = self.frame_buffer[y*256 + x]
-                # self.display.surface[x, y] = i
-        self.display.DrawGame()
+        # dumb_buffer = np.array([[i] * 240] * 256, ndmin=2, dtype=np.uint32)
+        # self.display.NewFrame(dumb_buffer)
+        self.display.NewFrame(self.frame_buffer)
 
     def update_sprite_buffer(self, address, v):
         i = address / 4
