@@ -368,12 +368,16 @@ def INC(cpu, mode, op1=None, op2=None):
 def INX(cpu, mode, op1=None, op2=None):
     '''INX'''
     value = cpu.registers['x'].read()
+    cpu.set_status('zero', value == 0)
+    cpu.set_status('negative', value >> 7)
     cpu.registers['x'].write(value + 1)
     return 0
 
 def INY(cpu, mode, op1=None, op2=None):
     '''INY'''
     value = cpu.registers['y'].read()
+    cpu.set_status('zero', value == 0)
+    cpu.set_status('negative', value >> 7)
     cpu.registers['y'].write(value + 1)
     return 0
 
@@ -541,6 +545,7 @@ def ROR(cpu, mode, op1=None, op2=None):
 
 def RTI(cpu, mode, op1=None, op2=None):
     '''RTI'''
+    p = cpu.pop_stack()
     pc = cpu.pop_stack()
     pc = pc << 8
     pc |= cpu.pop_stack()
@@ -571,23 +576,47 @@ def RTS(cpu, mode, op1=None, op2=None):
 
 def SBC(cpu, mode, op1=None, op2=None):
     '''SBC'''
-    value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
-
-    a = cpu.registers['a'].read()
+    value, page_crossed = mode.read(cpu, op1, op2)
     c = cpu.get_status('carry')
+    a = cpu.registers['a'].read()
     result = a - value - (1 - c)
+    overflow = (((a >> 6) & 0x1) and ((value >> 6) & 0x1) and not ((result >> 6) & 0x1) or (not ((a >> 6) & 0x1) and not ((value >> 6) & 0x1 and ((result >> 6) & 0x1))))
+    print "************************************************  [DEBUG] [SBC] overflow: {} carry: {}".format(overflow, overflow)
 
-    cpu.registers['a'].write(result)
-    if result < 0:
-        cpu.set_status('carry', 0)
+    cpu.set_status('negative', result & 0x80 == 0x80)
+    cpu.set_status('zero', result & 0xff == 0x0)
+    if ((a ^ value) & 0x80 == 0) and ((a ^ result) & 0x80 == 0x80):
         cpu.set_status('overflow', 1)
-    cpu.set_status('zero', result == 0)
-    cpu.set_status('negative', result >> 7)
+    else:
+        cpu.set_status('overflow', 0)
+    
+    #cpu.set_status('overflow', value > 0x100)
+    cpu.set_status('carry', not(value > a))
+
+    cpu.registers['a'].write(result & 0xff)
 
     if page_crossed:
         extra_cycles = 1
+
     return extra_cycles
+    # value, page_crossed = mode.read(cpu, op1, op2)
+    # extra_cycles = 0
+
+    # a = cpu.registers['a'].read()
+    # c = cpu.get_status('carry')
+    # result = a - value - (1 - c)
+
+    # cpu.registers['a'].write(result)
+    # if result < 0:
+    #     cpu.set_status('carry', 0)
+    #     cpu.set_status('overflow', 1)
+    # cpu.set_status('zero', result == 0)
+    # cpu.set_status('negative', result >> 7)
+
+    # if page_crossed:
+    #     extra_cycles = 1
+    # return extra_cycles
 
 def SEC(cpu, mode, op1=None, op2=None):
     '''SEC'''
