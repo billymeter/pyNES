@@ -356,10 +356,12 @@ class CPU:
 
     # Stack methods
     def push_stack(self, value):
+        print "[PUSH] {:2X}".format(value)
         self.memory.write(0x100 + self.registers['sp'].read(), value)#+ 0x100, value)
         self.registers['sp'].adjust(value=-1)
 
     def pop_stack(self):
         self.registers['sp'].adjust(value=1)
         result = self.memory.read(0x100 + self.registers['sp'].read())
+        print "[POP ] {:2X}".format(result)
         return result

@@ -398,9 +398,10 @@ def JSR(cpu, mode, op1=None, op2=None):
     '''JSR'''
     address, page_crossed = mode.read(cpu, op1, op2)
     pc = cpu.registers['pc'].read()
-
-    cpu.push_stack(pc & 0xff)
+    pc -= 1
     cpu.push_stack(pc >> 8)
+    cpu.push_stack((pc & 0xff))
+    
 
     cpu.registers['pc'].write(address)
     return 0
@@ -553,8 +554,7 @@ def RTI(cpu, mode, op1=None, op2=None):
     '''RTI'''
     p = cpu.pop_stack()
     pc = cpu.pop_stack()
-    pc = pc << 8
-    pc |= cpu.pop_stack()
+    pc |= (cpu.pop_stack() << 8)
 
     cpu.registers['p'].write(p)
     cpu.registers['pc'].write(pc)
@@ -564,7 +564,7 @@ def RTI(cpu, mode, op1=None, op2=None):
     cpu.set_status('interrupt', p >> 2 & 0x1)
     cpu.set_status('decimal', p >> 3 & 0x1)
     cpu.set_status('break', p >> 4 & 0x1)
-
+    cpu.set_status('unused', 1)
     cpu.set_status('overflow', p >> 6 & 0x1)
     cpu.set_status('negative', p >> 7)
 
@@ -573,10 +573,9 @@ def RTI(cpu, mode, op1=None, op2=None):
 def RTS(cpu, mode, op1=None, op2=None):
     '''RTS'''
     pc = cpu.pop_stack()
-    pc = pc << 8
-    pc |= cpu.pop_stack()
+    pc |= (cpu.pop_stack() << 8)
 
-    cpu.registers['pc'].write(pc)
+    cpu.registers['pc'].write(pc+1)
     return 0
 
 def SBC(cpu, mode, op1=None, op2=None):
