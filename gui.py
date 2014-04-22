@@ -12,21 +12,19 @@ from utils import key_to_pykey
 
 class EmulatorThread(threading.Thread):
     """ Thread for emulator computations """
-    def __init__(self, rom_path, display):
+    def __init__(self):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.nes = nes.NES()
-        self.nes.ppu.display = display
-        display.nes = self.nes
         self.running = False
-        self.rom_path = rom_path
         self.paused = False
         self.save = False
 
-    def load_rom(self, rom_path):
-        self.rom_path = rom_path
+    def load_emulator(self, rom_path, display):
         with open(rom_path, 'rb') as rom:
-            self.nes.load_rom(rom.read())
+            self.nes = nes.NES(rom.read())
+        self.rom_path = rom_path
+        self.nes.ppu.display = display
+        display.nes = self.nes
 
     def run(self):
         self.running = True
@@ -53,7 +51,7 @@ class Controller(object):
     """
     def __init__(self, app):
         self.main_view = MainView(None)
-        self.emu_thread = EmulatorThread(None, self.main_view.display)
+        self.emu_thread = EmulatorThread()
 
         # Emulator config parser
         self.config = ConfigParser.ConfigParser()
@@ -71,7 +69,6 @@ class Controller(object):
         pub.subscribe(self.unpause_emulation, "Unpause Emulation")
 
         # Assign emulation state-config listeners
-        pub.subscribe(self.load_rom, "Load ROM")
         pub.subscribe(self.push_input_config, "Push Options.Input")
         pub.subscribe(self.pending_input_config, "Pending Options.Input")
 
@@ -94,13 +91,10 @@ class Controller(object):
         except ConfigParser.NoSectionError:
             pass
 
-    def start_emulation(self):
+    def start_emulation(self, rom_path):
         """ Initialize emulation thread """
-        if self.emu_thread.rom_path:
-            self.emu_thread.start()
-        else:
-            with open('error.log', 'a') as error_log:
-                error_log.write('Tried to start emulation before ROM loaded\n')
+        self.emu_thread.load_emulator(rom_path, self.main_view.display)
+        self.emu_thread.start()
 
     def stop_emulation(self):
         """ Stop emulation thread """
@@ -113,10 +107,6 @@ class Controller(object):
     def unpause_emulation(self):
         """ Unpause emulation thread """
         self.emu_thread.paused = False
-
-    def load_rom(self, rom_path):
-        """ Give ROM path to emulator """
-        self.emu_thread.load_rom(rom_path)
 
     def push_input_config(self):
         """ Write user changes to settings file """

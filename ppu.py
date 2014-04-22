@@ -303,7 +303,7 @@ class PPU(object):
     def ppustatus_read(self):
         """ Handle a read to PPUSTATUS ($2002) """
         # get current status
-        tmp = self._nes.cpu.read(0x2002)
+        tmp = self.status
 
         # vram address latch is cleared
         self.vram_addr_latch = 0
@@ -442,11 +442,11 @@ class PPU(object):
 
     def dma_write(self, v):
         """ Handle a write to $4014 """
-        self._nes.cpu.cycles += 513
+        self._nes.halt_cpu = 513
 
         base_address = v * 0x100
         for i in range(self.sprite_ram_addr, 0x100):
-            data = self._nes.cpu.read(base_address + i)
+            data = self._nes.cpu.memory.read(base_address + i)
             self.sprite_ram[i] = data
             self.update_sprite_buffer(i, data)
 
@@ -644,7 +644,7 @@ class PPU(object):
                 px = self.palette_buffer[fb_row]
                 priority = (attr >> 5) & 0x1
 
-                hit = self._nes.cpu.read(0x2002) & 0x40
+                hit = self.status & 0x40
                 if px['value'] != 0 and is_sprite0 and not hit:
                     # sprite 0 has been hit
                     set_bit(self.status, StatusBit.Sprite0Hit)
@@ -707,6 +707,8 @@ class PPU(object):
         # i = randrange(256)
         # dumb_buffer = np.array([[i] * 240] * 256, ndmin=2, dtype=np.uint32)
         # self.display.NewFrame(dumb_buffer)
+        with open('frame_buffer.txt', 'w') as file:
+            file.write(str(self.frame_buffer))
         self.display.NewFrame(self.frame_buffer)
 
     def update_sprite_buffer(self, address, v):

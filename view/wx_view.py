@@ -79,8 +79,7 @@ class MainView(wx.Frame):
         dlg = wx.FileDialog(parent=self, style=wx.FD_OPEN,
                             wildcard="NES files (*.nes) | *.nes")
         if dlg.ShowModal() == wx.ID_OK:
-            pub.sendMessage("Load ROM", rom_path=dlg.GetPath())
-            pub.sendMessage("Start Emulation")
+            pub.sendMessage("Start Emulation", rom_path=dlg.GetPath())
 
             # Update status bar
             self.statusbar.SetStatusText(dlg.GetFilename())

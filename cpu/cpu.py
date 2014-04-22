@@ -365,3 +365,20 @@ class CPU:
         result = self.memory.read(0x100 + self.registers['sp'].read())
         print "[POP ] {:2X}".format(result)
         return result
+
+    def set_reset_vector(self):
+        high = self.memory.read(0xfffd)
+        low = self.memory.read(0xfffc)
+
+        self.registers['pc'].write((high << 8) + low)
+
+    def reset(self):
+        self.registers['x'].write(0)
+        self.registers['y'].write(0)
+        self.registers['a'].write(0)
+        self.registers['p'].write(0x34)
+        self.registers['sp'].write(0xfd)
+        self.cycles = 0
+        # self.set_reset_vector()
+
+        # interrupt stuff?
