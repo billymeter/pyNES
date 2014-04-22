@@ -5,10 +5,12 @@ def enum(*sequential, **named):
 
 def clear_bit(v, bit):
     v &= ~(1 << bit)
+    return v
 
 
 def set_bit(v, bit):
     v |= (1 << bit)
+    return v
 
 # not complete
 key_to_pykey = {

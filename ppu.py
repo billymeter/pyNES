@@ -335,7 +335,7 @@ class PPU(object):
             self.ignore_vblank = 1
         else:
             # vblank flag is cleared
-            clear_bit(self.status, StatusBit.InVblank)
+            self.status = clear_bit(self.status, StatusBit.InVblank)
             self.ignore_nmi = 0
             self.ignore_vblank = 0
 
@@ -462,8 +462,8 @@ class PPU(object):
     def step(self):
         if self.scanline == -1:
             if self.cycle == 1:
-                clear_bit(self.status, StatusBit.SpriteOverflow)
-                clear_bit(self.status, StatusBit.Sprite0Hit)
+                self.status = clear_bit(self.status, StatusBit.SpriteOverflow)
+                self.status = clear_bit(self.status, StatusBit.Sprite0Hit)
             if self.cycle == 304:
                 '''
                 From http://wiki.nesdev.com/w/index.php/PPU_scrolling:
@@ -483,14 +483,14 @@ class PPU(object):
         elif self.scanline == 241:
             if self.cycle == 1:
                 if not self.ignore_vblank:
-                    set_bit(self.status, StatusBit.InVblank)
+                    self.status = set_bit(self.status, StatusBit.InVblank)
                 if self.nmi_on_vblank == 1 and not self.ignore_nmi:
-                    # request interrupt from CPU!
-                    self._nes.cpu.set_status('interrupt', 1)
+                    # request NMI from CPU!
+                    self._nes.cpu.request_nmi = 1
                 self.render_output()
         elif self.scanline == 260:
             if self.cycle == 1:
-                clear_bit(self.status, StatusBit.InVblank)
+                self.status = clear_bit(self.status, StatusBit.InVblank)
             elif self.cycle == 341:
                 self.scanline = -1
                 self.cycle = 1
@@ -647,7 +647,7 @@ class PPU(object):
                 hit = self.status & 0x40
                 if px['value'] != 0 and is_sprite0 and not hit:
                     # sprite 0 has been hit
-                    set_bit(self.status, StatusBit.Sprite0Hit)
+                    self.status = set_bit(self.status, StatusBit.Sprite0Hit)
 
                 if -1 < px['index'] < index:
                     # higher priority sprite is already rendered here; skip
