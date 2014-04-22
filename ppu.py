@@ -9,6 +9,8 @@ import numpy as np
 logging.basicConfig(filename='errors.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+f = open("ppu.log", 'w')
+
 ''' Constants '''
 MirrorType = enum('Horizontal', 'Vertical', 'SingleUpper', 'SingleLower')
 # PatternTablePos = (0x0000, 0x1000)
@@ -23,70 +25,85 @@ NAMETABLE_SIZE = 0x400
 # status register
 StatusBit = enum(SpriteOverflow=5, Sprite0Hit=6, InVblank=7)
 
-rgb_palette = [(0x1D << 2, 0x1D << 2, 0x1D << 2),
-               (0x09 << 2, 0x06 << 2, 0x23 << 2),
-               (0x00 << 2, 0x00 << 2, 0x2A << 2),
-               (0x11 << 2, 0x00 << 2, 0x27 << 2),
-               (0x23 << 2, 0x00 << 2, 0x1D << 2),
-               (0x2A << 2, 0x00 << 2, 0x04 << 2),
-               (0x29 << 2, 0x00 << 2, 0x00 << 2),
-               (0x1F << 2, 0x02 << 2, 0x00 << 2),
-               (0x10 << 2, 0x0B << 2, 0x00 << 2),
-               (0x00 << 2, 0x11 << 2, 0x00 << 2),
-               (0x00 << 2, 0x14 << 2, 0x00 << 2),
-               (0x00 << 2, 0x0F << 2, 0x05 << 2),
-               (0x06 << 2, 0x0F << 2, 0x17 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x2F << 2, 0x2F << 2, 0x2F << 2),
-               (0x00 << 2, 0x1C << 2, 0x3B << 2),
-               (0x08 << 2, 0x0E << 2, 0x3B << 2),
-               (0x20 << 2, 0x00 << 2, 0x3C << 2),
-               (0x2F << 2, 0x00 << 2, 0x2F << 2),
-               (0x39 << 2, 0x00 << 2, 0x16 << 2),
-               (0x36 << 2, 0x0A << 2, 0x00 << 2),
-               (0x32 << 2, 0x13 << 2, 0x03 << 2),
-               (0x22 << 2, 0x1C << 2, 0x00 << 2),
-               (0x00 << 2, 0x25 << 2, 0x00 << 2),
-               (0x00 << 2, 0x2A << 2, 0x00 << 2),
-               (0x00 << 2, 0x24 << 2, 0x0E << 2),
-               (0x00 << 2, 0x20 << 2, 0x22 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x3F << 2, 0x3F << 2, 0x3F << 2),
-               (0x0F << 2, 0x2F << 2, 0x3F << 2),
-               (0x17 << 2, 0x25 << 2, 0x3F << 2),
-               (0x33 << 2, 0x22 << 2, 0x3F << 2),
-               (0x3D << 2, 0x1E << 2, 0x3F << 2),
-               (0x3F << 2, 0x1D << 2, 0x2D << 2),
-               (0x3F << 2, 0x1D << 2, 0x18 << 2),
-               (0x3F << 2, 0x26 << 2, 0x0E << 2),
-               (0x3C << 2, 0x2F << 2, 0x0F << 2),
-               (0x20 << 2, 0x34 << 2, 0x04 << 2),
-               (0x13 << 2, 0x37 << 2, 0x12 << 2),
-               (0x16 << 2, 0x3E << 2, 0x26 << 2),
-               (0x00 << 2, 0x3A << 2, 0x36 << 2),
-               (0x1E << 2, 0x1E << 2, 0x1E << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x3F << 2, 0x3F << 2, 0x3F << 2),
-               (0x2A << 2, 0x39 << 2, 0x3F << 2),
-               (0x31 << 2, 0x35 << 2, 0x3F << 2),
-               (0x35 << 2, 0x32 << 2, 0x3F << 2),
-               (0x3F << 2, 0x31 << 2, 0x3F << 2),
-               (0x3F << 2, 0x31 << 2, 0x36 << 2),
-               (0x3F << 2, 0x2F << 2, 0x2C << 2),
-               (0x3F << 2, 0x36 << 2, 0x2A << 2),
-               (0x3F << 2, 0x39 << 2, 0x28 << 2),
-               (0x38 << 2, 0x3F << 2, 0x28 << 2),
-               (0x2A << 2, 0x3C << 2, 0x2F << 2),
-               (0x2C << 2, 0x3F << 2, 0x33 << 2),
-               (0x27 << 2, 0x3F << 2, 0x3C << 2),
-               (0x31 << 2, 0x31 << 2, 0x31 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               (0x00 << 2, 0x00 << 2, 0x00 << 2)]
+rgb_palette = [
+    0x666666, 0x002A88, 0x1412A7, 0x3B00A4, 0x5C007E,
+    0x6E0040, 0x6C0600, 0x561D00, 0x333500, 0x0B4800,
+    0x005200, 0x004F08, 0x00404D, 0x000000, 0x000000,
+    0x000000, 0xADADAD, 0x155FD9, 0x4240FF, 0x7527FE,
+    0xA01ACC, 0xB71E7B, 0xB53120, 0x994E00, 0x6B6D00,
+    0x388700, 0x0C9300, 0x008F32, 0x007C8D, 0x000000,
+    0x000000, 0x000000, 0xFFFEFF, 0x64B0FF, 0x9290FF,
+    0xC676FF, 0xF36AFF, 0xFE6ECC, 0xFE8170, 0xEA9E22,
+    0xBCBE00, 0x88D800, 0x5CE430, 0x45E082, 0x48CDDE,
+    0x4F4F4F, 0x000000, 0x000000, 0xFFFEFF, 0xC0DFFF,
+    0xD3D2FF, 0xE8C8FF, 0xFBC2FF, 0xFEC4EA, 0xFECCC5,
+    0xF7D8A5, 0xE4E594, 0xCFEF96, 0xBDF4AB, 0xB3F3CC,
+    0xB5EBF2, 0xB8B8B8, 0x000000, 0x000000,
+]
+               # [(0x1D << 2, 0x1D << 2, 0x1D << 2),
+               # (0x09 << 2, 0x06 << 2, 0x23 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x2A << 2),
+               # (0x11 << 2, 0x00 << 2, 0x27 << 2),
+               # (0x23 << 2, 0x00 << 2, 0x1D << 2),
+               # (0x2A << 2, 0x00 << 2, 0x04 << 2),
+               # (0x29 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x1F << 2, 0x02 << 2, 0x00 << 2),
+               # (0x10 << 2, 0x0B << 2, 0x00 << 2),
+               # (0x00 << 2, 0x11 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x14 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x0F << 2, 0x05 << 2),
+               # (0x06 << 2, 0x0F << 2, 0x17 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x2F << 2, 0x2F << 2, 0x2F << 2),
+               # (0x00 << 2, 0x1C << 2, 0x3B << 2),
+               # (0x08 << 2, 0x0E << 2, 0x3B << 2),
+               # (0x20 << 2, 0x00 << 2, 0x3C << 2),
+               # (0x2F << 2, 0x00 << 2, 0x2F << 2),
+               # (0x39 << 2, 0x00 << 2, 0x16 << 2),
+               # (0x36 << 2, 0x0A << 2, 0x00 << 2),
+               # (0x32 << 2, 0x13 << 2, 0x03 << 2),
+               # (0x22 << 2, 0x1C << 2, 0x00 << 2),
+               # (0x00 << 2, 0x25 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x2A << 2, 0x00 << 2),
+               # (0x00 << 2, 0x24 << 2, 0x0E << 2),
+               # (0x00 << 2, 0x20 << 2, 0x22 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x3F << 2, 0x3F << 2, 0x3F << 2),
+               # (0x0F << 2, 0x2F << 2, 0x3F << 2),
+               # (0x17 << 2, 0x25 << 2, 0x3F << 2),
+               # (0x33 << 2, 0x22 << 2, 0x3F << 2),
+               # (0x3D << 2, 0x1E << 2, 0x3F << 2),
+               # (0x3F << 2, 0x1D << 2, 0x2D << 2),
+               # (0x3F << 2, 0x1D << 2, 0x18 << 2),
+               # (0x3F << 2, 0x26 << 2, 0x0E << 2),
+               # (0x3C << 2, 0x2F << 2, 0x0F << 2),
+               # (0x20 << 2, 0x34 << 2, 0x04 << 2),
+               # (0x13 << 2, 0x37 << 2, 0x12 << 2),
+               # (0x16 << 2, 0x3E << 2, 0x26 << 2),
+               # (0x00 << 2, 0x3A << 2, 0x36 << 2),
+               # (0x1E << 2, 0x1E << 2, 0x1E << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x3F << 2, 0x3F << 2, 0x3F << 2),
+               # (0x2A << 2, 0x39 << 2, 0x3F << 2),
+               # (0x31 << 2, 0x35 << 2, 0x3F << 2),
+               # (0x35 << 2, 0x32 << 2, 0x3F << 2),
+               # (0x3F << 2, 0x31 << 2, 0x3F << 2),
+               # (0x3F << 2, 0x31 << 2, 0x36 << 2),
+               # (0x3F << 2, 0x2F << 2, 0x2C << 2),
+               # (0x3F << 2, 0x36 << 2, 0x2A << 2),
+               # (0x3F << 2, 0x39 << 2, 0x28 << 2),
+               # (0x38 << 2, 0x3F << 2, 0x28 << 2),
+               # (0x2A << 2, 0x3C << 2, 0x2F << 2),
+               # (0x2C << 2, 0x3F << 2, 0x33 << 2),
+               # (0x27 << 2, 0x3F << 2, 0x3C << 2),
+               # (0x31 << 2, 0x31 << 2, 0x31 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
+               # (0x00 << 2, 0x00 << 2, 0x00 << 2)]
 
 
 class NameTables(object):
@@ -96,8 +113,8 @@ class NameTables(object):
     """
     def __init__(self):
         self.logical_tables = [[], [], [], []]
-        self.nametable0 = [0] * NAMETABLE_SIZE
-        self.nametable1 = [0] * NAMETABLE_SIZE
+        self.nametable0 = [0xff] * NAMETABLE_SIZE
+        self.nametable1 = [0xff] * NAMETABLE_SIZE
         self.mirroring = None
 
     def set_mirroring(self, m):
@@ -227,6 +244,8 @@ class PPU(object):
             return self.oamdata_read()
         elif address == 0x2007:
             return self.ppudata_read()
+        else:
+            return
 
     def write_register(self, address, v):
         if address == 0x2000:
@@ -245,6 +264,8 @@ class PPU(object):
             self.ppudata_write(v)
         elif address == 0x4014:
             self.dma_write(v)
+        else:
+            pass
 
     def ppuctrl_write(self, value):
         """ Handle a write to PPUCTRL ($2000) """
@@ -339,7 +360,7 @@ class PPU(object):
             self.ignore_nmi = 0
             self.ignore_vblank = 0
 
-        return tmp
+        return self.status
 
     def oamaddr_write(self, v):
         """ Handle a write to OAMADDR ($2003) """
@@ -460,13 +481,20 @@ class PPU(object):
             self.vram_addr += 1
 
     def step(self):
+        f.write("{:04X}  {:02X}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:{} CTRL:{} MASK:{} STATUS:{} DBUF:{} D:{} ABUF:{} ADDR:{} SRAM:{} FX:{} ALATCH:{} SHIFT1:{} SHIFT2:{}\n".format(self._nes.cpu.registers['pc'].read(),
+                self._nes.cpu.memory.read(self._nes.cpu.registers['pc'].read()),
+                self._nes.cpu.registers['a'].read(), self._nes.cpu.registers['x'].read(), self._nes.cpu.registers['y'].read(),
+                self._nes.cpu.registers['p'].read(), self._nes.cpu.registers['sp'].read(), self.cycle, self.scanline,
+                self.control, self.mask, self.status, self.vram_data_buffer, self.vram_addr, self.vram_addr_buffer, self.sprite_ram_addr,
+                self.vram_data, self.fine_x, self.vram_addr_latch, self.shift16_1, self.shift16_2))
         if self.scanline == -1:
             if self.cycle == 1:
+                self.status = clear_bit(self.status, StatusBit.InVblank)
                 self.status = clear_bit(self.status, StatusBit.SpriteOverflow)
                 self.status = clear_bit(self.status, StatusBit.Sprite0Hit)
             if self.cycle == 304:
                 '''
-                From http://wiki.nesdev.com/w/index.php/PPU_scrolling:
+                From http://wiki._nesdev.com/w/index.php/PPU_scrolling:
                 At the beginning of each frame, the contents of
                 vram_addr_buffer copied into vram_addr, as long as background
                 or sprites are enabled. This takes place on PPU cycle 304 of
@@ -489,15 +517,12 @@ class PPU(object):
                     self._nes.cpu.request_nmi = 1
                 self.render_output()
         elif self.scanline == 260:
-            if self.cycle == 1:
-                self.status = clear_bit(self.status, StatusBit.InVblank)
-            elif self.cycle == 341:
+            if self.cycle == 340:
                 self.scanline = -1
-                self.cycle = 1
                 self.frame_count += 1
 
-        if self.cycle == 341:
-            self.cycle = 0
+        if self.cycle == 340:
+            self.cycle = -1
             self.scanline += 1
 
         self.cycle += 1
@@ -517,8 +542,7 @@ class PPU(object):
             # for each pixel in the row of the tile
             for k in range(8):
                 fb_row = self.scanline*256 + ((x * 8) + k)
-                pixel = self.palette_buffer[fb_row]
-                if pixel['value'] != 0:
+                if self.palette_buffer[fb_row]['value'] != 0:
                     continue
 
                 current = (15 - k - self.fine_x)
@@ -530,9 +554,9 @@ class PPU(object):
                 else:
                     palette = self.get_background_entry(attr_buffer, pxvalue)
 
-                pixel['color'] = rgb_palette[palette % 64]
-                pixel['value'] = pxvalue
-                pixel['index'] = -1
+                self.palette_buffer[fb_row]['color'] = rgb_palette[palette % 64]
+                self.palette_buffer[fb_row]['value'] = pxvalue
+                self.palette_buffer[fb_row]['index'] = -1
 
             attr = attr_buffer
 
@@ -641,15 +665,15 @@ class PPU(object):
                 trans = 1
 
             if fb_row < 0xf000 and not trans:
-                px = self.palette_buffer[fb_row]
                 priority = (attr >> 5) & 0x1
 
                 hit = self.status & 0x40
-                if px['value'] != 0 and is_sprite0 and not hit:
+                if (self.palette_buffer[fb_row]['value'] != 0 and is_sprite0
+                        and not hit):
                     # sprite 0 has been hit
                     self.status = set_bit(self.status, StatusBit.Sprite0Hit)
 
-                if -1 < px['index'] < index:
+                if -1 < self.palette_buffer[fb_row]['index'] < index:
                     # higher priority sprite is already rendered here; skip
                     continue
                 elif px['value'] != 0 and priority == 1:
