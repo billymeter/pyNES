@@ -191,13 +191,7 @@ def BPL(cpu, mode, op1=None, op2=None):
 
 def BRK(cpu, mode, op1=None, op2=None):
     ''' BRK'''
-    
     pc = cpu.registers['pc'].read()
-
-    f=open("stackdump.dmp", "wb")
-    f.write(cpu.memory._memory[0x000:0x200])
-    f.close()
-    raise SystemExit
 
     cpu.push_stack(pc & 0xff)
     cpu.push_stack(pc >> 8)
@@ -279,7 +273,7 @@ def CMP(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     n = cpu.get_status('negative')
     a = cpu.registers['a'].read()
-    
+
     result = a - value
 
     cpu.set_status('carry', a >= value)
@@ -317,21 +311,16 @@ def CPY(cpu, mode, op1=None, op2=None):
 
 def DCP_UNDOC(cpu, mode, op1=None, op2=None):
     '''*DCP'''
-    DEC(cpu, mode, op1, op2)
-    CMP(cpu, mode, op1, op2)
-    # extra_cycles = 0
-    # value, page_crossed = mode.read(cpu, op1, op2)
-    # c = cpu.get_status('carry')
-    
-    # result = (value - 1) & 0xff    
-    # if (value == 0xff and cpu.get_status('negative')):
-    #     result = 0
-    
-    # cpu.set_status('carry', 0)
-    # cpu.set_status('negative', result >> 7)
-    # cpu.set_status('zero', result & 0xff == 0x0)
+    value, page_crossed = mode.read(cpu, op1, op2)
+    value -= 1
+    a = cpu.registers['a'].read()
 
-    # mode.write(cpu, op1, op2, result)
+    result = a - value
+    mode.write(cpu, op1, op2, (value) & 0xff)
+
+    cpu.set_status('carry', a >= value)
+    cpu.set_status('negative', (result & 0xff) >> 7)
+    cpu.set_status('zero', result & 0xff == 0x0)
     return 0
 
 def DEC(cpu, mode, op1=None, op2=None):
@@ -407,6 +396,22 @@ def INY(cpu, mode, op1=None, op2=None):
     cpu.set_status('negative', (value & 0xff) >> 7)
     cpu.registers['y'].write(value)
     return 0
+
+def ISB_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*ISB'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    value += 1
+    a = cpu.registers['a'].read()
+    c = cpu.get_status('carry')
+    result = a - value - (0 if c else 1)
+    cpu.set_status('carry', a >= value)
+    cpu.set_status('negative', (result & 0xff) >> 7)
+    cpu.set_status('zero', result & 0xff == 0x0)
+    
+    extra_cycles = 0
+    if page_crossed:
+        extra_cycles = 1
+    return extra_cycles
 
 def JMP(cpu, mode, op1=None, op2=None):
     ''' JMP'''

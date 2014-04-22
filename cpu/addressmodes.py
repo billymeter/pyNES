@@ -161,7 +161,7 @@ class AddressingMode:
             addr = (addr1 & 0xff) + ((addr2 & 0xff) << 8)
             y = cpu.registers['y'].read()
 
-            result = cpu.memory.read((addr+y)&0xfff)
+            result = cpu.memory.read((addr+y)&0xffff)
             return result, page_crossed
 
         @classmethod
