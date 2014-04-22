@@ -134,13 +134,15 @@ class AddressingMode:
             addr += ((cpu.memory.read(op1 + 1) & 0xff) << 8)
             y = cpu.registers['y'].read()
 
+            if cpu.get_status('negative'):
+                y = (y ^ 0xff) + 1
+                y *= -1
+
             print "[DEBUG] [INDIRECT_Y READ] addr:{:X} value:{:X} y:{:X} pc:{:X}".format(addr, cpu.memory.read(addr), y, cpu.registers['pc'].read() - self.byte_size)
             if addr > (addr % 0x800):
                 # page crossed
                 page_crossed = True
-            
-            if y==0xff:
-                y=-1
+
             result = cpu.memory.read((addr+y)&0xfff)
             
             print "        [INDR_Y] value at read(read():{:X}".format(cpu.memory.read(cpu.memory.read(addr)))
@@ -177,6 +179,7 @@ class AddressingMode:
             if op1 >> 7:
                 op1 ^= 0xff
                 op1 += 1
+                op1 *= -1
             return op1, False
 
         @classmethod
