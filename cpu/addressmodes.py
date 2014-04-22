@@ -86,14 +86,14 @@ class AddressingMode:
         @classmethod
         def read(self, cpu, op1, op2):
             addr1 = cpu.memory.read(op2 << 8 | op1)
-            addr2 = cpu.memory.read((op2 << 8 | op1) + 1)
+            addr2 = cpu.memory.read((op2 << 8 | op1)) # + 1)
             addr = addr2 << 8 | addr1
             return addr
 
         @classmethod
         def write(self, cpu, op1, op2, value):
             addr1 = cpu.memory.read(op2 << 8 | op1)
-            addr2 = cpu.memory.read((op2 << 8 | op1) + 1)
+            addr2 = cpu.memory.read((op2 << 8 | op1)) # + 1)
             addr = addr2 << 8 | addr1
             cpu.memory.write(addr, value)
             return None
@@ -130,27 +130,21 @@ class AddressingMode:
         @classmethod
         def read(self, cpu, op1, op2=None):
             page_crossed = False
-            addr = cpu.memory.read(op1) & 0xff
-            addr += ((cpu.memory.read(op1 + 1) & 0xff) << 8)
+            addr1 = cpu.memory.read(op1) & 0xff
+            addr2 = cpu.memory.read((op1 + 1) & 0xff)
+            addr = addr1 + (addr2 << 8)
             y = cpu.registers['y'].read()
 
-            # if cpu.get_status('negative'):
-            #     y = (y ^ 0xff) + 1
-            #     y *= -1
-
-            if addr > (addr % 0x800):
-                # page crossed
+            if addr1 < addr2:
                 page_crossed = True
 
-            print "[DEBUG] addr:{:X}".format((addr+y))
-            result = cpu.memory.read((addr+y)&0xfff)
+            # if addr > (addr % 0x800):
+            #     # page crossed
+            #     page_crossed = True
 
-            if (cpu.registers['pc'].read() - self.byte_size) == 0xd959:
-                f=open("memdump","wb")
-                f.write(cpu.memory._memory)
-                f.close()
-            
-            #print "        [INDR_Y] value at read(read():{:X}".format(cpu.memory.read(cpu.memory.read(addr)))
+
+
+            result = cpu.memory.read((addr+y)&0xfff)
             return result, page_crossed
 
         @classmethod
