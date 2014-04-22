@@ -325,7 +325,7 @@ class CPU:
 
         # check for interrupts
         if self.irq_requested:
-            if not (self.registers['p'].read() & 0x4 == 0x4):
+            if not self.get_status('interrupt'):
                 self.irq()
                 self.interrupt_requested = 0
         elif self.nmi_requested:
