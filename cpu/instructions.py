@@ -45,9 +45,10 @@ def ASL(cpu, mode, op1=None, op2=None):
     bit7 = value & 0x80
     cpu.set_status('carry', bit7)
 
-    result = value << 1
+    result = (value << 1) & 0xff
 
-    cpu.registers['a'].write(result)
+    mode.write(cpu, op1, op2, result)
+    #cpu.registers['a'].write(result)
 
     cpu.set_status('zero', (result & 0xff) == 0)
     cpu.set_status('negative', (result & 0xff) >> 7)

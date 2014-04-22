@@ -105,15 +105,23 @@ class AddressingMode:
             # this addressing mode works on the zero page, so
             # wrap around
             indir_addr = (op1 + cpu.registers['x'].read()) % 0xff
-            addr = cpu.memory.read(indir_addr)
-            addr += (cpu.memory.read(indir_addr + 1) << 8)
+            addr = cpu.memory.read(indir_addr) & 0xff
+            if op1==0xff:
+                addr = addr << 8
+            else:
+                addr += (cpu.memory.read((indir_addr + 1) & 0xff) << 8)
+            #print "[DEBUG] [INDIRECT_X READ] addr:{:X} value:{:X} pc:{:X}".format(addr, cpu.memory.read(addr), cpu.registers['pc'].read() - self.byte_size)
+            #print "[DEBUG] [INDR_X] value at 0x0400:{:X}".format(cpu.memory.read(0x0400))
             return cpu.memory.read(addr), False
 
         @classmethod
         def write(self, cpu, op1, op2=None, value=0):
             indir_addr = (op1 + cpu.registers['x'].read()) % 0xff
             addr = cpu.memory.read(indir_addr)
-            addr += (cpu.memory.read(indir_addr + 1) << 8)
+            if op1==0xff:
+                addr = addr << 8
+            else:
+                addr += (cpu.memory.read((indir_addr + 1) & 0xff) << 8)
             cpu.memory.write(addr, value)
             return None
 
