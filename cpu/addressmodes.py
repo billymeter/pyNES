@@ -126,7 +126,6 @@ class AddressingMode:
                 addr = addr << 8
             else:
                 addr += (cpu.memory.read((indir_addr + 1) & 0xff) << 8)
-            print "[DEBUG] Indirect_X READ   ({:4X})={:2X} op1:{:2X} pc:{:X}".format(addr, cpu.memory.read(addr), op1, cpu.registers['pc'].read()-self.byte_size)
             return cpu.memory.read(addr), False
 
         @classmethod
@@ -138,7 +137,6 @@ class AddressingMode:
             else:
                 addr += (cpu.memory.read((indir_addr + 1) & 0xff) << 8)
             cpu.memory.write(addr, value)
-            print "[DEBUG] Indirect_X WRITE  ({:4X})={:2X} op1:{:2X} pc:{:X}".format(addr, value, op1,cpu.registers['pc'].read()-self.byte_size)
             return None
 
     class Indirect_Y:
@@ -199,10 +197,15 @@ class AddressingMode:
         byte_size = 2
         @classmethod
         def read(self, cpu, op1, op2=None):
+            page_crossed = False
             if op1 >> 7:
                 op1 ^= 0xff
                 op1 += 1
                 op1 *= -1
+
+            pc = cpu.registers['pc'].read()
+            if (pc & 0xff00) != (pc + op1) & 0xff00:
+                page_crossed = True
             return op1, False
 
         @classmethod

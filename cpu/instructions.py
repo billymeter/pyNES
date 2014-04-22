@@ -403,11 +403,15 @@ def ISB_UNDOC(cpu, mode, op1=None, op2=None):
     value += 1
     a = cpu.registers['a'].read()
     c = cpu.get_status('carry')
-    result = a - value - (0 if c else 1)
+    
+    result = a - value - (1 - c)
+    
+    cpu.registers['a'].write(result)
+
     cpu.set_status('carry', a >= value)
     cpu.set_status('negative', (result & 0xff) >> 7)
     cpu.set_status('zero', result & 0xff == 0x0)
-    
+    cpu.set_status('overflow', 0)
     extra_cycles = 0
     if page_crossed:
         extra_cycles = 1
