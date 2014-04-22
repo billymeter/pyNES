@@ -64,7 +64,7 @@ class CPU:
                 #base_addr = (addr - 0x2000) % 0x8
                 #self.memory[base_addr + 0x2000] = value
                 offset = addr % 0x8
-                return self._nes.ppu.read_register(0x2000 + offset)
+                return self._nes.ppu.write_register(0x2000 + offset, value)
             # Unmirrored I/O registers
             elif 0x4000 <= addr < 0x4020:
                 self._memory[addr] = value
