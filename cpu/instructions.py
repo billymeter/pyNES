@@ -6,8 +6,6 @@ def ADC(cpu, mode, op1=None, op2=None):
     a = cpu.registers['a'].read()
     result = value + a + c
     
-    
-
     cpu.set_status('negative', result & 0x80 == 0x80)
     cpu.set_status('zero', result & 0xff == 0x0)
     if ((a ^ value) & 0x80 == 0) and ((a ^ result) & 0x80 == 0x80):
@@ -51,8 +49,8 @@ def ASL(cpu, mode, op1=None, op2=None):
 
     cpu.registers['a'].write(result)
 
-    cpu.set_status('zero', result == 0)
-    cpu.set_status('negative', result >> 7)
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('negative', (result & 0xff) >> 7)
 
     return 0 # no extra cycles
 

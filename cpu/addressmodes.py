@@ -100,7 +100,9 @@ class AddressingMode:
         def read(self, cpu, op1, op2=None):
             # this addressing mode works on the zero page, so
             # wrap around
-            addr = (op1 + cpu.registers['x'].read()) % 0x100
+            indir_addr = (op1 + cpu.registers['x'].read()) % 0xff
+            addr = cpu.memory.read(indir_addr)
+            addr += (cpu.memory.read(indir_addr + 1) << 8)
             return addr, False
 
         @classmethod
@@ -139,6 +141,10 @@ class AddressingMode:
         byte_size = 2
         @classmethod
         def read(self, cpu, op1, op2=None):
+
+            #if addr > (addr % 0x100):
+                # page crossed
+            #    page_crossed = True
             return op1, False
 
         @classmethod

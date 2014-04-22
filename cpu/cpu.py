@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 f=open("cpu.log","w")
 
+scanlines = 241
+
 class CPU:
     '''
     CPU emulation
@@ -307,8 +309,14 @@ class CPU:
         self.registers['pc'].write(0xc000)
         self.registers['p'].write(0x24)
         self.registers['sp'].write(0xfd)
+        self.memory._memory[0x0000:0x0800] = [0xff]
+        self.memory._memory[0x0008] = 0xf7
+        self.memory._memory[0x0009] = 0xef
+        self.memory._memory[0x000a] = 0xdf
+        self.memory._memory[0x000f] = 0xbf
 
     def execute(self):
+        global scanlines
         # fetch
 
         pc = self.registers['pc'].read()
@@ -331,20 +339,27 @@ class CPU:
         self.registers['pc'].write(pc + operands)
 
         #execute
-        f.write("{:04X}  {:02X} {} {}  {}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:\n".format(pc, opcode,
+        f.write("{:04X}  {:02X} {} {}  {}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:{}\n".format(pc, opcode,
                                                             "  " if ops[0] == None else "{:02X}".format(ops[0]), "  " if ops[1] == None else "{:02X}".format(ops[1]),
                                                             self.opcodes[opcode]._instruction.__doc__,
                             self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(),
-                            self.registers['p'].read(), self.registers['sp'].read(), self._cycles))
+                            self.registers['p'].read(), self.registers['sp'].read(), self._cycles, scanlines))
         #print "[DEBUG] ------------------------\n"
         cycles = self.opcodes[opcode](ops[0], ops[1])
         return cycles
         #self._cycles += cycles
 
     def run(self):
+        global scanlines
         while True:
             cycles = self.execute()
+            temp = self._cycles
             self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
+            if temp > self._cycles:
+                scanlines += 1
+                if scanlines == 261:
+                    scanlines = -1
+
 
     # status methods
     def get_status(self, flag):
