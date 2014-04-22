@@ -351,7 +351,7 @@ class CPU:
     def run(self):
         while True:
             cycles = self.execute()
-            for i in range(cycles):  # cycles + 1 maybe?????
+            for i in range(cycles + 1):  # cycles + 1 maybe?????
                 self._nes.apu.tick()
             self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
 

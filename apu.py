@@ -30,17 +30,17 @@ class APU:
                 # do something to the CPU to enable the interrupt (no the flag)
             halfTick = self.slowCount & 5
             fullTick = self.slowCount < 4
-            self.square1.tick()
-            self.square2.tick()
-            self.triangle.tick()
-            self.noise.tick()
-            # self.DMC.tick()
+            self.square1.tick(halfTick, fullTick)
+            self.square2.tick(halfTick, fullTick)
+            self.triangle.tick(halfTick, fullTick)
+            self.noise.tick(halfTick, fullTick)
+            # self.DMC.tick(halfTick, fullTick)
     class square:
         def __init__(self, apu):
             self.apu = apu
             # 0x00
             self.duty = 0
-            self.loop = 0
+            self.halt = 0
             self.cv = 0
             self.v = 0
             # 0x01
@@ -49,17 +49,18 @@ class APU:
             self.sn = 0
             self.ss = 0
             # 0x02
-            self.timerlow = 0
+            # self.timerlow = 0
             # 0x03
-            self.load = 0
-            self.timerhigh = 0
+            self.length = 0
+            # self.timerhigh = 0
+            self.period = 0
 
         def write(self, reg, value):
             reg &= 3
             value &= 0xFF
             if reg == 0:
                 self.duty = (value >> 6) & 3
-                self.loop = (value >> 5) & 1
+                self.halt = (value >> 5) & 1
                 self.cv = (value >> 4) & 1
                 self.v = value & 0xf
             if reg == 1:
@@ -68,12 +69,12 @@ class APU:
                 self.sn = (value >> 3) & 1
                 self.ss = value & 7
             if reg == 2:
-                self.timerlow = value
+                self.period = value + self.period & 0x700
             if reg == 3:
-                self.load = (value >> 3) & 0x1F
-                self.timerhigh = value & 7
-        def tick():
-            
+                self.length = (value >> 3) & 0x1F
+                self.period = (self.period & 0xFF) + ((value & 7) << 8)
+        def tick(self, halfTick, fullTick):
+
 
 
     class triangle:
