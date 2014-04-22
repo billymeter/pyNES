@@ -128,6 +128,10 @@ class CPU:
         self._cycles = 0
         self._cart = cart
 
+        # interrupt flags
+        self.irq_requested = 0
+        self.nmi_requested = 0
+
         # Create the CPU registers
         self.registers = {'pc': CPU.Register(16), 'sp': CPU.Register(8),
                           'a': CPU.Register(8), 'x': CPU.Register(8),
@@ -319,6 +323,15 @@ class CPU:
         global scanlines
         # fetch
 
+        # check for interrupts
+        if self.irq_requested:
+            if not (self.registers['p'].read() & 0x4 == 0x4):
+                self.irq()
+                self.interrupt_requested = 0
+        elif self.nmi_requested:
+            self.nmi()
+            self.nmi_requested = 0
+
         pc = self.registers['pc'].read()
         #print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
         opcode = self.memory.read(pc)
@@ -397,3 +410,30 @@ class CPU:
         # self.set_reset_vector()
 
         # interrupt stuff?
+
+    def irq(self):
+        pc = self.registers['pc'].read()
+        high = pc >> 8
+        low = pc & 0xff
+
+        self.push_stack(high)
+        self.push_stack(low)
+        self.push_stack(self.registers['p'].read())
+
+        high = self.memory.read(0xffff)
+        low = self.memory.read(0xfffe)
+
+        self.registers['pc'].write((high << 8) + low)
+
+    def nmi(self):
+        pc = self.registers['pc'].read()
+        high = pc >> 8
+        low = pc & 0xff
+
+        self.push_stack(high)
+        self.push_stack(low)
+        self.push_stack(self.registers['p'].read())
+
+        high = self.memory.read(0xfffb)
+        low = self.memory.read(0xfffa)
+        self.registers['pc'].write((high << 8) + low)
