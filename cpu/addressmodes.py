@@ -68,13 +68,13 @@ class AddressingMode:
 
         @classmethod
         def write(self, cpu, op1, op2=None, value=0):
+            cpu.memory.write(op1, value)
             return None, False
 
     class Implied:
         byte_size = 1
         @classmethod
         def read(self, cpu, op1=None, op2=None):
-            ""
             return None, False
 
         @classmethod
@@ -92,6 +92,10 @@ class AddressingMode:
 
         @classmethod
         def write(self, cpu, op1, op2, value):
+            addr1 = cpu.memory.read(op2 << 8 | op1)
+            addr2 = cpu.memory.read((op2 << 8 | op1) + 1)
+            addr = addr2 << 8 | addr1
+            cpu.memory.write(addr, value)
             return None
 
     class Indirect_X:
@@ -103,10 +107,14 @@ class AddressingMode:
             indir_addr = (op1 + cpu.registers['x'].read()) % 0xff
             addr = cpu.memory.read(indir_addr)
             addr += (cpu.memory.read(indir_addr + 1) << 8)
-            return addr, False
+            return cpu.memory.read(addr), False
 
         @classmethod
         def write(self, cpu, op1, op2=None, value=0):
+            indir_addr = (op1 + cpu.registers['x'].read()) % 0xff
+            addr = cpu.memory.read(indir_addr)
+            addr += (cpu.memory.read(indir_addr + 1) << 8)
+            cpu.memory.write(addr, value)
             return None
 
     class Indirect_Y:
