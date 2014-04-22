@@ -1,5 +1,5 @@
 def ADC(cpu, mode, op1=None, op2=None):
-    '''ADC'''
+    ''' ADC'''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
     c = cpu.get_status('carry')
@@ -23,7 +23,7 @@ def ADC(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def AND(cpu, mode, op1=None, op2=None):
-    '''AND'''
+    ''' AND'''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
@@ -40,7 +40,7 @@ def AND(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def ASL(cpu, mode, op1=None, op2=None):
-    '''ASL'''
+    ''' ASL'''
     value, page_crossed = mode.read(cpu, op1, op2)
     bit7 = value & 0x80
     cpu.set_status('carry', bit7)
@@ -56,7 +56,7 @@ def ASL(cpu, mode, op1=None, op2=None):
     return 0 # no extra cycles
 
 def BCC(cpu, mode, op1=None, op2=None):
-    '''BCC'''
+    ''' BCC'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -77,7 +77,7 @@ def BCC(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def BCS(cpu, mode, op1=None, op2=None):
-    '''BCS'''
+    ''' BCS'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -94,7 +94,7 @@ def BCS(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def BEQ(cpu, mode, op1=None, op2=None):
-    '''BEQ'''
+    ''' BEQ'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -115,7 +115,7 @@ def BEQ(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def BIT(cpu, mode, op1=None, op2=None):
-    '''BIT'''
+    ''' BIT'''
     value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
 
@@ -127,7 +127,7 @@ def BIT(cpu, mode, op1=None, op2=None):
     return 0 # no extra cycles
 
 def BMI(cpu, mode, op1=None, op2=None):
-    '''BMI'''
+    ''' BMI'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -148,7 +148,7 @@ def BMI(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def BNE(cpu, mode, op1=None, op2=None):
-    '''BNE'''
+    ''' BNE'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -169,7 +169,7 @@ def BNE(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def BPL(cpu, mode, op1=None, op2=None):
-    '''BPL'''
+    ''' BPL'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -190,7 +190,7 @@ def BPL(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def BRK(cpu, mode, op1=None, op2=None):
-    '''BRK'''
+    ''' BRK'''
     
     pc = cpu.registers['pc'].read()
 
@@ -212,7 +212,7 @@ def BRK(cpu, mode, op1=None, op2=None):
     return 0
 
 def BVC(cpu, mode, op1=None, op2=None):
-    '''BVC'''
+    ''' BVC'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -233,7 +233,7 @@ def BVC(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def BVS(cpu, mode, op1=None, op2=None):
-    '''BVS'''
+    ''' BVS'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -254,27 +254,27 @@ def BVS(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def CLC(cpu, mode, op1=None, op2=None):
-    '''CLC'''
+    ''' CLC'''
     cpu.set_status('carry', 0)
     return 0
 
 def CLD(cpu, mode, op1=None, op2=None):
-    '''CLD'''
+    ''' CLD'''
     cpu.set_status('decimal', 0)
     return 0
 
 def CLI(cpu, mode, op1=None, op2=None):
-    '''CLI'''
+    ''' CLI'''
     cpu.set_status('interrupt', 0)
     return 0
 
 def CLV(cpu, mode, op1=None, op2=None):
-    '''CLV'''
+    ''' CLV'''
     cpu.set_status('overflow', 0)
     return 0
 
 def CMP(cpu, mode, op1=None, op2=None):
-    '''CMP'''
+    ''' CMP'''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
@@ -290,7 +290,7 @@ def CMP(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def CPX(cpu, mode, op1=None, op2=None):
-    '''CPX'''
+    ''' CPX'''
     value, page_crossed = mode.read(cpu, op1, op2)
     x = cpu.registers['x'].read()
     result = x - value
@@ -302,7 +302,7 @@ def CPX(cpu, mode, op1=None, op2=None):
     return 0
 
 def CPY(cpu, mode, op1=None, op2=None):
-    '''CPY'''
+    ''' CPY'''
     value, page_crossed = mode.read(cpu, op1, op2)
     y = cpu.registers['y'].read()
     result = y - value
@@ -314,7 +314,7 @@ def CPY(cpu, mode, op1=None, op2=None):
     return 0
 
 def DEC(cpu, mode, op1=None, op2=None):
-    '''DEC'''
+    ''' DEC'''
     value, page_crossed = mode.read(cpu, op1, op2)
 
     result = (value - 1) & 0xff
@@ -325,7 +325,7 @@ def DEC(cpu, mode, op1=None, op2=None):
     return 0
 
 def DEX(cpu, mode, op1=None, op2=None):
-    '''DEX'''
+    ''' DEX'''
     value = cpu.registers['x'].read()
     value -= 1
     cpu.set_status('zero', value == 0)
@@ -334,7 +334,7 @@ def DEX(cpu, mode, op1=None, op2=None):
     return 0
 
 def DEY(cpu, mode, op1=None, op2=None):
-    '''DEY'''
+    ''' DEY'''
     value = cpu.registers['y'].read()
     value -= 1
     cpu.set_status('zero', value == 0)
@@ -343,7 +343,7 @@ def DEY(cpu, mode, op1=None, op2=None):
     return 0
 
 def EOR(cpu, mode, op1=None, op2=None):
-    '''EOR'''
+    ''' EOR'''
     value, page_crossed = mode.read(cpu, op1, op2)
     a = cpu.registers['a'].read()
     extra_cycles = 0
@@ -359,7 +359,7 @@ def EOR(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def INC(cpu, mode, op1=None, op2=None):
-    '''INC'''
+    ''' INC'''
     value, page_crossed = mode.read(cpu, op1, op2)
 
     result = (value + 1) & 0xff
@@ -370,7 +370,7 @@ def INC(cpu, mode, op1=None, op2=None):
     return 0
 
 def INX(cpu, mode, op1=None, op2=None):
-    '''INX'''
+    ''' INX'''
     value = cpu.registers['x'].read()
     value += 1
     cpu.set_status('zero', (value & 0xff) == 0)
@@ -379,7 +379,7 @@ def INX(cpu, mode, op1=None, op2=None):
     return 0
 
 def INY(cpu, mode, op1=None, op2=None):
-    '''INY'''
+    ''' INY'''
     value = cpu.registers['y'].read()
     value += 1
     cpu.set_status('zero', (value & 0xff) == 0)
@@ -388,13 +388,13 @@ def INY(cpu, mode, op1=None, op2=None):
     return 0
 
 def JMP(cpu, mode, op1=None, op2=None):
-    '''JMP'''
+    ''' JMP'''
     address, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['pc'].write(address)
     return 0
 
 def JSR(cpu, mode, op1=None, op2=None):
-    '''JSR'''
+    ''' JSR'''
     address, page_crossed = mode.read(cpu, op1, op2)
     pc = cpu.registers['pc'].read()
     pc -= 1
@@ -405,8 +405,24 @@ def JSR(cpu, mode, op1=None, op2=None):
     cpu.registers['pc'].write(address)
     return 0
 
+def LAX_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*LAX'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    cpu.registers['x'].write(value)
+    cpu.registers['a'].write(value)
+
+    extra_cycles = 0
+    result = value
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('negative', (result & 0xff) >> 7)
+
+    if page_crossed:
+        extra_cycles = 1
+
+    return extra_cycles
+
 def LDA(cpu, mode, op1=None, op2=None):
-    '''LDA'''
+    ''' LDA'''
     value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['a'].write(value)
     extra_cycles = 0
@@ -421,7 +437,7 @@ def LDA(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def LDX(cpu, mode, op1=None, op2=None):
-    '''LDX'''
+    ''' LDX'''
     value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['x'].write(value)
 
@@ -436,7 +452,7 @@ def LDX(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def LDY(cpu, mode, op1=None, op2=None):
-    '''LDY'''
+    ''' LDY'''
     value, page_crossed = mode.read(cpu, op1, op2)
     cpu.registers['y'].write(value)
 
@@ -451,7 +467,7 @@ def LDY(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def LSR(cpu, mode, op1=None, op2=None):
-    '''LSR'''
+    ''' LSR'''
     value, page_crossed = mode.read(cpu, op1, op2)
 
     result = (value >> 1) & 0xff
@@ -463,11 +479,21 @@ def LSR(cpu, mode, op1=None, op2=None):
     return 0
 
 def NOP(cpu, mode, op1=None, op2=None):
-    '''NOP'''
+    ''' NOP'''
     return 0
 
+def NOP_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*NOP'''
+    extra_cycles = 0
+    value, page_crossed = mode.read(cpu, op1, op2)
+    
+    if page_crossed:
+        extra_cycles = 1
+
+    return extra_cycles
+
 def ORA(cpu, mode, op1=None, op2=None):
-    '''ORA'''
+    ''' ORA'''
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
@@ -483,20 +509,20 @@ def ORA(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def PHA(cpu, mode, op1=None, op2=None):
-    '''PHA'''
+    ''' PHA'''
     a = cpu.registers['a'].read()
     cpu.push_stack(a)
     return 0
 
 def PHP(cpu, mode, op1=None, op2=None):
-    '''PHP'''
+    ''' PHP'''
     p = cpu.registers['p'].read()
     p |= 0x1 << 4
     cpu.push_stack(p)
     return 0
 
 def PLA(cpu, mode, op1=None, op2=None):
-    '''PLA'''
+    ''' PLA'''
     result = cpu.pop_stack()
 
     cpu.set_status('zero', result == 0)
@@ -505,7 +531,7 @@ def PLA(cpu, mode, op1=None, op2=None):
     return 0
 
 def PLP(cpu, mode, op1=None, op2=None):
-    '''PLP'''
+    ''' PLP'''
     p = cpu.pop_stack()
     cpu.registers['p'].write(p)
 
@@ -520,7 +546,7 @@ def PLP(cpu, mode, op1=None, op2=None):
     return 0
 
 def ROL(cpu, mode, op1=None, op2=None):
-    '''ROL'''
+    ''' ROL'''
     value, page_crossed = mode.read(cpu, op1, op2)
     bit7 = value >> 7
     carry = cpu.get_status('carry')
@@ -535,7 +561,7 @@ def ROL(cpu, mode, op1=None, op2=None):
     return 0
 
 def ROR(cpu, mode, op1=None, op2=None):
-    '''ROR'''
+    ''' ROR'''
     value, page_crossed = mode.read(cpu, op1, op2)
     bit0 = value & 0x1
     carry = cpu.get_status('carry')
@@ -550,7 +576,7 @@ def ROR(cpu, mode, op1=None, op2=None):
     return 0
 
 def RTI(cpu, mode, op1=None, op2=None):
-    '''RTI'''
+    ''' RTI'''
     p = cpu.pop_stack()
     pc = cpu.pop_stack()
     pc |= (cpu.pop_stack() << 8)
@@ -570,15 +596,27 @@ def RTI(cpu, mode, op1=None, op2=None):
     return 0
 
 def RTS(cpu, mode, op1=None, op2=None):
-    '''RTS'''
+    ''' RTS'''
     pc = cpu.pop_stack()
     pc |= (cpu.pop_stack() << 8)
 
     cpu.registers['pc'].write(pc+1)
     return 0
 
+def SAX_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*SAX'''
+    a = cpu.registers['a'].read()
+    x = cpu.registers['x'].read()
+
+    result = (a & x) & 0xff
+    mode.write(cpu, op1, op2, result)
+    # cpu.set_status('zero', result == 0)
+    # cpu.set_status('negative', result >> 7)
+
+    return 0
+
 def SBC(cpu, mode, op1=None, op2=None):
-    '''SBC'''
+    ''' SBC'''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
     c = cpu.get_status('carry')
@@ -602,40 +640,40 @@ def SBC(cpu, mode, op1=None, op2=None):
     return extra_cycles
 
 def SEC(cpu, mode, op1=None, op2=None):
-    '''SEC'''
+    ''' SEC'''
     cpu.set_status('carry', 1)
     return 0
 
 def SED(cpu, mode, op1=None, op2=None):
-    '''SED'''
+    ''' SED'''
     cpu.set_status('decimal', 1)
     return 0
 
 def SEI(cpu, mode, op1=None, op2=None):
-    '''SEI'''
+    ''' SEI'''
     cpu.set_status('interrupt', 1)
     return 0
 
 def STA(cpu, mode, op1=None, op2=None):
-    '''STA'''
+    ''' STA'''
     a = cpu.registers['a'].read()
     mode.write(cpu, op1, op2, a)
     return 0
 
 def STX(cpu, mode, op1=None, op2=None):
-    '''STX'''
+    ''' STX'''
     x = cpu.registers['x'].read()
     mode.write(cpu, op1, op2, x)
     return 0
 
 def STY(cpu, mode, op1=None, op2=None):
-    '''STY'''
+    ''' STY'''
     y = cpu.registers['y'].read()
     mode.write(cpu, op1, op2, y)
     return 0
 
 def TAX(cpu, mode, op1=None, op2=None):
-    '''TAX'''
+    ''' TAX'''
     result = cpu.registers['a'].read()
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
@@ -644,7 +682,7 @@ def TAX(cpu, mode, op1=None, op2=None):
     return 0
 
 def TAY(cpu, mode, op1=None, op2=None):
-    '''TAY'''
+    ''' TAY'''
     result = cpu.registers['a'].read()
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
@@ -653,7 +691,7 @@ def TAY(cpu, mode, op1=None, op2=None):
     return 0
 
 def TSX(cpu, mode, op1=None, op2=None):
-    '''TSX'''
+    ''' TSX'''
     result = cpu.registers['sp'].read()
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
@@ -662,7 +700,7 @@ def TSX(cpu, mode, op1=None, op2=None):
     return 0
 
 def TXA(cpu, mode, op1=None, op2=None):
-    '''TXA'''
+    ''' TXA'''
     result = cpu.registers['x'].read()
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
@@ -671,13 +709,13 @@ def TXA(cpu, mode, op1=None, op2=None):
     return 0
 
 def TXS(cpu, mode, op1=None, op2=None):
-    '''TXS'''
+    ''' TXS'''
     x = cpu.registers['x'].read()
     cpu.registers['sp'].write(x)
     return 0
 
 def TYA(cpu, mode, op1=None, op2=None):
-    '''TYA'''
+    ''' TYA'''
     result = cpu.registers['y'].read()
     cpu.set_status('zero', result == 0)
     cpu.set_status('negative', result >> 7)
