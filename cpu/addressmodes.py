@@ -130,15 +130,32 @@ class AddressingMode:
         @classmethod
         def read(self, cpu, op1, op2=None):
             page_crossed = False
-            addr = op1 + cpu.registers['y'].read()
-            if addr > (addr % 0x100):
+            addr = cpu.memory.read(op1) & 0xff
+            addr += ((cpu.memory.read(op1 + 1) & 0xff) << 8)
+            y = cpu.registers['y'].read()
+
+            print "[DEBUG] [INDIRECT_Y READ] addr:{:X} value:{:X} y:{:X} pc:{:X}".format(addr, cpu.memory.read(addr), y, cpu.registers['pc'].read() - self.byte_size)
+            if addr > (addr % 0x800):
                 # page crossed
                 page_crossed = True
-
-            return addr, page_crossed
+            
+            if y==0xff:
+                y=-1
+            result = cpu.memory.read((addr+y)&0xfff)
+            
+            print "        [INDR_Y] value at read(read():{:X}".format(cpu.memory.read(cpu.memory.read(addr)))
+            return result, page_crossed
 
         @classmethod
         def write(self, cpu, op1, op2=None, value=0):
+            page_crossed = False
+            addr = cpu.memory.read(op1)
+            addr += (cpu.memory.read(op1 + 1) << 8)
+            if addr > (addr % 0x100):
+                # page crossed
+                page_crossed = True
+            y = cpu.registers['y'].read()
+            cpu.memory.write((addr + y) & 0xff, value)
             return None
 
     class JMP_Absolute:
@@ -157,10 +174,9 @@ class AddressingMode:
         byte_size = 2
         @classmethod
         def read(self, cpu, op1, op2=None):
-
-            #if addr > (addr % 0x100):
-                # page crossed
-            #    page_crossed = True
+            if op1 >> 7:
+                op1 ^= 0xff
+                op1 += 1
             return op1, False
 
         @classmethod
