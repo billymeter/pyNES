@@ -195,6 +195,9 @@ def BRK(cpu, mode, op1=None, op2=None):
     
     pc = cpu.registers['pc'].read()
 
+    f=open("stackdump.dmp", "wb")
+    f.write(cpu.memory._memory[0x000:0x200])
+    f.close()
     raise SystemExit
 
     cpu.push_stack(pc & 0xff)
