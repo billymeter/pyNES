@@ -296,27 +296,33 @@ class CPU:
 
             0xc0: CPU.Instruction(self, instructions.CPY, AddressingMode.Immediate, 2),
             0xc1: CPU.Instruction(self, instructions.CMP, AddressingMode.Indirect_X, 6),
+            0xc3: CPU.Instruction(self, instructions.DCP_UNDOC, AddressingMode.Indirect_X, 8), # undocumented
             0xc4: CPU.Instruction(self, instructions.CPY, AddressingMode.Zero_Page, 3),
             0xc5: CPU.Instruction(self, instructions.CMP, AddressingMode.Zero_Page, 3),
             0xc6: CPU.Instruction(self, instructions.DEC, AddressingMode.Zero_Page, 5),
+            0xc7: CPU.Instruction(self, instructions.DCP_UNDOC, AddressingMode.Zero_Page, 5), # undocumented
             0xc8: CPU.Instruction(self, instructions.INY, AddressingMode.Implied, 2),
             0xc9: CPU.Instruction(self, instructions.CMP, AddressingMode.Immediate, 2),
             0xca: CPU.Instruction(self, instructions.DEX, AddressingMode.Implied, 2),
             0xcc: CPU.Instruction(self, instructions.CPY, AddressingMode.Absolute, 4),
             0xcd: CPU.Instruction(self, instructions.CMP, AddressingMode.Absolute, 4),
             0xce: CPU.Instruction(self, instructions.DEC, AddressingMode.Absolute, 6),
+            0xcf: CPU.Instruction(self, instructions.DCP_UNDOC, AddressingMode.Absolute, 5), # undocumented
 
             0xd0: CPU.Instruction(self, instructions.BNE, AddressingMode.Relative, 2),
             0xd1: CPU.Instruction(self, instructions.CMP, AddressingMode.Indirect_Y, 5),
+            0xd3: CPU.Instruction(self, instructions.DCP_UNDOC, AddressingMode.Indirect_Y, 8), # undocumented
             0xd4: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Immediate, 4),  # undocumented
             0xd5: CPU.Instruction(self, instructions.CMP, AddressingMode.Zero_Page_X, 4),
             0xd6: CPU.Instruction(self, instructions.DEC, AddressingMode.Zero_Page_X, 6),
+            0xd7: CPU.Instruction(self, instructions.DCP_UNDOC, AddressingMode.Zero_Page_X, 6), # undocumented
             0xd8: CPU.Instruction(self, instructions.CLD, AddressingMode.Implied, 2),
             0xd9: CPU.Instruction(self, instructions.CMP, AddressingMode.Absolute_Y, 4),
             0xda: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Implied, 2),
             0xdc: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Absolute_X, 4),  # undocumented
             0xdd: CPU.Instruction(self, instructions.CMP, AddressingMode.Absolute_X, 4),
             0xde: CPU.Instruction(self, instructions.DEC, AddressingMode.Absolute_X, 7),
+            0xdf: CPU.Instruction(self, instructions.DCP_UNDOC, AddressingMode.Absolute_X, 7), # undocumented
 
             0xe0: CPU.Instruction(self, instructions.CPX, AddressingMode.Immediate, 2),
             0xe1: CPU.Instruction(self, instructions.SBC, AddressingMode.Indirect_X, 6),
@@ -326,6 +332,7 @@ class CPU:
             0xe8: CPU.Instruction(self, instructions.INX, AddressingMode.Implied, 2),
             0xe9: CPU.Instruction(self, instructions.SBC, AddressingMode.Immediate, 2),
             0xea: CPU.Instruction(self, instructions.NOP, AddressingMode.Implied, 2),
+            0xeb: CPU.Instruction(self, instructions.SBC_UNDOC, AddressingMode.Immediate, 2), # undocumented
             0xec: CPU.Instruction(self, instructions.CPX, AddressingMode.Absolute, 4),
             0xed: CPU.Instruction(self, instructions.SBC, AddressingMode.Absolute, 4),
             0xee: CPU.Instruction(self, instructions.INC, AddressingMode.Absolute, 6),

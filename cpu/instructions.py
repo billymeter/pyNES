@@ -277,7 +277,9 @@ def CMP(cpu, mode, op1=None, op2=None):
     ''' CMP'''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
+    n = cpu.get_status('negative')
     a = cpu.registers['a'].read()
+    
     result = a - value
 
     cpu.set_status('carry', a >= value)
@@ -311,6 +313,25 @@ def CPY(cpu, mode, op1=None, op2=None):
     cpu.set_status('zero', y == value)
     cpu.set_status('negative', result >> 7)
 
+    return 0
+
+def DCP_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*DCP'''
+    DEC(cpu, mode, op1, op2)
+    CMP(cpu, mode, op1, op2)
+    # extra_cycles = 0
+    # value, page_crossed = mode.read(cpu, op1, op2)
+    # c = cpu.get_status('carry')
+    
+    # result = (value - 1) & 0xff    
+    # if (value == 0xff and cpu.get_status('negative')):
+    #     result = 0
+    
+    # cpu.set_status('carry', 0)
+    # cpu.set_status('negative', result >> 7)
+    # cpu.set_status('zero', result & 0xff == 0x0)
+
+    # mode.write(cpu, op1, op2, result)
     return 0
 
 def DEC(cpu, mode, op1=None, op2=None):
@@ -610,6 +631,7 @@ def SAX_UNDOC(cpu, mode, op1=None, op2=None):
 
     result = (a & x) & 0xff
     mode.write(cpu, op1, op2, result)
+
     # cpu.set_status('zero', result == 0)
     # cpu.set_status('negative', result >> 7)
 
@@ -617,6 +639,30 @@ def SAX_UNDOC(cpu, mode, op1=None, op2=None):
 
 def SBC(cpu, mode, op1=None, op2=None):
     ''' SBC'''
+    extra_cycles = 0
+    value, page_crossed = mode.read(cpu, op1, op2)
+    c = cpu.get_status('carry')
+    a = cpu.registers['a'].read()
+    result = a - value - (1 - c)
+
+    cpu.set_status('negative', result & 0x80 == 0x80)
+    cpu.set_status('zero', result & 0xff == 0x0)
+    if ((a ^ value) & 0x80 != 0) and ((a ^ result) & 0x80 != 0):
+        cpu.set_status('overflow', 1)
+    else:
+        cpu.set_status('overflow', 0)
+    
+    cpu.set_status('carry', result >> 8 == 0)
+
+    cpu.registers['a'].write(result & 0xff)
+
+    if page_crossed:
+        extra_cycles = 1
+
+    return extra_cycles
+
+def SBC_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*SBC'''
     extra_cycles = 0
     value, page_crossed = mode.read(cpu, op1, op2)
     c = cpu.get_status('carry')
