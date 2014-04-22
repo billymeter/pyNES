@@ -134,18 +134,23 @@ class AddressingMode:
             addr += ((cpu.memory.read(op1 + 1) & 0xff) << 8)
             y = cpu.registers['y'].read()
 
-            if cpu.get_status('negative'):
-                y = (y ^ 0xff) + 1
-                y *= -1
+            # if cpu.get_status('negative'):
+            #     y = (y ^ 0xff) + 1
+            #     y *= -1
 
-            print "[DEBUG] [INDIRECT_Y READ] addr:{:X} value:{:X} y:{:X} pc:{:X}".format(addr, cpu.memory.read(addr), y, cpu.registers['pc'].read() - self.byte_size)
             if addr > (addr % 0x800):
                 # page crossed
                 page_crossed = True
 
+            print "[DEBUG] addr:{:X}".format((addr+y))
             result = cpu.memory.read((addr+y)&0xfff)
+
+            if (cpu.registers['pc'].read() - self.byte_size) == 0xd959:
+                f=open("memdump","wb")
+                f.write(cpu.memory._memory)
+                f.close()
             
-            print "        [INDR_Y] value at read(read():{:X}".format(cpu.memory.read(cpu.memory.read(addr)))
+            #print "        [INDR_Y] value at read(read():{:X}".format(cpu.memory.read(cpu.memory.read(addr)))
             return result, page_crossed
 
         @classmethod
