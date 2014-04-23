@@ -248,19 +248,19 @@ class PPU(object):
             return 0
 
     def write_register(self, address, v):
-        if address & 0x7 == 0x0:
+        if address == 0x2000:
             self.ppuctrl_write(v)
-        elif address & 0x7 == 0x1:
+        elif address == 0x2001:
             self.ppumask_write(v)
-        elif address & 0x7 == 0x3:
+        elif address == 0x2003:
             self.oamaddr_write(v)
-        elif address & 0x7 == 0x4:
+        elif address == 0x2004:
             self.oamdata_write(v)
-        elif address & 0x7 == 0x5:
+        elif address == 0x2005:
             self.ppuscroll_write(v)
-        elif address & 0x7 == 0x6:
+        elif address == 0x2006:
             self.ppuaddr_write(v)
-        elif address & 0x7 == 0x7:
+        elif address == 0x2007:
             self.ppudata_write(v)
         elif address == 0x4014:
             self.dma_write(v)
@@ -488,12 +488,12 @@ class PPU(object):
             self.vram_addr += 1
 
     def step(self):
-        f.write("{:04X}  {:02X}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:{} CTRL:{} MASK:{} STATUS:{} DBUF:{} D:{} ABUF:{} ADDR:{} SRAM:{} FX:{} ALATCH:{} SHIFT1:{} SHIFT2:{}\n".format(self._nes.cpu.registers['pc'].read(),
-                self._nes.cpu.memory.read(self._nes.cpu.registers['pc'].read()),
-                self._nes.cpu.registers['a'].read(), self._nes.cpu.registers['x'].read(), self._nes.cpu.registers['y'].read(),
-                self._nes.cpu.registers['p'].read(), self._nes.cpu.registers['sp'].read(), self.cycle, self.scanline,
-                self.control, self.mask, self.status, self.vram_data_buffer, self.vram_addr, self.vram_addr_buffer, self.sprite_ram_addr,
-                self.vram_data, self.fine_x, self.vram_addr_latch, self.shift16_1, self.shift16_2))
+        # f.write("{:04X}  {:02X}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:{} CTRL:{} MASK:{} STATUS:{} DBUF:{} D:{} ABUF:{} ADDR:{} SRAM:{} FX:{} ALATCH:{} SHIFT1:{} SHIFT2:{}\n".format(self._nes.cpu.registers['pc'].read(),
+        #         self._nes.cpu.memory.read(self._nes.cpu.registers['pc'].read()),
+        #         self._nes.cpu.registers['a'].read(), self._nes.cpu.registers['x'].read(), self._nes.cpu.registers['y'].read(),
+        #         self._nes.cpu.registers['p'].read(), self._nes.cpu.registers['sp'].read(), self.cycle, self.scanline,
+        #         self.control, self.mask, self.status, self.vram_data_buffer, self.vram_addr, self.vram_addr_buffer, self.sprite_ram_addr,
+        #         self.vram_data, self.fine_x, self.vram_addr_latch, self.shift16_1, self.shift16_2))
         if self.scanline == -1:
             if self.cycle == 1:
                 self.status = clear_bit(self.status, StatusBit.InVblank)
