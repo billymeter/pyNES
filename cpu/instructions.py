@@ -367,7 +367,7 @@ def ISB_UNDOC(cpu, mode, op1=None, op2=None):
     result = a - value - (1 - c)
     cpu.registers['a'].write(result)
 
-    cpu.set_status('carry', (result > 0xff or ((result < 0xff) and c) or (result < 0 and c)))#a >= value)
+    cpu.set_status('carry', (result > 0xff or ((result < 0xff) and c) or (result < 0 and c)))
     cpu.set_status('negative', (result & 0xff) >> 7)
     cpu.set_status('zero', result & 0xff == 0x0)
     cpu.set_status('overflow', 0)
