@@ -229,7 +229,7 @@ class PPU(object):
         self.cycle = 0
         self.scanline = 241
         self.ignore_nmi = 0
-        self.ignore_vblank = 0
+        self.ignore_vblank = 1
 
         self.attr_loc = [0] * 0x400
         self.attr_shift = [0] * 0x400
@@ -349,17 +349,16 @@ class PPU(object):
                    line); cleared after reading $2002 and at dot 1 of the
                    pre-render line.
         '''
-        # if self.scanline == 240 and self.cycle == 1:
-        #     # a read at this (scanline, cycle) causes skips
-        #     self.ignore_nmi = 1
-        #     self.ignore_vblank = 1
-        #     return tmp & 0x7f
-        # else:
-        #     self.ignore_nmi = 0
-        #     self.ignore_vblank = 0
-        #     # vblank flag is cleared
-        #     self.status = clear_bit(self.status, StatusBit.InVblank)
-        self.status = clear_bit(self.status, StatusBit.InVblank)
+        if self.scanline == 240 and self.cycle == 1:
+            # a read at this (scanline, cycle) causes skips
+            self.ignore_nmi = 1
+            self.ignore_vblank = 1
+            return tmp & 0x7f
+        else:
+            self.ignore_nmi = 0
+            self.ignore_vblank = 0
+            # vblank flag is cleared
+            self.status = clear_bit(self.status, StatusBit.InVblank)
 
         return tmp
 
@@ -509,7 +508,7 @@ class PPU(object):
                     self.create_tile_row()
                 if self.show_sprites:
                     self.evaluate_sprites()
-        elif self.scanline == 240:
+        elif self.scanline == 241:
             if self.cycle == 1:
                 if not self.ignore_vblank:
                     self.status = set_bit(self.status, StatusBit.InVblank)
