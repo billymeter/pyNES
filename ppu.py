@@ -623,8 +623,8 @@ class PPU(object):
                 if self.sprite_size:
                     s = self.get_sprite_tbl_address(tile)
 
-                    top = self._nes.rom.read_chr(s, 16)
-                    bottom = self._nes.rom.read_chr(s + 16, 16)
+                    top = self._nes.rom.read_tile(s)
+                    bottom = self._nes.rom.read_tile(s + 16)
 
                     if c > 7 and y_flip:
                         tile = top
@@ -638,7 +638,7 @@ class PPU(object):
                         tile = top
                 else:
                     s = self.get_sprite_tbl_address(tile)
-                    tile = self._nes.rom.read_chr(s, 16)
+                    tile = self._nes.rom.read_tile(s)
 
                 self.mux_tile([tile[c], tile[c+8]],
                               self.sprite_data['x'][i], y_coord,
@@ -683,7 +683,7 @@ class PPU(object):
                 if -1 < self.palette_buffer[fb_row]['index'] < index:
                     # higher priority sprite is already rendered here; skip
                     continue
-                elif px['value'] != 0 and priority == 1:
+                elif self.palette_buffer[fb_row]['value'] != 0 and priority == 1:
                     # pixel is already rendered and priority 1 indicates
                     # that this should be skipped
                     continue
