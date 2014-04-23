@@ -64,8 +64,10 @@ class CPU:
                 #base_addr = (addr - 0x2000) % 0x8
                 #self.memory[base_addr + 0x2000] = value
                 offset = addr % 0x8
-                return self._nes.ppu.write_register(0x2000 + offset, value)
+                self._nes.ppu.write_register(0x2000 + offset, value)
             # Unmirrored I/O registers
+            elif addr == 0x4014:
+                self._nes.ppu.write_register(0x4014, value)
             elif 0x4000 <= addr < 0x4020:
                 self._memory[addr] = value
             # Expansion ROM cannot be written to
@@ -436,14 +438,14 @@ class CPU:
                             self.registers['p'].read(), self.registers['sp'].read(), self._cycles, scanlines))
         #print "[DEBUG] ------------------------\n"
         cycles = self.opcodes[opcode](ops[0], ops[1])
-        
+
         temp = self._cycles
         self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
         if temp > self._cycles:
             scanlines += 1
             if scanlines == 261:
                 scanlines = -1
-        
+
         return cycles
         #self._cycles += cycles
 
