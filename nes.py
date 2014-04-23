@@ -37,7 +37,7 @@ class NES(object):
             cycles = 1
             self.halt_cpu -= 1
 
-        for i in range(3):# * cycles):
+        for i in range(3 * cycles):
             self.ppu.step()
 
     def load_rom(self, rom_data):
