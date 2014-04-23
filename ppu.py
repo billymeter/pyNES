@@ -323,9 +323,6 @@ class PPU(object):
 
     def ppustatus_read(self):
         """ Handle a read to PPUSTATUS ($2002) """
-        # get current status
-        tmp = self.status
-
         # vram address latch is cleared
         self.vram_addr_latch = 0
 
@@ -349,18 +346,28 @@ class PPU(object):
                    line); cleared after reading $2002 and at dot 1 of the
                    pre-render line.
         '''
-        if self.scanline == 240 and self.cycle == 1:
-            # a read at this (scanline, cycle) causes skips
+        if self.scanline == 240 and self.cycle == 0:
+            # reading one cycle before vblank results in:
+            # ignore_nmi and ignore_vblank are set
+            # return status with vblank cleared
             self.ignore_nmi = 1
             self.ignore_vblank = 1
-            return tmp & 0x7f
+            return clear_bit(self.status, StatusBit.InVblank)
+        elif self.scanline == 240 and self.cycle == 2:
+            # reading one cycle after vblank results in:
+            # clear vblank, suppress NMI for the frame
+            # return status with vblank set
+            self.status = clear_bit(self.status, StatusBit.InVblank)
+            self.ignore_nmi = 1
+            return set_bit(self.status, StatusBit.InVblank)
         else:
+            # otherwise normal behavior:
+            # nmi, vblank aren't affected, status is returned then cleared
             self.ignore_nmi = 0
             self.ignore_vblank = 0
-            # vblank flag is cleared
+            tmp = self.status
             self.status = clear_bit(self.status, StatusBit.InVblank)
-
-        return tmp
+            return tmp
 
     def oamaddr_write(self, v):
         """ Handle a write to OAMADDR ($2003) """
