@@ -401,21 +401,21 @@ def ISB_UNDOC(cpu, mode, op1=None, op2=None):
     '''*ISB'''
     value, page_crossed = mode.read(cpu, op1, op2)
     value += 1
+    mode.write(cpu, op1, op2, value & 0xff)
     a = cpu.registers['a'].read()
     c = cpu.get_status('carry')
     
     result = a - value - (1 - c)
+    print "[DEBUG] [ISB] a:{:X} value:{:X} carry:{:X} result:{:X} pc:{:X}".format(a, value, c, result, cpu.registers['pc'].read() - mode.byte_size)
     
     cpu.registers['a'].write(result)
 
-    cpu.set_status('carry', a >= value)
+    cpu.set_status('carry', (result > 0xff or ((result < 0xff) and c) or (result < 0 and c)))#a >= value)
     cpu.set_status('negative', (result & 0xff) >> 7)
     cpu.set_status('zero', result & 0xff == 0x0)
     cpu.set_status('overflow', 0)
-    extra_cycles = 0
-    if page_crossed:
-        extra_cycles = 1
-    return extra_cycles
+    
+    return 0
 
 def JMP(cpu, mode, op1=None, op2=None):
     ''' JMP'''
@@ -575,6 +575,25 @@ def PLP(cpu, mode, op1=None, op2=None):
     cpu.set_status('negative', p >> 7)
     return 0
 
+def RLA_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*RLA'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    bit7 = value >> 7
+    carry = cpu.get_status('carry')
+    result = (value << 1) & 0xff
+    result = (result & 0xfe) | carry
+
+    mode.write(cpu, op1, op2, result)
+    
+    a = cpu.registers['a'].read()
+    result &= a
+    cpu.registers['a'].write(result)
+
+    cpu.set_status('carry', bit7)
+    cpu.set_status('negative', (result & 0xff) >> 7)
+    cpu.set_status('zero', result & 0xff == 0x0)
+    return 0
+
 def ROL(cpu, mode, op1=None, op2=None):
     ''' ROL'''
     value, page_crossed = mode.read(cpu, op1, op2)
@@ -708,6 +727,43 @@ def SEI(cpu, mode, op1=None, op2=None):
     ''' SEI'''
     cpu.set_status('interrupt', 1)
     return 0
+
+def SLO_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*SLO'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    value <<= 1
+    mode.write(cpu, op1, op2, value & 0xff)
+
+    a = cpu.registers['a'].read()
+    result = a | value
+       
+    cpu.registers['a'].write(result)
+
+    cpu.set_status('carry', result > 0xff)#a >= value)
+    cpu.set_status('negative', (result & 0xff) >> 7)
+    cpu.set_status('zero', result & 0xff == 0x0)
+    #cpu.set_status('overflow', 0)
+    
+    return 0
+
+def SRE_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*SRE'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    value >>= 1
+
+    mode.write(cpu, op1, op2, value)
+
+    
+
+    result = a ^ value
+    cpu.registers['a'].write(result)
+
+    cpu.set_status('carry', bit7)
+    cpu.set_status('zero', (result & 0xff) == 0)
+    cpu.set_status('negative', (result & 0xff) >> 7)
+
+    return 0 # no extra cycles
+
 
 def STA(cpu, mode, op1=None, op2=None):
     ''' STA'''

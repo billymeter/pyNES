@@ -99,10 +99,10 @@ class AddressingMode:
             lobyte = cpu.memory.read(addr)
             highbyte = cpu.memory.read( (op2 << 8) | ((op1 + 1) & 0xff))
             addr = highbyte << 8 | lobyte
-            if cpu.registers['pc'].read() - self.byte_size == 0xDBb5:
-                f=open("memdump", "wb")
-                f.write(cpu.memory._memory)
-                f.close()
+            # if cpu.registers['pc'].read() - self.byte_size == 0xDBb5:
+            #     f=open("memdump", "wb")
+            #     f.write(cpu.memory._memory)
+            #     f.close()
             return addr, False
 
         @classmethod
@@ -126,6 +126,8 @@ class AddressingMode:
                 addr = addr << 8
             else:
                 addr += (cpu.memory.read((indir_addr + 1) & 0xff) << 8)
+
+            print "[DEBUG] [Indirect_X Read()] addr:{:4X} value:{:2X} pc:{:4X}".format(addr, cpu.memory.read(addr), cpu.registers['pc'].read() - self.byte_size)
             return cpu.memory.read(addr), False
 
         @classmethod
@@ -204,13 +206,13 @@ class AddressingMode:
                 op1 *= -1
 
             pc = cpu.registers['pc'].read()
-            if (pc & 0xff00) != (pc + op1) & 0xff00:
+            if (pc & 0xf800) != (pc + op1) & 0xf800:
                 page_crossed = True
             return op1, False
 
         @classmethod
         def write(self, cpu, op1, op2=None, value=0):
-            return None
+            return None      
 
     class Zero_Page:
         byte_size = 2

@@ -144,51 +144,65 @@ class CPU:
         self.opcodes = {
             0x00: CPU.Instruction(self, instructions.BRK, AddressingMode.Implied, 7),
             0x01: CPU.Instruction(self, instructions.ORA, AddressingMode.Indirect_X, 6),
+            0x03: CPU.Instruction(self, instructions.SLO_UNDOC, AddressingMode.Indirect_X, 8), # undocumented
             0x04: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Immediate, 3),  # undocumented
             0x05: CPU.Instruction(self, instructions.ORA, AddressingMode.Zero_Page, 3),
             0x06: CPU.Instruction(self, instructions.ASL, AddressingMode.Zero_Page, 5),
+            0x07: CPU.Instruction(self, instructions.SLO_UNDOC, AddressingMode.Zero_Page, 5), # undocumented
             0x08: CPU.Instruction(self, instructions.PHP, AddressingMode.Implied, 3),
             0x09: CPU.Instruction(self, instructions.ORA, AddressingMode.Immediate, 2),
             0x0a: CPU.Instruction(self, instructions.ASL, AddressingMode.Accumulator, 2),
             0x0c: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Absolute, 4),  # undocumented
             0x0d: CPU.Instruction(self, instructions.ORA, AddressingMode.Absolute, 4),
             0x0e: CPU.Instruction(self, instructions.ASL, AddressingMode.Absolute, 6),
+            0x0f: CPU.Instruction(self, instructions.SLO_UNDOC, AddressingMode.Absolute, 6), # undocumented
 
             0x10: CPU.Instruction(self, instructions.BPL, AddressingMode.Relative, 2),
             0x11: CPU.Instruction(self, instructions.ORA, AddressingMode.Indirect_Y, 5),
+            0x13: CPU.Instruction(self, instructions.SLO_UNDOC, AddressingMode.Indirect_Y, 8), # undocumented
             0x14: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Immediate, 4),  # undocumented
             0x15: CPU.Instruction(self, instructions.ORA, AddressingMode.Zero_Page_X, 4),
             0x16: CPU.Instruction(self, instructions.ASL, AddressingMode.Zero_Page_X, 6),
+            0x17: CPU.Instruction(self, instructions.SLO_UNDOC, AddressingMode.Zero_Page_X, 6), # undocumented
             0x18: CPU.Instruction(self, instructions.CLC, AddressingMode.Implied, 2),
             0x19: CPU.Instruction(self, instructions.ORA, AddressingMode.Absolute_Y, 4),
             0x1a: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Implied, 2),
+            0x1b: CPU.Instruction(self, instructions.SLO_UNDOC, AddressingMode.Absolute_Y, 7), # undocumented
             0x1c: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Absolute_X, 4),  # undocumented
             0x1d: CPU.Instruction(self, instructions.ORA, AddressingMode.Absolute_X, 4),
             0x1e: CPU.Instruction(self, instructions.ASL, AddressingMode.Absolute_X, 7),
+            0x1f: CPU.Instruction(self, instructions.SLO_UNDOC, AddressingMode.Absolute_X, 7), # undocumented
 
             0x20: CPU.Instruction(self, instructions.JSR, AddressingMode.JMP_Absolute, 6),
             0x21: CPU.Instruction(self, instructions.AND, AddressingMode.Indirect_X, 6),
+            0x23: CPU.Instruction(self, instructions.RLA_UNDOC, AddressingMode.Indirect_X, 8), # undocumented
             0x24: CPU.Instruction(self, instructions.BIT, AddressingMode.Zero_Page, 3),
             0x25: CPU.Instruction(self, instructions.AND, AddressingMode.Zero_Page, 3),
             0x26: CPU.Instruction(self, instructions.ROL, AddressingMode.Zero_Page, 5),
+            0x27: CPU.Instruction(self, instructions.RLA_UNDOC, AddressingMode.Zero_Page, 5), # undocumented
             0x28: CPU.Instruction(self, instructions.PLP, AddressingMode.Implied, 4),
             0x29: CPU.Instruction(self, instructions.AND, AddressingMode.Immediate, 2),
             0x2a: CPU.Instruction(self, instructions.ROL, AddressingMode.Accumulator, 2),
             0x2c: CPU.Instruction(self, instructions.BIT, AddressingMode.Absolute, 4),
             0x2d: CPU.Instruction(self, instructions.AND, AddressingMode.Absolute, 4),
             0x2e: CPU.Instruction(self, instructions.ROL, AddressingMode.Absolute, 6),
+            0x2f: CPU.Instruction(self, instructions.RLA_UNDOC, AddressingMode.Absolute, 6), # undocumented
 
             0x30: CPU.Instruction(self, instructions.BMI, AddressingMode.Relative, 2),
             0x31: CPU.Instruction(self, instructions.AND, AddressingMode.Indirect_Y, 5),
+            0x33: CPU.Instruction(self, instructions.RLA_UNDOC, AddressingMode.Indirect_Y, 8), # undocumented
             0x34: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Immediate, 4),  # undocumented
             0x35: CPU.Instruction(self, instructions.AND, AddressingMode.Zero_Page_X, 4),
             0x36: CPU.Instruction(self, instructions.ROL, AddressingMode.Zero_Page_X, 6),
+            0x37: CPU.Instruction(self, instructions.RLA_UNDOC, AddressingMode.Zero_Page_X, 6), # undocumented
             0x38: CPU.Instruction(self, instructions.SEC, AddressingMode.Implied, 2),
             0x39: CPU.Instruction(self, instructions.AND, AddressingMode.Absolute_Y, 4),
             0x3a: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Implied, 2),
+            0x3b: CPU.Instruction(self, instructions.RLA_UNDOC, AddressingMode.Absolute_Y, 7), # undocumented
             0x3c: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Absolute_X, 4),  # undocumented
             0x3d: CPU.Instruction(self, instructions.AND, AddressingMode.Absolute_X, 4),
             0x3e: CPU.Instruction(self, instructions.ROL, AddressingMode.Absolute_X, 7),
+            0x3f: CPU.Instruction(self, instructions.RLA_UNDOC, AddressingMode.Absolute_X, 7), # undocumented
 
             0x40: CPU.Instruction(self, instructions.RTI, AddressingMode.Implied, 6),
             0x41: CPU.Instruction(self, instructions.EOR, AddressingMode.Indirect_X, 6),
@@ -331,6 +345,7 @@ class CPU:
             0xe4: CPU.Instruction(self, instructions.CPX, AddressingMode.Zero_Page, 3),
             0xe5: CPU.Instruction(self, instructions.SBC, AddressingMode.Zero_Page, 3),
             0xe6: CPU.Instruction(self, instructions.INC, AddressingMode.Zero_Page, 5),
+            0xe7: CPU.Instruction(self, instructions.ISB_UNDOC, AddressingMode.Zero_Page, 5), # undocumented
             0xe8: CPU.Instruction(self, instructions.INX, AddressingMode.Implied, 2),
             0xe9: CPU.Instruction(self, instructions.SBC, AddressingMode.Immediate, 2),
             0xea: CPU.Instruction(self, instructions.NOP, AddressingMode.Implied, 2),
@@ -338,18 +353,23 @@ class CPU:
             0xec: CPU.Instruction(self, instructions.CPX, AddressingMode.Absolute, 4),
             0xed: CPU.Instruction(self, instructions.SBC, AddressingMode.Absolute, 4),
             0xee: CPU.Instruction(self, instructions.INC, AddressingMode.Absolute, 6),
+            0xef: CPU.Instruction(self, instructions.ISB_UNDOC, AddressingMode.Absolute, 6), # undocumented
 
             0xf0: CPU.Instruction(self, instructions.BEQ, AddressingMode.Relative, 2),
             0xf1: CPU.Instruction(self, instructions.SBC, AddressingMode.Indirect_Y, 5),
+            0xf3: CPU.Instruction(self, instructions.ISB_UNDOC, AddressingMode.Indirect_Y, 8), # undocumented
             0xf4: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Immediate, 4),  # undocumented
             0xf5: CPU.Instruction(self, instructions.SBC, AddressingMode.Zero_Page_X, 4),
             0xf6: CPU.Instruction(self, instructions.INC, AddressingMode.Zero_Page_X, 6),
+            0xf7: CPU.Instruction(self, instructions.ISB_UNDOC, AddressingMode.Zero_Page_X, 6), # undocumented
             0xf8: CPU.Instruction(self, instructions.SED, AddressingMode.Implied, 2),
             0xf9: CPU.Instruction(self, instructions.SBC, AddressingMode.Absolute_Y, 4),
             0xfa: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Implied, 2),
+            0xfb: CPU.Instruction(self, instructions.ISB_UNDOC, AddressingMode.Absolute_Y, 7), # undocumented
             0xfd: CPU.Instruction(self, instructions.SBC, AddressingMode.Absolute_X, 4),
             0xfc: CPU.Instruction(self, instructions.NOP_UNDOC, AddressingMode.Absolute_X, 4),  # undocumented
-            0xfe: CPU.Instruction(self, instructions.INC, AddressingMode.Absolute_X, 7)
+            0xfe: CPU.Instruction(self, instructions.INC, AddressingMode.Absolute_X, 7),
+            0xff: CPU.Instruction(self, instructions.ISB_UNDOC, AddressingMode.Absolute_X, 7) # undocumented
         }
 
         self.registers['pc'].write(0xc000)
@@ -401,6 +421,14 @@ class CPU:
                             self.registers['p'].read(), self.registers['sp'].read(), self._cycles, scanlines))
         #print "[DEBUG] ------------------------\n"
         cycles = self.opcodes[opcode](ops[0], ops[1])
+        
+        temp = self._cycles
+        self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
+        if temp > self._cycles:
+            scanlines += 1
+            if scanlines == 261:
+                scanlines = -1
+        
         return cycles
         #self._cycles += cycles
 
@@ -408,12 +436,12 @@ class CPU:
         global scanlines
         while True:
             cycles = self.execute()
-            temp = self._cycles
-            self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
-            if temp > self._cycles:
-                scanlines += 1
-                if scanlines == 261:
-                    scanlines = -1
+            # temp = self._cycles
+            # self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
+            # if temp > self._cycles:
+            #     scanlines += 1
+            #     if scanlines == 261:
+            #         scanlines = -1
 
 
     # status methods
