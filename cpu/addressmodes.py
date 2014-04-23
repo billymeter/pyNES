@@ -99,10 +99,6 @@ class AddressingMode:
             lobyte = cpu.memory.read(addr)
             highbyte = cpu.memory.read( (op2 << 8) | ((op1 + 1) & 0xff))
             addr = highbyte << 8 | lobyte
-            # if cpu.registers['pc'].read() - self.byte_size == 0xDBb5:
-            #     f=open("memdump", "wb")
-            #     f.write(cpu.memory._memory)
-            #     f.close()
             return addr, False
 
         @classmethod
@@ -126,8 +122,6 @@ class AddressingMode:
                 addr = addr << 8
             else:
                 addr += (cpu.memory.read((indir_addr + 1) & 0xff) << 8)
-
-            print "[DEBUG] [Indirect_X Read()] addr:{:4X} value:{:2X} pc:{:4X}".format(addr, cpu.memory.read(addr), cpu.registers['pc'].read() - self.byte_size)
             return cpu.memory.read(addr), False
 
         @classmethod
@@ -148,20 +142,14 @@ class AddressingMode:
             page_crossed = False
             addr1 = cpu.memory.read(op1)
             addr2 = cpu.memory.read((op1 + 1) & 0xff)
-            
-            if op1 > (op1 + 1) & 0xff:
-                page_crossed = True
-
-            # this is cheating
-            if cpu.registers['pc'].read() - self.byte_size == 0xd940:
-                page_crossed = True
-            if cpu.registers['pc'].read() - self.byte_size == 0xe652:
-                page_crossed = True
 
             addr = (addr1 & 0xff) + ((addr2 & 0xff) << 8)
             y = cpu.registers['y'].read()
 
-            result = cpu.memory.read((addr+y)&0xffff)
+            if (addr & 0xff00) != ((addr + y) & 0xff00):
+                page_crossed = True
+
+            result = cpu.memory.read((addr + y) & 0xffff)
             return result, page_crossed
 
         @classmethod
@@ -171,10 +159,6 @@ class AddressingMode:
             addr2 = cpu.memory.read((op1 + 1) & 0xff)
             
             if op1 > (op1 + 1) & 0xff:
-                page_crossed = True
-
-            # need to figure out why these are not calculating page boundry crossings
-            if cpu.registers['pc'].read() - self.byte_size == 0xd940:
                 page_crossed = True
 
             addr = (addr1 & 0xff) + ((addr2 & 0xff) << 8)
@@ -187,7 +171,7 @@ class AddressingMode:
         byte_size = 3
         @classmethod
         def read(self, cpu, op1, op2):
-            value = op2 << 8 | op1 #cpu.memory.read(op2 << 8 | op1)
+            value = op2 << 8 | op1 
             return value, False
         
         @classmethod
@@ -206,9 +190,10 @@ class AddressingMode:
                 op1 *= -1
 
             pc = cpu.registers['pc'].read()
-            if (pc & 0xf800) != (pc + op1) & 0xf800:
+
+            if (pc & 0xff00) != ((pc + op1) & 0xff00):
                 page_crossed = True
-            return op1, False
+            return op1, page_crossed
 
         @classmethod
         def write(self, cpu, op1, op2=None, value=0):

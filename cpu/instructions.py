@@ -48,8 +48,6 @@ def ASL(cpu, mode, op1=None, op2=None):
     result = (value << 1) & 0xff
 
     mode.write(cpu, op1, op2, result)
-    #cpu.registers['a'].write(result)
-
     cpu.set_status('zero', (result & 0xff) == 0)
     cpu.set_status('negative', (result & 0xff) >> 7)
 
@@ -61,11 +59,6 @@ def BCC(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     if cpu.get_status('carry') == 0:
-        # see if we are going into a new page
-        #page = value / 0x800
-        #pc = cpu.registers['pc'].read()
-        #newpage = (pc + value) / 0x800
-
         if page_crossed:
             extra_cycles = 2
         else:
@@ -81,16 +74,14 @@ def BCS(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status('carry') == 1:
-        if page_crossed:
-            extra_cycles = 2
-        else:
-            extra_cycles = 1
-
     if cpu.get_status('carry'):
         pc = cpu.registers['pc'].read()
         cpu.registers['pc'].write(pc + value)
 
+        if page_crossed:
+            extra_cycles = 2
+        else:
+            extra_cycles = 1
     return extra_cycles
 
 def BEQ(cpu, mode, op1=None, op2=None):
@@ -98,20 +89,14 @@ def BEQ(cpu, mode, op1=None, op2=None):
     value, page_crossed = mode.read(cpu, op1, op2)
     extra_cycles = 0
 
-    if cpu.get_status('zero') == 1:
-        # see if we are going into a new page
-        #page = value / 0x800
-        #pc = cpu.registers['pc'].read()
-        #newpage = (pc + value) / 0x800
+    pc = cpu.registers['pc'].read()
+    if cpu.get_status('zero'):
+        cpu.registers['pc'].write(pc + value)
 
         if page_crossed:
             extra_cycles = 2
         else:
             extra_cycles = 1
-
-    if cpu.get_status('zero'):
-        pc = cpu.registers['pc'].read()
-        cpu.registers['pc'].write(pc + value)
     return extra_cycles
 
 def BIT(cpu, mode, op1=None, op2=None):
@@ -406,8 +391,6 @@ def ISB_UNDOC(cpu, mode, op1=None, op2=None):
     c = cpu.get_status('carry')
     
     result = a - value - (1 - c)
-    print "[DEBUG] [ISB] a:{:X} value:{:X} carry:{:X} result:{:X} pc:{:X}".format(a, value, c, result, cpu.registers['pc'].read() - mode.byte_size)
-    
     cpu.registers['a'].write(result)
 
     cpu.set_status('carry', (result > 0xff or ((result < 0xff) and c) or (result < 0 and c)))#a >= value)
@@ -624,6 +607,32 @@ def ROR(cpu, mode, op1=None, op2=None):
     cpu.set_status('negative', result >> 7)
     return 0
 
+def RRA_UNDOC(cpu, mode, op1=None, op2=None):
+    '''*RRA'''
+    value, page_crossed = mode.read(cpu, op1, op2)
+    bit0 = value & 0x1
+    carry = cpu.get_status('carry')
+    value = (value >> 1) & 0xff
+    value = (value & 0x7f) | (carry << 7)
+
+    mode.write(cpu, op1, op2, value)
+    cpu.set_status('carry', bit0)
+
+    a = cpu.registers['a'].read()
+    result = a + value + bit0
+    cpu.registers['a'].write(result)
+
+    cpu.set_status('carry', result > 0xff)
+    cpu.set_status('negative', (result & 0xff) >> 7)
+    cpu.set_status('zero', result & 0xff == 0x0)
+
+    if ((a ^ value) & 0x80 == 0) and ((a ^ result) & 0x80 == 0x80):
+        cpu.set_status('overflow', 1)
+    else:
+        cpu.set_status('overflow', 0)
+
+    return 0
+
 def RTI(cpu, mode, op1=None, op2=None):
     ''' RTI'''
     p = cpu.pop_stack()
@@ -749,16 +758,15 @@ def SLO_UNDOC(cpu, mode, op1=None, op2=None):
 def SRE_UNDOC(cpu, mode, op1=None, op2=None):
     '''*SRE'''
     value, page_crossed = mode.read(cpu, op1, op2)
+    bit0 = value & 0x1
     value >>= 1
-
     mode.write(cpu, op1, op2, value)
 
-    
-
+    a = cpu.registers['a'].read()
     result = a ^ value
     cpu.registers['a'].write(result)
 
-    cpu.set_status('carry', bit7)
+    cpu.set_status('carry', bit0)
     cpu.set_status('zero', (result & 0xff) == 0)
     cpu.set_status('negative', (result & 0xff) >> 7)
 
