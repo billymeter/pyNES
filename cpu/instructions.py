@@ -117,11 +117,6 @@ def BMI(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     if cpu.get_status('negative') == 1:
-        # see if we are going into a new page
-        #page = value / 0x800
-        #pc = cpu.registers['pc'].read()
-        #newpage = (pc + value) / 0x800
-
         if page_crossed:
             extra_cycles = 2
         else:
@@ -138,11 +133,6 @@ def BNE(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     if cpu.get_status('zero') == 0:
-        # see if we are going into a new page
-        #page = value / 0x800
-        #pc = cpu.registers['pc'].read()
-        #newpage = (pc + value) / 0x800
-
         if page_crossed:
             extra_cycles = 2
         else:
@@ -159,11 +149,6 @@ def BPL(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     if cpu.get_status('negative') == 0:
-        # see if we are going into a new page
-        #page = value / 0x800
-        #pc = cpu.registers['pc'].read()
-        #newpage = (pc + value) / 0x800
-
         if page_crossed:
             extra_cycles = 2
         else:
@@ -187,7 +172,6 @@ def BRK(cpu, mode, op1=None, op2=None):
 
     cpu.registers['pc'].write(irq)
     cpu.set_status('break', 1)
-
     return 0
 
 def BVC(cpu, mode, op1=None, op2=None):
@@ -196,11 +180,6 @@ def BVC(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     if cpu.get_status('overflow') == 0:
-        # see if we are going into a new page
-        #page = value / 0x800
-        #pc = cpu.registers['pc'].read()
-        #newpage = (pc + value) / 0x800
-
         if page_crossed:
             extra_cycles = 2
         else:
@@ -217,11 +196,6 @@ def BVS(cpu, mode, op1=None, op2=None):
     extra_cycles = 0
 
     if cpu.get_status('overflow') == 1:
-        # see if we are going into a new page
-        #page = value / 0x800
-        #pc = cpu.registers['pc'].read()
-        #newpage = (pc + value) / 0x800
-
         if page_crossed:
             extra_cycles = 2
         else:
@@ -552,7 +526,7 @@ def PLP(cpu, mode, op1=None, op2=None):
     cpu.set_status('zero', p >> 1 & 0x1)
     cpu.set_status('interrupt', p >> 2 & 0x1)
     cpu.set_status('decimal', p >> 3 & 0x1)
-    cpu.set_status('break', 0) # p >> 4 & 0x1)
+    cpu.set_status('break', 0)
     cpu.set_status('unused', 1)
     cpu.set_status('overflow', p >> 6 & 0x1)
     cpu.set_status('negative', p >> 7)
@@ -668,10 +642,6 @@ def SAX_UNDOC(cpu, mode, op1=None, op2=None):
 
     result = (a & x) & 0xff
     mode.write(cpu, op1, op2, result)
-
-    # cpu.set_status('zero', result == 0)
-    # cpu.set_status('negative', result >> 7)
-
     return 0
 
 def SBC(cpu, mode, op1=None, op2=None):
@@ -748,11 +718,9 @@ def SLO_UNDOC(cpu, mode, op1=None, op2=None):
        
     cpu.registers['a'].write(result)
 
-    cpu.set_status('carry', result > 0xff)#a >= value)
+    cpu.set_status('carry', result > 0xff)
     cpu.set_status('negative', (result & 0xff) >> 7)
     cpu.set_status('zero', result & 0xff == 0x0)
-    #cpu.set_status('overflow', 0)
-    
     return 0
 
 def SRE_UNDOC(cpu, mode, op1=None, op2=None):
@@ -771,7 +739,6 @@ def SRE_UNDOC(cpu, mode, op1=None, op2=None):
     cpu.set_status('negative', (result & 0xff) >> 7)
 
     return 0 # no extra cycles
-
 
 def STA(cpu, mode, op1=None, op2=None):
     ''' STA'''
