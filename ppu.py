@@ -521,7 +521,7 @@ class PPU(object):
                     self.status = set_bit(self.status, StatusBit.InVblank)
                 if self.nmi_on_vblank == 1 and not self.ignore_nmi:
                     # request NMI from CPU!
-                    self._nes.cpu.request_nmi = 1
+                    self._nes.cpu.nmi_requested = 1
                 self.render_output()
         elif self.scanline == 260:
             if self.cycle == 340:
