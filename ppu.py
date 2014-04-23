@@ -238,29 +238,29 @@ class PPU(object):
             self.attr_shift[i] = ((i >> 4) & 0x04) | (i & 0x02)
 
     def read_register(self, address):
-        if address == 0x2002:
+        if address & 0x7 == 0x2:
             return self.ppustatus_read()
-        elif address == 0x2004:
+        elif address & 0x7 == 0x4:
             return self.oamdata_read()
-        elif address == 0x2007:
+        elif address & 0x7 == 0x7:
             return self.ppudata_read()
         else:
-            return
+            return 0
 
     def write_register(self, address, v):
-        if address == 0x2000:
+        if address & 0x7 == 0x0:
             self.ppuctrl_write(v)
-        elif address == 0x2001:
+        elif address & 0x7 == 0x1:
             self.ppumask_write(v)
-        elif address == 0x2003:
+        elif address & 0x7 == 0x3:
             self.oamaddr_write(v)
-        elif address == 0x2004:
+        elif address & 0x7 == 0x4:
             self.oamdata_write(v)
-        elif address == 0x2005:
+        elif address & 0x7 == 0x5:
             self.ppuscroll_write(v)
-        elif address == 0x2006:
+        elif address & 0x7 == 0x6:
             self.ppuaddr_write(v)
-        elif address == 0x2007:
+        elif address & 0x7 == 0x7:
             self.ppudata_write(v)
         elif address == 0x4014:
             self.dma_write(v)
@@ -349,18 +349,19 @@ class PPU(object):
                    line); cleared after reading $2002 and at dot 1 of the
                    pre-render line.
         '''
-        if self.scanline == 240 and self.cycle == 1:
-            # a read at this (scanline, cycle) causes skips
-            tmp &= 0x7f
-            self.ignore_nmi = 1
-            self.ignore_vblank = 1
-        else:
-            # vblank flag is cleared
-            self.status = clear_bit(self.status, StatusBit.InVblank)
-            self.ignore_nmi = 0
-            self.ignore_vblank = 0
+        # if self.scanline == 240 and self.cycle == 1:
+        #     # a read at this (scanline, cycle) causes skips
+        #     self.ignore_nmi = 1
+        #     self.ignore_vblank = 1
+        #     return tmp & 0x7f
+        # else:
+        #     self.ignore_nmi = 0
+        #     self.ignore_vblank = 0
+        #     # vblank flag is cleared
+        #     self.status = clear_bit(self.status, StatusBit.InVblank)
+        self.status = clear_bit(self.status, StatusBit.InVblank)
 
-        return self.status
+        return tmp
 
     def oamaddr_write(self, v):
         """ Handle a write to OAMADDR ($2003) """
@@ -508,7 +509,7 @@ class PPU(object):
                     self.create_tile_row()
                 if self.show_sprites:
                     self.evaluate_sprites()
-        elif self.scanline == 241:
+        elif self.scanline == 240:
             if self.cycle == 1:
                 if not self.ignore_vblank:
                     self.status = set_bit(self.status, StatusBit.InVblank)
@@ -518,7 +519,7 @@ class PPU(object):
                 self.render_output()
         elif self.scanline == 260:
             if self.cycle == 340:
-                self.scanline = -1
+                self.scanline = -2
                 self.frame_count += 1
 
         if self.cycle == 340:
@@ -746,3 +747,32 @@ class PPU(object):
             self.sprite_data['attributes'][i] = v
         elif bit == 3:
             self.sprite_data['x'][i] = v
+
+    def end_scanline(self):
+        # experiment
+        if self.vram_addr & 0x1F == 0x1F:
+            self.vram_addr ^= 0x41F
+        else:
+            self.vram_addr += 1
+
+        if self.vram_addr & 0x1F == 0x1F:
+            self.vram_addr ^= 0x41F
+        else:
+            self.vram_addr += 1
+
+        if self.show_background or self.show_sprites:
+            if self.vram_addr & 0x7000 == 0x7000:
+                tmp = self.vram_addr & 0x3E0
+                self.vram_addr &= 0xFFF
+
+                if tmp == 0x3a0:
+                    self.vram_addr ^= 0xba0
+                elif tmp == 0x3e0:
+                    self.vram_addr ^= 0x3E0
+                else:
+                    self.vram_addr += 0x20
+            else:
+                self.vram_addr += 0x1000
+
+            self.vram_addr = ((self.vram_addr & 0x7BE0) |
+                              (self.vram_addr_latch & 0x41F))
