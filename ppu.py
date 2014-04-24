@@ -144,24 +144,10 @@ class NameTables(object):
 
     def write(self, addr, value):
         # print "(addr & 0xc00) >> 10: ", (addr & 0xc00) >> 10, "; addr & 0x3ff: ", addr & 0x3ff
-        if ((0x23c0 <= addr < 0x2400) or (0x27c0 <= addr < 0x2800) or
-                (0x2bc0 <= addr < 0x2c00) or (0x2fc0 <= addr < 0x3000)):
-            self.write_attribute(addr, value)
+        # if ((0x23c0 <= addr < 0x2400) or (0x27c0 <= addr < 0x2800) or
+        #         (0x2bc0 <= addr < 0x2c00) or (0x2fc0 <= addr < 0x3000)):
+        #     self.write_attribute(addr, value)
         self.logical_tables[(addr & 0xc00) >> 10][addr & 0x3ff] = value
-
-    def write_attribute(self, addr, value):
-            basex = (addr % 8) * 4
-            basey = (addr / 8) * 4
-
-            for sqy in range(0, 2):
-                for sqx in range(0, 2):
-                    add = (value >> (2*(sqy*2+sqx))) & 3
-                    for y in range(0, 2):
-                        for x in range(0, 2):
-                            tx = basex + sqx*2 + x
-                            ty = basey + sqy*2 + y
-                            attindex = ty*self.width+tx
-                            self.attrib[ty*self.width+tx] = (add << 2) & 12
 
     def read(self, addr):
         return self.logical_tables[(addr & 0xc00) >> 10][addr & 0x3ff]
@@ -181,7 +167,7 @@ class PPU(object):
         # pattern tables aren't actually in the ppu, they're on the cartridge
         # self.patterntables = PatternTables()
         # still confused about sprites; not sure if this is good
-        self.sprite_data = SpriteData([0] * 64, [0] * 64, [0] * 64, [0] * 64)
+        # self.sprite_data = SpriteData([0] * 64, [0] * 64, [0] * 64, [0] * 64)
         self.sprite_data = {
             'y': [0] * 64,
             'tiles': [0] * 64,
@@ -450,12 +436,12 @@ class PPU(object):
 
     def ppudata_write(self, v):
         """ Handle a write to PPUDATA ($2007) """
-        if self.vram_addr > 0x3000:
+        if 0x3f00 <= self.vram_addr < 0x4000:
             self.write_palette(self.vram_addr, v)
-        elif 0x2000 <= self.vram_addr < 0x3000:
+        elif 0x2000 <= self.vram_addr < 0x3f00:
             self.nametables.write(self.vram_addr, v)
         elif self.vram_addr < 0x2000:
-            self._nes.rom.write_chr(self.vram_addr, v)
+            self._nes.rom.write_chr(self.vram_addr & 0x3fff, v)
         else:
             self.vram[self.vram_addr & 0x3fff] = v
         self.inc_vram_address()
@@ -509,6 +495,9 @@ class PPU(object):
             self.vram_addr += 1
 
     def step(self):
+        # if self.vram_addr > 0x4000:
+        #     with open('vram.txt', 'a') as f:
+        #         f.write("Cycle: {}, Address: {}\n".format(self.cycle, self.vram_addr))
         # f.write("{:04X}  {:02X}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:{} CTRL:{} MASK:{} STATUS:{} DBUF:{} D:{} ABUF:{} ADDR:{} SRAM:{} FX:{} ALATCH:{} SHIFT1:{} SHIFT2:{}\n".format(self._nes.cpu.registers['pc'].read(),
         #         self._nes.cpu.memory.read(self._nes.cpu.registers['pc'].read()),
         #         self._nes.cpu.registers['a'].read(), self._nes.cpu.registers['x'].read(), self._nes.cpu.registers['y'].read(),
@@ -584,6 +573,8 @@ class PPU(object):
                 else:
                     palette = self.get_background_entry(attr_buffer, pxvalue)
 
+                # import random
+                # palette = random.randrange(64)
                 self.palette_buffer[fb_row]['color'] = rgb_palette[palette % 64]
                 self.palette_buffer[fb_row]['value'] = pxvalue
                 self.palette_buffer[fb_row]['index'] = -1
@@ -664,13 +655,16 @@ class PPU(object):
                         tile = bottom
                     else:
                         tile = top
+
+                    self.mux_tile([tile[c % 8], tile[(c % 8)+8]],
+                                  self.sprite_data['x'][i], y_coord,
+                                  attr_val, i)
                 else:
                     s = self.get_sprite_tbl_address(tile)
                     tile = self._nes.rom.read_tile(s)
-
-                self.mux_tile([tile[c], tile[c+8]],
-                              self.sprite_data['x'][i], y_coord,
-                              attr_val, i)
+                    self.mux_tile([tile[c], tile[c+8]],
+                                  self.sprite_data['x'][i], y_coord,
+                                  attr_val, i)
                 sprite_count += 1
 
                 # if sprite_count == 9:
@@ -682,7 +676,7 @@ class PPU(object):
         attr = self.sprite_data['attributes'][index]
         is_sprite0 = (index == 0)
         for b in range(8):
-            if (attr >> 6) & 1:
+            if (attr >> 6) & 1 != 0:
                 x_coord = x + b
             else:
                 x_coord = x + (7 - b)
@@ -692,17 +686,18 @@ class PPU(object):
 
             fb_row = y * 256 + x_coord
 
+            # store the 0th and 1st bits
             pixel = (tiles[0] >> b) & 0x1
             pixel += ((tiles[1] >> b & 0x1) << 1)
 
-            trans = 0
-            if not attr and not pixel:
-                trans = 1
+            transparent = 0
+            if attr and not pixel:
+                transparent = 1
 
-            if fb_row < 0xf000 and not trans:
+            if fb_row < 0xf000 and not transparent:
                 priority = (attr >> 5) & 0x1
 
-                hit = self.status & 0x40
+                hit = (self.status & 0x40 == 0x40)
                 if (self.palette_buffer[fb_row]['value'] != 0 and is_sprite0
                         and not hit):
                     # sprite 0 has been hit
@@ -738,7 +733,6 @@ class PPU(object):
 
     def write_palette(self, address, v):
         if 0x3f00 <= address < 0x3f20:
-            print address, v
             if address == 0x3F00 or address == 0x3F10:
                 self.palette_ram[0x3F00] = v
                 self.palette_ram[0x3F10] = v
@@ -768,7 +762,7 @@ class PPU(object):
             #     x -= 8
 
             width = 256
-            self.frame_buffer[x][y] = color << 8
+            self.frame_buffer[x][y] = color
             self.palette_buffer[i]['value'] = 0
             self.palette_buffer[i]['index'] = -1
         # from random import randrange
