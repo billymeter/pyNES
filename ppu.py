@@ -116,6 +116,7 @@ class NameTables(object):
         self.nametable0 = [0xff] * NAMETABLE_SIZE
         self.nametable1 = [0xff] * NAMETABLE_SIZE
         self.mirroring = None
+        self.readit = 0
 
     def set_mirroring(self, m):
         self.mirroring = m
@@ -142,7 +143,25 @@ class NameTables(object):
             self.logical_tables[3] = self.nametable1
 
     def write(self, addr, value):
+        # print "(addr & 0xc00) >> 10: ", (addr & 0xc00) >> 10, "; addr & 0x3ff: ", addr & 0x3ff
+        if ((0x23c0 <= addr < 0x2400) or (0x27c0 <= addr < 0x2800) or
+                (0x2bc0 <= addr < 0x2c00) or (0x2fc0 <= addr < 0x3000)):
+            self.write_attribute(addr, value)
         self.logical_tables[(addr & 0xc00) >> 10][addr & 0x3ff] = value
+
+    def write_attribute(self, addr, value):
+            basex = (addr % 8) * 4
+            basey = (addr / 8) * 4
+
+            for sqy in range(0, 2):
+                for sqx in range(0, 2):
+                    add = (value >> (2*(sqy*2+sqx))) & 3
+                    for y in range(0, 2):
+                        for x in range(0, 2):
+                            tx = basex + sqx*2 + x
+                            ty = basey + sqy*2 + y
+                            attindex = ty*self.width+tx
+                            self.attrib[ty*self.width+tx] = (add << 2) & 12
 
     def read(self, addr):
         return self.logical_tables[(addr & 0xc00) >> 10][addr & 0x3ff]
@@ -155,7 +174,7 @@ class PPU(object):
     def __init__(self, nes):
         self._nes = nes
         # ppu memory
-        self.vram = [0] * 0x10000
+        self.vram = [0] * 0x8000
         self.sprite_ram = [0] * 0x100
         self.palette_ram = [0] * 0x20
         self.nametables = NameTables()
@@ -238,11 +257,11 @@ class PPU(object):
             self.attr_shift[i] = ((i >> 4) & 0x04) | (i & 0x02)
 
     def read_register(self, address):
-        if address & 0x7 == 0x2:
+        if address == 0x2002:
             return self.ppustatus_read()
-        elif address & 0x7 == 0x4:
+        elif address == 0x2004:
             return self.oamdata_read()
-        elif address & 0x7 == 0x7:
+        elif address == 0x2007:
             return self.ppudata_read()
         else:
             return 0
@@ -264,8 +283,7 @@ class PPU(object):
             self.ppudata_write(v)
         elif address == 0x4014:
             self.dma_write(v)
-        else:
-            pass
+        self.ppustatus |= value & 0x1f
 
     def ppuctrl_write(self, value):
         """ Handle a write to PPUCTRL ($2000) """
@@ -426,13 +444,15 @@ class PPU(object):
             self.vram_addr_buffer &= 0x7f00
             self.vram_addr_buffer |= v
             self.vram_addr = self.vram_addr_buffer
+
+            # check sprite0
         self.vram_addr_latch = not self.vram_addr_latch
 
     def ppudata_write(self, v):
         """ Handle a write to PPUDATA ($2007) """
         if self.vram_addr > 0x3000:
-            self.write_mirrored_vram(self.vram_addr, v)
-        elif self.vram_addr >= 0x2000 and self.vram_addr < 0x3000:
+            self.write_palette(self.vram_addr, v)
+        elif 0x2000 <= self.vram_addr < 0x3000:
             self.nametables.write(self.vram_addr, v)
         elif self.vram_addr < 0x2000:
             self._nes.rom.write_chr(self.vram_addr, v)
@@ -470,10 +490,11 @@ class PPU(object):
 
     def dma_write(self, v):
         """ Handle a write to $4014 """
-        self._nes.halt_cpu = 513
+        self.cycle += 1541 % 340
+        self.scanline += 4
 
         base_address = v * 0x100
-        for i in range(self.sprite_ram_addr, 0x100):
+        for i in range(0, 0x100):
             data = self._nes.cpu.memory.read(base_address + i)
             self.sprite_ram[i] = data
             self.update_sprite_buffer(i, data)
@@ -515,6 +536,9 @@ class PPU(object):
                     self.create_tile_row()
                 if self.show_sprites:
                     self.evaluate_sprites()
+            elif self.cycle == 256:
+                if self.show_background:
+                    self.end_scanline()
         elif self.scanline == 241:
             if self.cycle == 1:
                 if not self.ignore_vblank:
@@ -553,8 +577,7 @@ class PPU(object):
                     continue
 
                 current = (15 - k - self.fine_x)
-                pxvalue = (((self.shift16_1 >> current) & 1) |
-                           (((self.shift16_2 >> current) & 1) << 1))
+                pxvalue = (self.shift16_1 >> current) & 1 | ((self.shift16_2 >> current) & 1) << 1
 
                 if current >= 8:
                     palette = self.get_background_entry(attr, pxvalue)
@@ -564,6 +587,9 @@ class PPU(object):
                 self.palette_buffer[fb_row]['color'] = rgb_palette[palette % 64]
                 self.palette_buffer[fb_row]['value'] = pxvalue
                 self.palette_buffer[fb_row]['index'] = -1
+                # print self.palette_buffer[fb_row]['color']
+                # print self.palette_buffer[fb_row]['value']
+                # print self.palette_buffer[fb_row]['index']
 
             attr = attr_buffer
 
@@ -577,17 +603,19 @@ class PPU(object):
                      self.attr_loc[self.vram_addr & 0x3ff])
         shift = self.attr_shift[self.vram_addr & 0x3ff]
         attr = ((self.nametables.read(attr_addr) >> shift) & 0x3) << 2
+        # with open('attempted_addresses.txt', 'a') as file:
+        #     file.write("Address: {}\n".format(attr_addr))
 
         index = self.nametables.read(self.vram_addr)
         tile = self.get_bg_tbl_address(index)
 
         # flip 10th bit on wraparound
-        if self.vram_addr & 0b11111 == 0b11111:
+        if (self.vram_addr & 0x1f) == 0x1f:
             self.vram_addr ^= 0x41f
         else:
             self.vram_addr += 1
 
-        return self.vram[tile], self.vram[tile + 8], attr
+        return self._nes.rom.read_chr(tile), self._nes.rom.read_chr(tile + 8), attr
 
     def get_background_entry(self, attribute, pixel):
         if not pixel:
@@ -596,9 +624,9 @@ class PPU(object):
         return self.palette_ram[attribute + pixel]
 
     def get_bg_tbl_address(self, v):
-        table = 1 if self.background_tbl_addr else 0
+        table = 0x1000 if self.background_tbl_addr else 0x0000
 
-        return v | (v << 4) | self.vram_addr >> 12
+        return (v << 4) | self.vram_addr >> 12 | table
 
     def evaluate_sprites(self):
         if self.sprite_size:
@@ -689,7 +717,6 @@ class PPU(object):
                     continue
 
                 pal = self.palette_ram[0x10 + (palette_index * 0x4) + pixel]
-
                 self.palette_buffer[fb_row]['color'] = rgb_palette[pal % 64]
                 self.palette_buffer[fb_row]['value'] = pixel
                 self.palette_buffer[fb_row]['index'] = index
@@ -707,15 +734,25 @@ class PPU(object):
         else:
             table = 0
 
-        return table | (tile << 4) | (self.vram_addr >> 12)
+        return (tile << 4) | (self.vram_addr >> 12) | table
 
-    def write_mirrored_vram(self, address, v):
-        if address >= 0x3f00:
-            if address & 0xf == 0:
-                address = 0
-            self.palette_ram[address & 0x1f] = v
-        else:
-            self.nametables.write(address - 0x1000, v)
+    def write_palette(self, address, v):
+        if 0x3f00 <= address < 0x3f20:
+            print address, v
+            if address == 0x3F00 or address == 0x3F10:
+                self.palette_ram[0x3F00] = v
+                self.palette_ram[0x3F10] = v
+            elif address == 0x3F04 or address == 0x3F14:
+                self.palette_ram[0x3F04] = v
+                self.palette_ram[0x3F14] = v
+            elif address == 0x3F08 or address == 0x3F18:
+                self.palette_ram[0x3F08] = v
+                self.palette_ram[0x3F18] = v
+            elif address == 0x3F0C or address == 0x3F1C:
+                self.palette_ram[0x3F0C] = v
+                self.palette_ram[0x3F1C] = v
+            else:
+                self.palette_ram[address] = v
 
     def render_output(self):
         for i in range(len(self.palette_buffer)-1, -1, -1):
