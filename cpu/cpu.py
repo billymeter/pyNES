@@ -7,10 +7,6 @@ import logging
 import instructions
 from addressmodes import *
 
-
-logging.basicConfig(filename='cpu.log', level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 f=open("cpu.log","w")
 
 scanlines = 241
@@ -30,13 +26,9 @@ class CPU:
             # use one copy rather than mirroring them all since we have a
             # mod operator
             if 0x0 <= addr < 0x2000:
-                #base_addr = addr % 0x800
-                #return self.memory[base_addr]
                 return self._memory[addr] & 0xff
             # I/O Registers, mirrored a bunch of times
             elif 0x2000 <= addr < 0x4000:
-                #base_addr = (addr - 0x2000) % 0x8
-                #return self.memory[base_addr + 0x2000]
                 offset = addr % 0x8
                 return self._nes.ppu.read_register(0x2000 + offset)
             # Unmirrored I/O registers, Expansion ROM, and Save RAM
@@ -56,13 +48,9 @@ class CPU:
             # use one copy rather than mirroring them all since we have a
             # mod operator
             elif 0x0 <= addr < 0x2000:
-                #base_addr = addr % 0x800
-                #self.memory[base_addr] = value
                 self._memory[addr] = value
             # I/O Registers, mirrored a bunch of times
             elif 0x2000 <= addr < 0x4000:
-                #base_addr = (addr - 0x2000) % 0x8
-                #self.memory[base_addr + 0x2000] = value
                 offset = addr % 0x8
                 self._nes.ppu.write_register(0x2000 + offset, value)
             # Unmirrored I/O registers
@@ -116,14 +104,9 @@ class CPU:
         def __call__(self, op1, op2):
 
             extra_cycles = self._instruction(self._cpu, self._addressing, op1, op2)
-
-            #pc = self._cpu.registers['pc'].read()
-            #self._cpu.registers['pc'].write(pc + self._addressing.byte_size)
-
             return self._cycles + extra_cycles
 
 
-    ####
     def __init__(self, nes, cart):
         self._nes = nes
         self.memory = CPU.Memory(nes)
@@ -411,22 +394,16 @@ class CPU:
             self.nmi_requested = 0
 
         pc = self.registers['pc'].read()
-        #print "[DEBUG] ------------------------\n [DEBUG] PC: {:X}".format(pc)
         opcode = self.memory.read(pc)
-
-        #print " [DEBUG] OPCODE: {:X} ({})".format(opcode, self.opcodes[opcode]._instruction.__doc__)
 
         # decode
         operands = self.opcodes[opcode]._addressing.byte_size
         ops = [None, None]
-        #print " [DEBUG] OPERAND COUNT: {}".format(operands)
+
         for i in range(operands):
             if i == 0: continue # skip instruction opcode
             ops[i-1] = self.memory.read(pc + i) # fill in operands
         # update program counter
-        #print " [DEBUG] OP1:{} OP2:{}\n [DEBUG] OLD PC: {:X} NEW PC: {:X}".format(ops[0] if ops[0] == None else hex(ops[0]),
-        #                                                                          ops[1] if ops[1] == None else hex(ops[1]),
-        #                                                                          pc, pc+operands)
         self.registers['pc'].write(pc + operands)
 
         #execute
@@ -436,7 +413,6 @@ class CPU:
                                                             self.opcodes[opcode]._instruction.__doc__,
                             self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(),
                             self.registers['p'].read(), self.registers['sp'].read(), self._cycles, scanlines))
-        #print "[DEBUG] ------------------------\n"
         cycles = self.opcodes[opcode](ops[0], ops[1])
 
         temp = self._cycles
@@ -447,7 +423,6 @@ class CPU:
                 scanlines = -1
 
         return cycles
-        #self._cycles += cycles
 
     def run(self):
         global scanlines
@@ -464,7 +439,7 @@ class CPU:
 
     # Stack methods
     def push_stack(self, value):
-        self.memory.write(0x100 + self.registers['sp'].read(), value)#+ 0x100, value)
+        self.memory.write(0x100 + self.registers['sp'].read(), value)
         self.registers['sp'].adjust(value=-1)
 
     def pop_stack(self):
