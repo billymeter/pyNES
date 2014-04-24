@@ -283,7 +283,7 @@ class PPU(object):
             self.ppudata_write(v)
         elif address == 0x4014:
             self.dma_write(v)
-        self.status |= value & 0x1f
+        self.status |= v & 0x1f
 
     def ppuctrl_write(self, value):
         """ Handle a write to PPUCTRL ($2000) """
