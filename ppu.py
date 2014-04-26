@@ -471,14 +471,14 @@ class PPU(object):
                    line); cleared after reading $2002 and at dot 1 of the
                    pre-render line.
         '''
-        if self.scanline == 240 and self.cycle == 0:
+        if self.scanline == 241 and self.cycle == 0:
             # reading one cycle before vblank results in:
             # ignore_nmi and ignore_vblank are set
             # return status with vblank cleared
             self.ignore_nmi = 1
             self.ignore_vblank = 1
             return clear_bit(self.status, StatusBit.InVblank)
-        elif self.scanline == 240 and self.cycle == 2:
+        elif self.scanline == 241 and self.cycle == 2:
             # reading one cycle after vblank results in:
             # clear vblank, suppress NMI for the frame
             # return status with vblank set
@@ -522,13 +522,13 @@ class PPU(object):
         '''
         if not self.vram_addr_latch:
             # first write, horizontal scroll
-            self.vram_addr_buffer &= 0x7fe0
-            self.vram_addr_buffer |= ((v & 0xf8) >> 3)
+            self.vram_addr_buffer = self.vram_addr_buffer & 0x7fe0
+            self.vram_addr_buffer = self.vram_addr_buffer | ((v & 0xf8) >> 3)
             self.fine_x = v & 0x7
         else:
             # second write, vertical scroll
-            self.vram_addr_buffer &= 0xc1f
-            self.vram_addr_buffer |= (((v & 0xf8) << 2) | ((v & 0x07) << 12))
+            self.vram_addr_buffer = self.vram_addr_buffer & 0xc1f
+            self.vram_addr_buffer = self.vram_addr_buffer | ((v & 0xf8) << 2) | ((v & 0x07) << 12)
         self.vram_addr_latch = not self.vram_addr_latch
 
     def ppuaddr_write(self, v):
@@ -545,14 +545,14 @@ class PPU(object):
             write_toggle:                      = 0
         '''
         if not self.vram_addr_latch:
-            self.vram_addr_buffer &= 0xff
-            self.vram_addr_buffer |= ((v & 0x3f) << 8)
+            self.vram_addr_buffer = self.vram_addr_buffer & 0xff
+            self.vram_addr_buffer = self.vram_addr_buffer | ((v & 0x3f) << 8)
         else:
-            self.vram_addr_buffer &= 0x7f00
-            self.vram_addr_buffer |= v
+            self.vram_addr_buffer = self.vram_addr_buffer & 0x7f00
+            self.vram_addr_buffer = self.vram_addr_buffer | v
             self.vram_addr = self.vram_addr_buffer
 
-            # check sprite0
+        # check sprite0
         self.vram_addr_latch = not self.vram_addr_latch
 
     def ppudata_write(self, v):
@@ -719,6 +719,11 @@ class PPU(object):
 
     def get_bg_tbl_address(self, v):
         table = 0x1000 if self.background_tbl_addr else 0x0000
+
+        # addr = (v << 4) | self.vram_addr >> 12 | table
+        # if addr < 0x00 or addr >= 0x2000:
+        #     print "addr: ", hex(addr)
+
         return (v << 4) | self.vram_addr >> 12 | table
 
     def update_sprite_buffer(self, address, v):
@@ -876,17 +881,13 @@ class PPU(object):
             self.sprite_data['x'][i] = v
 
     def end_scanline(self):
-        # experiment
+        # wraparound
         if self.vram_addr & 0x1f == 0x1f:
             self.vram_addr ^= 0x41f
         else:
             self.vram_addr += 1
 
-        if self.vram_addr & 0x1f == 0x1f:
-            self.vram_addr ^= 0x41f
-        else:
-            self.vram_addr += 1
-
+        # finished scanline
         if self.show_background or self.show_sprites:
             if self.vram_addr & 0x7000 == 0x7000:
                 tmp = self.vram_addr & 0x3e0
@@ -899,6 +900,7 @@ class PPU(object):
                 else:
                     self.vram_addr += 0x20
             else:
+                # fine y
                 self.vram_addr += 0x1000
 
             self.vram_addr = ((self.vram_addr & 0x7be0) |
