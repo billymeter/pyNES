@@ -715,7 +715,7 @@ class PPU(object):
         if not pixel:
             return self.vram.read(0x3f00)
 
-        return self.vram.read(attribute + pixel)
+        return self.vram.read(0x3f00 + attribute + pixel)
 
     def get_bg_tbl_address(self, v):
         table = 0x1000 if self.background_tbl_addr else 0x0000
