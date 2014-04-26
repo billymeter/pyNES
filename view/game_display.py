@@ -57,10 +57,10 @@ class Display(wx.Window):
             elif event.type == pygame.KEYDOWN:
                 for button in self.gamepad1:
                     if event.key == self.gamepad1[button]:
-                        self.nes.parse_input(button)
+                        self.nes.parse_input(1, button)
                 for button in self.gamepad2:
                     if event.key == self.gamepad2[button]:
-                        self.nes.parse_input(button)
+                        self.nes.parse_input(2, button)
         self.Redraw()
 
     def Redraw(self):
