@@ -5,6 +5,7 @@ from collections import namedtuple
 from utils import *
 import logging
 import numpy as np
+np.set_printoptions(threshold='nan')
 
 logging.basicConfig(filename='errors.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -557,8 +558,47 @@ class PPU(object):
 
     def ppudata_write(self, v):
         """ Handle a write to PPUDATA ($2007) """
-        self.vram.write(self.vram_addr, v)
-        self.increment_vram_address()
+        if self.scanline < 240 and (self.show_background or self.show_sprites):
+            self.coarse_x_increment()
+            self.y_increment()
+        else:
+            self.vram.write(self.vram_addr, v)
+            self.increment_vram_address()
+
+    def coarse_x_increment(self):
+        # if coarse X == 31
+        if (self.vram_addr & 0x001F) == 31:
+            # coarse X = 0
+            self.vram_addr &= ~0x001
+            # switch horizontal nametable
+            self.vram_addr ^= 0x0400
+        else:
+            # increment coarse X
+            self.vram_addr += 1
+
+    def y_increment(self):
+        # if fine Y < 7
+        if (self.vram_addr & 0x7000) != 0x7000:
+            # increment fine Y
+            self.vram_addr += 0x1000
+        else:
+            # fine Y = 0
+            self.vram_addr &= ~0x7000
+            # let y = coarse Y
+            y = (self.vram_addr & 0x03E0) >> 5
+            if y == 29:
+                # coarse Y = 0
+                y = 0
+                # switch vertical nametable
+                self.vram_addr ^= 0x0800
+            elif y == 31:
+                # coarse Y = 0, nametable not switched
+                y = 0
+            else:
+                # increment coarse Y
+                y += 1
+            # put coarse Y back into v
+            self.vram_addr = (self.vram_addr & ~0x03E0) | (y << 5)
 
     def ppudata_read(self):
         """ Handle a read to PPUDATA ($2007) """
@@ -619,26 +659,33 @@ class PPU(object):
                 '''
                 if self.show_background or self.show_sprites:
                     self.vram_addr = self.vram_addr_buffer
-        elif self.scanline < 240:
-            if self.cycle == 254:
+                    # self.vram_addr = ((self.vram_addr & 0x41f) |
+                    #                   (self.vram_addr_buffer & 0x7be0))
+        elif 0 <= self.scanline < 240:
+            if self.cycle == 253:
                 if self.show_background:
                     self.create_tile_row()
                 if self.show_sprites:
                     self.evaluate_sprites()
-            elif self.cycle == 256:
+            elif self.cycle == 255:
                 if self.show_background:
+                    # self.y_increment()
                     self.end_scanline()
+            # elif self.cycle == 257:
+            #     if self.show_background or self.show_sprites:
+            #         self.vram_addr = ((self.vram_addr & 0x7be0) |
+            #                           (self.vram_addr_buffer & 0x41f))
         elif self.scanline == 241:
-            if self.cycle == 1:
+            if self.cycle == 0:
                 if not self.ignore_vblank:
                     self.status = set_bit(self.status, StatusBit.InVblank)
                 if self.nmi_on_vblank == 1 and not self.ignore_nmi:
                     # request NMI from CPU!
                     self._nes.cpu.nmi_requested = 1
-                    self.cycle += 21
+                    # self.cycle += 21
                 self.render_output()
         elif self.scanline == 260:
-            if self.cycle >= 340:
+            if self.cycle == 340:
                 self.scanline = -2
                 self.frame_count += 1
 
@@ -657,14 +704,16 @@ class PPU(object):
         low, high, attr_buffer = self.get_tile_attributes()
 
         # shift the first tile to make room for the second
-        self.shift16_1 = (self.shift16_1 << 8) | low
-        self.shift16_2 = (self.shift16_2 << 8) | high
+        self.shift16_1 = ((self.shift16_1 << 8) & 0xffff) | low
+        self.shift16_2 = ((self.shift16_2 << 8) & 0xffff) | high
 
         # for each tile in the row
         for x in range(32):
             # for each pixel in the row of the tile
             for k in range(8):
                 fb_row = self.scanline*256 + ((x * 8) + k)
+                if fb_row >= 61440:
+                    print fb_row
                 if self.values[fb_row] != 0:
                     continue
 
@@ -672,7 +721,8 @@ class PPU(object):
                 # 16-bit shift registers; the bit used is computed with k
                 # and fine x
                 current = (15 - k - self.fine_x)
-                pxvalue = ((self.shift16_1 >> current) & 1) | (((self.shift16_2 >> current) & 1) << 1)
+                pxvalue = (((self.shift16_1 >> current) & 1) |
+                           (((self.shift16_2 >> current) & 1) << 1))
 
                 # attr corresponds to the first tile, while attr_buffer
                 # corresponds to the second; if we're taking bit 8 or higher,
@@ -691,8 +741,8 @@ class PPU(object):
             # shift in a new tile
             attr = attr_buffer
             low, high, attr_buffer = self.get_tile_attributes()
-            self.shift16_1 = (self.shift16_1 << 8) | low
-            self.shift16_2 = (self.shift16_2 << 8) | high
+            self.shift16_1 = ((self.shift16_1 << 8) & 0xffff) | low
+            self.shift16_2 = ((self.shift16_2 << 8) & 0xffff) | high
 
     def get_tile_attributes(self):
         attr_addr = (0x23c0 | (self.vram_addr & 0xc00) |
@@ -709,7 +759,9 @@ class PPU(object):
         else:
             self.vram_addr += 1
 
-        return self._nes.rom.read_chr(tile), self._nes.rom.read_chr(tile + 8), attr
+        # print tile, tile+8
+        # print self.vram.read(tile), self.vram.read(tile + 8)
+        return self.vram.read(tile), self.vram.read(tile + 8), attr
 
     def get_background_entry(self, attribute, pixel):
         if not pixel:
@@ -718,7 +770,10 @@ class PPU(object):
         return self.vram.read(0x3f00 + attribute + pixel)
 
     def get_bg_tbl_address(self, v):
-        table = 0x1000 if self.background_tbl_addr else 0x0000
+        if self.background_tbl_addr:
+            table = 0x1000
+        else:
+            table = 0
 
         # addr = (v << 4) | self.vram_addr >> 12 | table
         # if addr < 0x00 or addr >= 0x2000:
@@ -881,6 +936,7 @@ class PPU(object):
             self.sprite_data['x'][i] = v
 
     def end_scanline(self):
+        # print "vram_addr before: ", bin(self.vram_addr)
         # wraparound
         if self.vram_addr & 0x1f == 0x1f:
             self.vram_addr ^= 0x41f
@@ -905,3 +961,4 @@ class PPU(object):
 
             self.vram_addr = ((self.vram_addr & 0x7be0) |
                               (self.vram_addr_buffer & 0x41f))
+        # print "vram_addr after: ", bin(self.vram_addr)
