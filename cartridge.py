@@ -32,10 +32,10 @@ class Cartridge(object):
         # set mirroring for this rom in the ppu
         if frombyte(rom[6]) & 0x1:
             # vertical mirroring
-            self._nes.ppu.nametables.set_mirroring(1)
+            self._nes.ppu.vram.nametable.set_mirroring('Vertical')
         else:
             # horizontal mirroring
-            self._nes.ppu.nametables.set_mirroring(0)
+            self._nes.ppu.vram.nametable.set_mirroring('Horizontal')
 
         if (frombyte(rom[6]) >> 1) & 0x1:
             self.battery = True
@@ -99,7 +99,7 @@ class Cartridge(object):
         if address >= 0x1000:
             return self.chr_banks[len(self.chr_banks)-1][offset]
 
-        return self.chr_banks[0][address & 0xfff]
+        return self.chr_banks[0][offset]
 
     def write_chr(self, address, value):
         if address >= 0x1000:

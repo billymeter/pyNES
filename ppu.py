@@ -106,77 +106,199 @@ rgb_palette = [
                # (0x00 << 2, 0x00 << 2, 0x00 << 2)]
 
 
-class NameTables(object):
-    """
-    Name table occupy 0x2000 through 0x2fff in PPU memory map, and are
-    mirrored at 0x3000.
-    """
-    def __init__(self):
-        self.logical_tables = [[], [], [], []]
-        self.nametable0 = [0xff] * NAMETABLE_SIZE
-        self.nametable1 = [0xff] * NAMETABLE_SIZE
-        self.mirroring = None
-        self.readit = 0
-
-    def set_mirroring(self, m):
-        self.mirroring = m
-
-        if self.mirroring == MirrorType.Horizontal:
-            self.logical_tables[0] = self.nametable0
-            self.logical_tables[1] = self.nametable0
-            self.logical_tables[2] = self.nametable1
-            self.logical_tables[3] = self.nametable1
-        elif self.mirroring == MirrorType.Vertical:
-            self.logical_tables[0] = self.nametable0
-            self.logical_tables[1] = self.nametable1
-            self.logical_tables[2] = self.nametable0
-            self.logical_tables[3] = self.nametable1
-        elif self.mirroring == MirrorType.SingleUpper:
-            self.logical_tables[0] = self.nametable0
-            self.logical_tables[1] = self.nametable0
-            self.logical_tables[2] = self.nametable0
-            self.logical_tables[3] = self.nametable0
-        elif self.mirroring == MirrorType.SingleLower:
-            self.logical_tables[0] = self.nametable1
-            self.logical_tables[1] = self.nametable1
-            self.logical_tables[2] = self.nametable1
-            self.logical_tables[3] = self.nametable1
-
-    def write(self, addr, value):
-        # print "(addr & 0xc00) >> 10: ", (addr & 0xc00) >> 10, "; addr & 0x3ff: ", addr & 0x3ff
-        # if ((0x23c0 <= addr < 0x2400) or (0x27c0 <= addr < 0x2800) or
-        #         (0x2bc0 <= addr < 0x2c00) or (0x2fc0 <= addr < 0x3000)):
-        #     self.write_attribute(addr, value)
-        self.logical_tables[(addr & 0xc00) >> 10][addr & 0x3ff] = value
-
-    def read(self, addr):
-        return self.logical_tables[(addr & 0xc00) >> 10][addr & 0x3ff]
-
-
-SpriteData = namedtuple('SpriteData', 'y tiles attributes x')
-
-
 class PPU(object):
+    class Memory(object):
+        class NameTable(object):
+            def __init__(self):
+                self.nametables = [[], [], [], []]
+                self.attrtables = [[], [], [], []]
+                self._nametables = [bytearray(0x3c0), bytearray(0x3c0)]
+                self._attrtables = [bytearray(0x40), bytearray(0x40)]
+                self._mirroring = None
+
+            def read(self, addr):
+                if 0x2000 <= addr < 0x23c0:
+                    return self.nametables[0][addr - 0x2000]
+                elif addr < 0x2400:
+                    return self.attrtables[0][addr - 0x23c0]
+                elif addr < 0x27c0:
+                    return self.nametables[1][addr - 0x2400]
+                elif addr < 0x2800:
+                    return self.attrtables[1][addr - 0x27c0]
+                elif addr < 0x2bc0:
+                    return self.nametables[2][addr - 0x2800]
+                elif addr < 0x2c00:
+                    return self.attrtables[2][addr - 0x2bc0]
+                elif addr < 0x2fc0:
+                    return self.nametables[3][addr - 0x2c00]
+                elif addr < 0x3000:
+                    return self.attrtables[3][addr - 0x2fc0]
+                else:
+                    return self.read(addr - 0x1000)
+
+            def write(self, addr, value):
+                if 0x2000 <= addr < 0x23c0:
+                    self.nametables[0][addr - 0x2000] = value
+                elif addr < 0x2400:
+                    self.attrtables[0][addr - 0x23c0] = value
+                elif addr < 0x27c0:
+                    self.nametables[1][addr - 0x2400] = value
+                elif addr < 0x2800:
+                    self.attrtables[1][addr - 0x27c0] = value
+                elif addr < 0x2bc0:
+                    self.nametables[2][addr - 0x2800] = value
+                elif addr < 0x2c00:
+                    self.attrtables[2][addr - 0x2bc0] = value
+                elif addr < 0x2fc0:
+                    self.nametables[3][addr - 0x2c00] = value
+                elif addr < 0x3000:
+                    self.attrtables[3][addr - 0x2fc0] = value
+
+            def nt_byte(self, nametable, x, y):
+                x /= 8
+                y /= 8
+                return self.nametables[nametable][y * 32 + x]
+
+            def at_byte(self, nametable, x, y):
+                x /= 32
+                y /= 30
+                return self.attrtables[nametable][y * 8 + x]
+
+            def set_mirroring(self, mirroring):
+                """ 'Horizontal', 'Vertical', 'SingleUpper', or 'SingleLower' """
+                self.mirroring = mirroring
+                if mirroring == 'Horizontal':
+                    for (i, j) in zip(range(4), [0, 0, 1, 1]):
+                        self.nametables[i] = self._nametables[j]
+                        self.attrtables[i] = self._attrtables[j]
+                elif mirroring == 'Vertical':
+                    for (i, j) in zip(range(4), [0, 1, 0, 1]):
+                        self.nametables[i] = self._nametables[j]
+                        self.attrtables[i] = self._attrtables[j]
+                elif mirroring == 'SingleUpper':
+                    for (i, j) in zip(range(4), [0, 0, 0, 0]):
+                        self.nametables[i] = self._nametables[j]
+                        self.attrtables[i] = self._attrtables[j]
+                elif mirroring == 'SingleLower':
+                    for (i, j) in zip(range(4), [1, 1, 1, 1]):
+                        self.nametables[i] = self._nametables[j]
+                        self.attrtables[i] = self._attrtables[j]
+
+        class PaletteTable(object):
+            def __init__(self):
+                self._memory = bytearray(0x20)
+
+            def read(self, addr):
+                if 0x3f00 <= addr < 0x3f20:
+                    return self._memory[addr - 0x3f00]
+                elif 0x3f20 <= addr < 0x3f40:
+                    return self.read(addr - 0x20)
+                elif 0x3f40 <= addr < 0x3f60:
+                    return self.read(addr - 0x40)
+                elif 0x3f60 <= addr < 0x3f80:
+                    return self.read(addr - 0x60)
+                elif 0x3f80 <= addr < 0x3fa0:
+                    return self.read(addr - 0x80)
+                elif 0x3fa0 <= addr < 0x3fc0:
+                    return self.read(addr - 0xa0)
+                elif 0x3fc0 <= addr < 0x3fe0:
+                    return self.read(addr - 0xc0)
+                elif 0x3fe0 <= addr < 0x4000:
+                    return self.read(addr - 0xe0)
+
+            def write(self, addr, value):
+                if 0x3f00 <= addr < 0x3f20:
+                    if addr == 0x3F00 or addr == 0x3F10:
+                        self._memory[0x00] = value
+                        self._memory[0x10] = value
+                    elif addr == 0x3F04 or addr == 0x3F14:
+                        self._memory[0x04] = value
+                        self._memory[0x14] = value
+                    elif addr == 0x3F08 or addr == 0x3F18:
+                        self._memory[0x08] = value
+                        self._memory[0x18] = value
+                    elif addr == 0x3F0C or addr == 0x3F1C:
+                        self._memory[0x0C] = value
+                        self._memory[0x1C] = value
+                    else:
+                        self._memory[addr - 0x3f00] = value
+                elif 0x3f20 <= addr < 0x3f40:
+                    self.write(addr - 0x20, value)
+                elif 0x3f40 <= addr < 0x3f60:
+                    self.write(addr - 0x40, value)
+                elif 0x3f60 <= addr < 0x3f80:
+                    self.write(addr - 0x60, value)
+                elif 0x3f80 <= addr < 0x3fa0:
+                    self.write(addr - 0x80, value)
+                elif 0x3fa0 <= addr < 0x3fc0:
+                    self.write(addr - 0xa0, value)
+                elif 0x3fc0 <= addr < 0x3fe0:
+                    self.write(addr - 0xc0, value)
+                elif 0x3fe0 <= addr < 0x4000:
+                    self.write(addr - 0xe0, value)
+
+        # Memory functions
+        def __init__(self, nes):
+            self._nes = nes
+            self._memory = bytearray(0x8000)
+            self.nametable = PPU.Memory.NameTable()
+            self.palettetable = PPU.Memory.PaletteTable()
+
+        def read(self, addr):
+            if 0x0000 <= addr < 0x2000:
+                return self._nes.rom.read_chr(addr)
+            elif 0x2000 <= addr < 0x3f00:
+                return self.nametable.read(addr)
+            elif 0x3f00 <= addr < 0x4000:
+                return self.palettetable.read(addr)
+            else:
+                return self.read(addr % 0x4000)
+
+        def write(self, addr, value):
+            self._memory[addr] = value
+            if 0x0000 <= addr < 0x2000:
+                self._nes.rom.write_chr(addr, value)
+            elif 0x2000 <= addr < 0x3f00:
+                self.nametable.write(addr, value)
+            elif 0x3f00 <= addr < 0x4000:
+                self.palettetable.write(addr, value)
+            else:
+                self.write(addr % 0x4000)
+
+    class OAM(object):
+        def __init__(self, nes):
+            self._nes = nes
+            self._memory = bytearray(0x100)
+
+        def write(self, addr, value):
+            self._memory[addr] = value
+
+        def read(self, addr):
+            return self._memory[addr]
+
+        def get_sprite_data(self, addr):
+            top_y = self._memory[addr]
+            tile_index = self._memory[addr + 1]
+            attributes = self._memory[addr + 2]
+            left_x = self._memory[addr + 3]
+            return (top_y, tile_index, attributes, left_x)
+
     def __init__(self, nes):
         self._nes = nes
         # ppu memory
-        self.vram = [0] * 0x8000
-        self.sprite_ram = [0] * 0x100
-        self.palette_ram = [0] * 0x20
-        self.nametables = NameTables()
-        # pattern tables aren't actually in the ppu, they're on the cartridge
-        # self.patterntables = PatternTables()
-        # still confused about sprites; not sure if this is good
-        # self.sprite_data = SpriteData([0] * 64, [0] * 64, [0] * 64, [0] * 64)
+        self.vram = PPU.Memory(nes)
+        self.sram64 = PPU.OAM(nes)
+        self.sram8 = PPU.OAM(nes)
+        # render states
         self.sprite_data = {
             'y': [0] * 64,
             'tiles': [0] * 64,
             'attributes': [0] * 64,
             'x': [0] * 64
         }
-
-        # render states
-        self.palette_buffer = [{'color': 0, 'value': 0, 'index': 0}] * 61440
+        self.colors = [0] * 61440
+        self.values = [0] * 61440
+        self.pindexes = [0] * 61440
         self.frame_buffer = np.array([[0] * 240] * 256, ndmin=2, dtype=np.uint32)
         self.display = None
 
@@ -226,8 +348,6 @@ class PPU(object):
         self.vram_addr_latch = 0
         self.shift16_1 = 0
         self.shift16_2 = 0
-        # self.shift8_1 = 0
-        # self.shift8_2 = 0
 
         # other state
         self.frame_count = 0
@@ -379,14 +499,14 @@ class PPU(object):
 
     def oamdata_write(self, v):
         """ Handle a write to OAMDATA ($2004) """
-        self.sprite_ram[self.sprite_ram_addr] = v
+        self.sram64.write(self.sprite_ram_addr, v)
         self.update_sprite_buffer(self.sprite_ram_addr, v)
         self.sprite_ram_addr += 1
         self.sprite_ram_addr %= 0x100
 
     def oamdata_read(self):
         """ Handle a read to OAMDATA ($2004) """
-        return self.sprite_ram[self.sprite_ram_addr]
+        return self.sram64.read(self.sprite_ram_addr)
 
     def ppuscroll_write(self, v):
         """ Handle a write to PPUSCROLL ($2005) """
@@ -399,11 +519,11 @@ class PPU(object):
             vram_addr_buffer: CBA..HG FED..... = d: HGFEDCBA
             write_toggle:                      = 0
         '''
-        if self.vram_addr_latch:
+        if not self.vram_addr_latch:
             # first write, horizontal scroll
             self.vram_addr_buffer &= 0x7fe0
             self.vram_addr_buffer |= ((v & 0xf8) >> 3)
-            self.fine_x = v & 0x07
+            self.fine_x = v & 0x7
         else:
             # second write, vertical scroll
             self.vram_addr_buffer &= 0xc1f
@@ -423,7 +543,7 @@ class PPU(object):
             vram_addr                          = vram_addr_buffer
             write_toggle:                      = 0
         '''
-        if self.vram_addr_latch:
+        if not self.vram_addr_latch:
             self.vram_addr_buffer &= 0xff
             self.vram_addr_buffer |= ((v & 0x3f) << 8)
         else:
@@ -436,43 +556,22 @@ class PPU(object):
 
     def ppudata_write(self, v):
         """ Handle a write to PPUDATA ($2007) """
-        if 0x3f00 <= self.vram_addr < 0x4000:
-            self.write_palette(self.vram_addr, v)
-        elif 0x2000 <= self.vram_addr < 0x3f00:
-            self.nametables.write(self.vram_addr, v)
-        elif self.vram_addr < 0x2000:
-            self._nes.rom.write_chr(self.vram_addr & 0x3fff, v)
-        else:
-            self.vram[self.vram_addr & 0x3fff] = v
-        self.inc_vram_address()
+        self.vram.write(self.vram_addr, v)
+        self.increment_vram_address()
 
     def ppudata_read(self):
         """ Handle a read to PPUDATA ($2007) """
-        if 0x2000 <= self.vram_addr < 0x3000:
-            data = self.vram_data_buffer
-            self.vram_data_buffer = self.nametables.read(self.vram_addr)
-        elif self.vram_addr < 0x3f00:
-            data = self.vram_data_buffer
-
-            if self.vram_addr < 0x2000:
-                self.vram_data_buffer = self._nes.rom.read_chr(self.vram_addr)
-            else:
-                self.vram_data_buffer = self.vram[self.vram_addr]
+        if 0x0000 <= vram_addr < 0x3f00:
+            to_return = self._data_buffer
+            self._data_buffer = self.vram.read(vram_addr)
         else:
-            buffer_addr = self.vram_addr - 0x1000
-            if 0x2000 <= buffer_addr < 0x3000:
-                self.vram_data_buffer = self.nametables.read(buffer_addr)
-            else:
-                self.vram_data_buffer = self.vram[buffer_addr]
-
-            address = self.vram_addr
-            if address & 0xf == 0:
-                address = 0
-            data = self.palette_ram[address & 0x1f]
-
-        self.inc_vram_address()
-
-        return data
+            # This may be a little wrong. The docs say that the mirrored
+            # nametable data is put in the data buffer, rather than the palette
+            # data. But vram - 0x1000 could be non-mirrored nametable data.
+            self._data_buffer = self.vram.read(vram_addr - 0x1000)
+            to_return = self.vram.read(vram_addr)
+        self.increment_vram_address()
+        return to_return
 
     def dma_write(self, v):
         """ Handle a write to $4014 """
@@ -482,10 +581,9 @@ class PPU(object):
         base_address = v * 0x100
         for i in range(0, 0x100):
             data = self._nes.cpu.memory.read(base_address + i)
-            self.sprite_ram[i] = data
-            self.update_sprite_buffer(i, data)
+            self.sram64.write(i, data)
 
-    def inc_vram_address(self):
+    def increment_vram_address(self):
         """
         vram address is incremented differently based on vram_addr_inc flag
         """
@@ -496,8 +594,8 @@ class PPU(object):
 
     def step(self):
         # if self.vram_addr > 0x4000:
-        #     with open('vram.txt', 'a') as f:
-        #         f.write("Cycle: {}, Address: {}\n".format(self.cycle, self.vram_addr))
+            # with open('vram.txt', 'a') as f:
+            #     f.write("Cycle: {}, Address: {}\n".format(self.cycle, self.vram_addr))
         # f.write("{:04X}  {:02X}   A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X} CYC:{:3} SL:{} CTRL:{} MASK:{} STATUS:{} DBUF:{} D:{} ABUF:{} ADDR:{} SRAM:{} FX:{} ALATCH:{} SHIFT1:{} SHIFT2:{}\n".format(self._nes.cpu.registers['pc'].read(),
         #         self._nes.cpu.memory.read(self._nes.cpu.registers['pc'].read()),
         #         self._nes.cpu.registers['a'].read(), self._nes.cpu.registers['x'].read(), self._nes.cpu.registers['y'].read(),
@@ -552,6 +650,8 @@ class PPU(object):
         self.shift16_1, self.shift16_2 = low, high
 
         low, high, attr_buffer = self.get_tile_attributes()
+        # with open('high.txt', 'a') as f:
+        #     f.write("High: {}, High_2: {}\n".format(self.shift16_2, high))
 
         self.shift16_1 = (self.shift16_1 << 8) | low
         self.shift16_2 = (self.shift16_2 << 8) | high
@@ -562,7 +662,7 @@ class PPU(object):
             # for each pixel in the row of the tile
             for k in range(8):
                 fb_row = self.scanline*256 + ((x * 8) + k)
-                if self.palette_buffer[fb_row]['value'] != 0:
+                if self.values[fb_row] != 0:
                     continue
 
                 current = (15 - k - self.fine_x)
@@ -575,12 +675,9 @@ class PPU(object):
 
                 # import random
                 # palette = random.randrange(64)
-                self.palette_buffer[fb_row]['color'] = rgb_palette[palette % 64]
-                self.palette_buffer[fb_row]['value'] = pxvalue
-                self.palette_buffer[fb_row]['index'] = -1
-                # print self.palette_buffer[fb_row]['color']
-                # print self.palette_buffer[fb_row]['value']
-                # print self.palette_buffer[fb_row]['index']
+                self.colors[fb_row] = rgb_palette[palette % 64]
+                self.values[fb_row] = pxvalue
+                self.pindexes[fb_row] = -1
 
             attr = attr_buffer
 
@@ -593,11 +690,9 @@ class PPU(object):
         attr_addr = (0x23c0 | (self.vram_addr & 0xc00) |
                      self.attr_loc[self.vram_addr & 0x3ff])
         shift = self.attr_shift[self.vram_addr & 0x3ff]
-        attr = ((self.nametables.read(attr_addr) >> shift) & 0x3) << 2
-        # with open('attempted_addresses.txt', 'a') as file:
-        #     file.write("Address: {}\n".format(attr_addr))
+        attr = ((self.vram.read(attr_addr) >> shift) & 0x3) << 2
 
-        index = self.nametables.read(self.vram_addr)
+        index = self.vram.read(self.vram_addr)
         tile = self.get_bg_tbl_address(index)
 
         # flip 10th bit on wraparound
@@ -610,14 +705,25 @@ class PPU(object):
 
     def get_background_entry(self, attribute, pixel):
         if not pixel:
-            return self.palette_ram[0]
+            return self.vram.read(0x3f00)
 
-        return self.palette_ram[attribute + pixel]
+        return self.vram.read(attribute + pixel)
 
     def get_bg_tbl_address(self, v):
         table = 0x1000 if self.background_tbl_addr else 0x0000
-
         return (v << 4) | self.vram_addr >> 12 | table
+
+    def update_sprite_buffer(self, address, v):
+        i = address / 4
+        bit = address % 4
+        if bit == 0:
+            self.sprite_data['y'][i] = v
+        elif bit == 1:
+            self.sprite_data['tiles'][i] = v
+        elif bit == 2:
+            self.sprite_data['attributes'][i] = v
+        elif bit == 3:
+            self.sprite_data['x'][i] = v
 
     def evaluate_sprites(self):
         if self.sprite_size:
@@ -698,23 +804,23 @@ class PPU(object):
                 priority = (attr >> 5) & 0x1
 
                 hit = (self.status & 0x40 == 0x40)
-                if (self.palette_buffer[fb_row]['value'] != 0 and is_sprite0
+                if (self.values[fb_row] != 0 and is_sprite0
                         and not hit):
                     # sprite 0 has been hit
                     self.status = set_bit(self.status, StatusBit.Sprite0Hit)
 
-                if -1 < self.palette_buffer[fb_row]['index'] < index:
+                if -1 < self.pindexes[fb_row] < index:
                     # higher priority sprite is already rendered here; skip
                     continue
-                elif self.palette_buffer[fb_row]['value'] != 0 and priority == 1:
+                elif self.values[fb_row] != 0 and priority == 1:
                     # pixel is already rendered and priority 1 indicates
                     # that this should be skipped
                     continue
 
-                pal = self.palette_ram[0x10 + (palette_index * 0x4) + pixel]
-                self.palette_buffer[fb_row]['color'] = rgb_palette[pal % 64]
-                self.palette_buffer[fb_row]['value'] = pixel
-                self.palette_buffer[fb_row]['index'] = index
+                pal = self.vram.read(0x3f10 + (palette_index * 0x4) + pixel)
+                self.colors[fb_row] = rgb_palette[pal % 64]
+                self.values[fb_row] = pixel
+                self.pindexes[fb_row] = index
 
     def get_sprite_tbl_address(self, tile):
         if self.sprite_size:
@@ -729,30 +835,13 @@ class PPU(object):
         else:
             table = 0
 
-        return (tile << 4) | (self.vram_addr >> 12) | table
-
-    def write_palette(self, address, v):
-        if 0x3f00 <= address < 0x3f20:
-            if address == 0x3F00 or address == 0x3F10:
-                self.palette_ram[0x3F00] = v
-                self.palette_ram[0x3F10] = v
-            elif address == 0x3F04 or address == 0x3F14:
-                self.palette_ram[0x3F04] = v
-                self.palette_ram[0x3F14] = v
-            elif address == 0x3F08 or address == 0x3F18:
-                self.palette_ram[0x3F08] = v
-                self.palette_ram[0x3F18] = v
-            elif address == 0x3F0C or address == 0x3F1C:
-                self.palette_ram[0x3F0C] = v
-                self.palette_ram[0x3F1C] = v
-            else:
-                self.palette_ram[address] = v
+        return tile * 0x10 + table
 
     def render_output(self):
-        for i in range(len(self.palette_buffer)-1, -1, -1):
+        for i in range(len(self.colors)-1, -1, -1):
             y = i / 256
             x = i - (y * 256)
-            color = self.palette_buffer[i]['color']
+            color = self.colors[i]
 
             # overscan
             # if y < 8 or y > 231 or x < 8 or x > 247:
@@ -761,16 +850,9 @@ class PPU(object):
             #     y -= 8
             #     x -= 8
 
-            width = 256
-            self.frame_buffer[x][y] = color
-            self.palette_buffer[i]['value'] = 0
-            self.palette_buffer[i]['index'] = -1
-        # from random import randrange
-        # i = randrange(256)
-        # dumb_buffer = np.array([[i] * 240] * 256, ndmin=2, dtype=np.uint32)
-        # self.display.NewFrame(dumb_buffer)
-        with open('frame_buffer.txt', 'w') as file:
-            file.write(str(self.frame_buffer))
+            self.frame_buffer[x][y] = color << 8
+            self.values[i] = 0
+            self.pindexes[i] = -1
         self.display.NewFrame(self.frame_buffer)
 
     def update_sprite_buffer(self, address, v):
@@ -787,29 +869,29 @@ class PPU(object):
 
     def end_scanline(self):
         # experiment
-        if self.vram_addr & 0x1F == 0x1F:
-            self.vram_addr ^= 0x41F
+        if self.vram_addr & 0x1f == 0x1f:
+            self.vram_addr ^= 0x41f
         else:
             self.vram_addr += 1
 
-        if self.vram_addr & 0x1F == 0x1F:
-            self.vram_addr ^= 0x41F
+        if self.vram_addr & 0x1f == 0x1f:
+            self.vram_addr ^= 0x41f
         else:
             self.vram_addr += 1
 
         if self.show_background or self.show_sprites:
             if self.vram_addr & 0x7000 == 0x7000:
-                tmp = self.vram_addr & 0x3E0
-                self.vram_addr &= 0xFFF
+                tmp = self.vram_addr & 0x3e0
+                self.vram_addr &= 0xfff
 
                 if tmp == 0x3a0:
                     self.vram_addr ^= 0xba0
                 elif tmp == 0x3e0:
-                    self.vram_addr ^= 0x3E0
+                    self.vram_addr ^= 0x3e0
                 else:
                     self.vram_addr += 0x20
             else:
                 self.vram_addr += 0x1000
 
-            self.vram_addr = ((self.vram_addr & 0x7BE0) |
-                              (self.vram_addr_latch & 0x41F))
+            self.vram_addr = ((self.vram_addr & 0x7be0) |
+                              (self.vram_addr_buffer & 0x41f))
