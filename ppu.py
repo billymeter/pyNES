@@ -10,6 +10,7 @@ logging.basicConfig(filename='errors.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 f = open("ppu.log", 'w')
+pal = open('palette.txt', 'a')
 
 ''' Constants '''
 MirrorType = enum('Horizontal', 'Vertical', 'SingleUpper', 'SingleLower')
@@ -561,15 +562,15 @@ class PPU(object):
 
     def ppudata_read(self):
         """ Handle a read to PPUDATA ($2007) """
-        if 0x0000 <= vram_addr < 0x3f00:
-            to_return = self._data_buffer
-            self._data_buffer = self.vram.read(vram_addr)
+        if 0x0000 <= self.vram_addr < 0x3f00:
+            to_return = self.vram_data_buffer
+            self.vram_data_buffer = self.vram.read(self.vram_addr)
         else:
             # This may be a little wrong. The docs say that the mirrored
             # nametable data is put in the data buffer, rather than the palette
             # data. But vram - 0x1000 could be non-mirrored nametable data.
-            self._data_buffer = self.vram.read(vram_addr - 0x1000)
-            to_return = self.vram.read(vram_addr)
+            self.vram_data_buffer = self.vram.read(self.vram_addr - 0x1000)
+            to_return = self.vram.read(self.vram_addr)
         self.increment_vram_address()
         return to_return
 
@@ -582,6 +583,7 @@ class PPU(object):
         for i in range(0, 0x100):
             data = self._nes.cpu.memory.read(base_address + i)
             self.sram64.write(i, data)
+            self.update_sprite_buffer(i, data)
 
     def increment_vram_address(self):
         """
@@ -633,41 +635,48 @@ class PPU(object):
                 if self.nmi_on_vblank == 1 and not self.ignore_nmi:
                     # request NMI from CPU!
                     self._nes.cpu.nmi_requested = 1
+                    self.cycle += 21
                 self.render_output()
         elif self.scanline == 260:
-            if self.cycle == 340:
+            if self.cycle >= 340:
                 self.scanline = -2
                 self.frame_count += 1
 
-        if self.cycle == 340:
+        if self.cycle >= 340:
             self.cycle = -1
             self.scanline += 1
 
         self.cycle += 1
 
     def create_tile_row(self):
+        # get the first tile layer
         low, high, attr = self.get_tile_attributes()
         self.shift16_1, self.shift16_2 = low, high
 
+        # get the second tile layer
         low, high, attr_buffer = self.get_tile_attributes()
-        # with open('high.txt', 'a') as f:
-        #     f.write("High: {}, High_2: {}\n".format(self.shift16_2, high))
 
+        # shift the first tile to make room for the second
         self.shift16_1 = (self.shift16_1 << 8) | low
         self.shift16_2 = (self.shift16_2 << 8) | high
 
         # for each tile in the row
         for x in range(32):
-
             # for each pixel in the row of the tile
             for k in range(8):
                 fb_row = self.scanline*256 + ((x * 8) + k)
                 if self.values[fb_row] != 0:
                     continue
 
+                # a pixel value is taken by layering a bit from each of the
+                # 16-bit shift registers; the bit used is computed with k
+                # and fine x
                 current = (15 - k - self.fine_x)
-                pxvalue = (self.shift16_1 >> current) & 1 | ((self.shift16_2 >> current) & 1) << 1
+                pxvalue = ((self.shift16_1 >> current) & 1) | (((self.shift16_2 >> current) & 1) << 1)
 
+                # attr corresponds to the first tile, while attr_buffer
+                # corresponds to the second; if we're taking bit 8 or higher,
+                # then it's the second tile
                 if current >= 8:
                     palette = self.get_background_entry(attr, pxvalue)
                 else:
@@ -679,10 +688,9 @@ class PPU(object):
                 self.values[fb_row] = pxvalue
                 self.pindexes[fb_row] = -1
 
+            # shift in a new tile
             attr = attr_buffer
-
             low, high, attr_buffer = self.get_tile_attributes()
-
             self.shift16_1 = (self.shift16_1 << 8) | low
             self.shift16_2 = (self.shift16_2 << 8) | high
 
@@ -850,7 +858,7 @@ class PPU(object):
             #     y -= 8
             #     x -= 8
 
-            self.frame_buffer[x][y] = color << 8
+            self.frame_buffer[x][y] = color
             self.values[i] = 0
             self.pindexes[i] = -1
         self.display.NewFrame(self.frame_buffer)
