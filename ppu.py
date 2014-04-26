@@ -676,7 +676,7 @@ class PPU(object):
             #         self.vram_addr = ((self.vram_addr & 0x7be0) |
             #                           (self.vram_addr_buffer & 0x41f))
         elif self.scanline == 241:
-            if self.cycle == 0:
+            if self.cycle == 1:
                 if not self.ignore_vblank:
                     self.status = set_bit(self.status, StatusBit.InVblank)
                 if self.nmi_on_vblank == 1 and not self.ignore_nmi:
