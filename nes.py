@@ -44,5 +44,5 @@ class NES(object):
         self.rom = cartridge.Cartridge(self, rom_data)
         # self.cpu.set_reset_vector()
 
-    def parse_input(self, button):
-        print "parsed!"
+    def parse_input(self, gamepad, button):
+        print "Button {} pressed".format(button)
