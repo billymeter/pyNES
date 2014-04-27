@@ -1001,9 +1001,9 @@ class PPU(object):
 
     def increment_frame_xy(self):
         self.frame_x += 1
-        if self.frame_x == 257:
+        if self.frame_x == 256:
             self.frame_x = 0
             self.frame_y += 1
-        if self.frame_y == 241:
+        if self.frame_y == 240:
             self.frame_x = 0
             self.frame_y = 0
