@@ -161,20 +161,12 @@ class PPU(object):
                 x -= 1
                 y /= 8
                 y -= 1
-                try:
-                    return self.nametables[nametable][y * 32 + x - 1]
-                except IndexError:
-                    print "Index error in nt_byte: ", x, y
+                return self.nametables[nametable][y * 32 + x]
 
             def at_byte(self, nametable, x, y):
-                x /= 32
-                x -= 1
-                y /= 30
-                y -= 1
-                try:
-                    return self.attrtables[nametable][y * 8 + x - 1]
-                except IndexError:
-                    print "Index error in at_byte: ", x, y
+                x = (x / 32) - 1
+                y = (y / 30) - 1
+                return self.attrtables[nametable][y * 8 + x]
 
             def set_mirroring(self, mirroring):
                 """ 'Horizontal', 'Vertical', 'SingleUpper', or 'SingleLower' """
@@ -684,12 +676,12 @@ class PPU(object):
             #     self.cycle = 0
             #     return
         elif 0 <= self.scanline < 240:
-            if self.cycle == 253:
+            if self.cycle == 254:
                 if self.show_background:
                     self.create_tile_row()
                 if self.show_sprites:
                     self.evaluate_sprites()
-            elif self.cycle == 255:
+            elif self.cycle == 256:
                 if self.show_background:
                     # self.y_increment()
                     self.end_scanline()
@@ -739,8 +731,6 @@ class PPU(object):
             # for each pixel in the row of the tile
             for k in range(8):
                 fb_row = self.scanline*256 + ((x * 8) + k)
-                if fb_row >= 61440:
-                    print fb_row
                 if self.values[fb_row] != 0:
                     continue
 
@@ -748,8 +738,8 @@ class PPU(object):
                 # 16-bit shift registers; the bit used is computed with k
                 # and fine x
                 current = (15 - k - self.fine_x)
-                pxvalue = (((self.shift16_1 >> current) & 1) |
-                           (((self.shift16_2 >> current) & 1) << 1))
+                pxvalue = (((self.shift16_1 >> k) & 1) |
+                           (((self.shift16_2 >> k) & 1) << 1))
 
                 # attr corresponds to the first tile, while attr_buffer
                 # corresponds to the second; if we're taking bit 8 or higher,
@@ -802,8 +792,7 @@ class PPU(object):
     def get_background_entry(self, attribute, pixel):
         if not pixel:
             return self.vram.read(0x3f00)
-
-        return self.vram.read(0x3f00 + (attribute & 0xffff) + pixel)
+        return self.vram.read(0x3f00 + attribute + pixel)
 
     def get_bg_tbl_address(self, v):
         if self.background_tbl_addr:
@@ -972,7 +961,6 @@ class PPU(object):
             self.sprite_data['x'][i] = v
 
     def end_scanline(self):
-        # print "vram_addr before: ", bin(self.vram_addr)
         # wraparound
         if self.vram_addr & 0x1f == 0x1f:
             self.vram_addr ^= 0x41f
@@ -997,7 +985,6 @@ class PPU(object):
 
             self.vram_addr = ((self.vram_addr & 0x7be0) |
                               (self.vram_addr_buffer & 0x41f))
-        # print "vram_addr after: ", bin(self.vram_addr)
 
     def increment_frame_xy(self):
         self.frame_x += 1
