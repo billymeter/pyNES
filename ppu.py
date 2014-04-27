@@ -728,7 +728,7 @@ class PPU(object):
         for x in range(32):
             # for each pixel in the row of the tile
             for k in range(8):
-                fb_row = self.scanline*256 + ((x * 8) + k)
+                fb_row = self.scanline*256 + ((x * 8) - k)
                 if self.values[fb_row] != 0:
                     continue
 
@@ -802,7 +802,7 @@ class PPU(object):
         # if addr < 0x00 or addr >= 0x2000:
         #     print "addr: ", hex(addr)
 
-        return (v << 4) | self.vram_addr >> 12 | table
+        return (v << 4) | (self.vram_addr >> 12) | table
 
     def update_sprite_buffer(self, address, v):
         i = address / 4
