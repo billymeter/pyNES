@@ -157,10 +157,8 @@ class PPU(object):
                     self.attrtables[3][addr - 0x2fc0] = value
 
             def nt_byte(self, nametable, x, y):
-                x /= 8
-                x -= 1
-                y /= 8
-                y -= 1
+                x = (x / 8) - 1
+                y = (y / 8) - 1
                 return self.nametables[nametable][y * 32 + x]
 
             def at_byte(self, nametable, x, y):
