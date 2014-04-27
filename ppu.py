@@ -158,13 +158,23 @@ class PPU(object):
 
             def nt_byte(self, nametable, x, y):
                 x /= 8
+                x -= 1
                 y /= 8
-                return self.nametables[nametable][y * 32 + x]
+                y -= 1
+                try:
+                    return self.nametables[nametable][y * 32 + x - 1]
+                except IndexError:
+                    print "Index error in nt_byte: ", x, y
 
             def at_byte(self, nametable, x, y):
                 x /= 32
+                x -= 1
                 y /= 30
-                return self.attrtables[nametable][y * 8 + x]
+                y -= 1
+                try:
+                    return self.attrtables[nametable][y * 8 + x - 1]
+                except IndexError:
+                    print "Index error in at_byte: ", x, y
 
             def set_mirroring(self, mirroring):
                 """ 'Horizontal', 'Vertical', 'SingleUpper', or 'SingleLower' """
@@ -358,6 +368,9 @@ class PPU(object):
         self.ignore_nmi = 0
         self.ignore_vblank = 1
 
+        self.frame_x = 0
+        self.frame_y = 0
+
         self.attr_loc = [0] * 0x400
         self.attr_shift = [0] * 0x400
         for i in range(0x400):
@@ -450,8 +463,6 @@ class PPU(object):
     def ppustatus_read(self):
         """ Handle a read to PPUSTATUS ($2002) """
         # vram address latch is cleared
-        self.vram_addr_latch = 0
-
         '''
         7654 3210
         |||| ||||
@@ -472,28 +483,35 @@ class PPU(object):
                    line); cleared after reading $2002 and at dot 1 of the
                    pre-render line.
         '''
+        self.vram_addr_latch = 0
+        to_return = 0
+        if self.status & 0x40:
+            # sprite 0 check
+            to_return |= 0x40
         if self.scanline == 241 and self.cycle == 0:
             # reading one cycle before vblank results in:
             # ignore_nmi and ignore_vblank are set
             # return status with vblank cleared
             self.ignore_nmi = 1
             self.ignore_vblank = 1
-            return clear_bit(self.status, StatusBit.InVblank)
+            to_return |= clear_bit(self.status, StatusBit.InVblank)
+            return to_return
         elif self.scanline == 241 and self.cycle == 2:
             # reading one cycle after vblank results in:
             # clear vblank, suppress NMI for the frame
             # return status with vblank set
             self.status = clear_bit(self.status, StatusBit.InVblank)
             self.ignore_nmi = 1
-            return set_bit(self.status, StatusBit.InVblank)
+            to_return |= set_bit(self.status, StatusBit.InVblank)
+            return to_return
         else:
             # otherwise normal behavior:
             # nmi, vblank aren't affected, status is returned then cleared
             self.ignore_nmi = 0
             self.ignore_vblank = 0
-            tmp = self.status
+            to_return |= self.status
             self.status = clear_bit(self.status, StatusBit.InVblank)
-            return tmp
+            return to_return
 
     def oamaddr_write(self, v):
         """ Handle a write to OAMADDR ($2003) """
@@ -553,7 +571,6 @@ class PPU(object):
             self.vram_addr_buffer = self.vram_addr_buffer | v
             self.vram_addr = self.vram_addr_buffer
 
-        # check sprite0
         self.vram_addr_latch = not self.vram_addr_latch
 
     def ppudata_write(self, v):
@@ -635,6 +652,7 @@ class PPU(object):
             self.vram_addr += 1
 
     def step(self):
+        pal.write(str(self.frame_count))
         # if self.vram_addr > 0x4000:
             # with open('vram.txt', 'a') as f:
             #     f.write("Cycle: {}, Address: {}\n".format(self.cycle, self.vram_addr))
@@ -649,7 +667,7 @@ class PPU(object):
                 self.status = clear_bit(self.status, StatusBit.InVblank)
                 self.status = clear_bit(self.status, StatusBit.SpriteOverflow)
                 self.status = clear_bit(self.status, StatusBit.Sprite0Hit)
-            if self.cycle == 304:
+            elif self.cycle == 304:
                 '''
                 From http://wiki._nesdev.com/w/index.php/PPU_scrolling:
                 At the beginning of each frame, the contents of
@@ -661,6 +679,10 @@ class PPU(object):
                     self.vram_addr = self.vram_addr_buffer
                     # self.vram_addr = ((self.vram_addr & 0x41f) |
                     #                   (self.vram_addr_buffer & 0x7be0))
+            # elif self.frame_count % 2 == 1 and self.cycle == 339:
+            #     self.scanline = 0
+            #     self.cycle = 0
+            #     return
         elif 0 <= self.scanline < 240:
             if self.cycle == 253:
                 if self.show_background:
@@ -675,18 +697,23 @@ class PPU(object):
             #     if self.show_background or self.show_sprites:
             #         self.vram_addr = ((self.vram_addr & 0x7be0) |
             #                           (self.vram_addr_buffer & 0x41f))
+        elif self.scanline == 240:
+            if self.cycle == 329:
+                if not self.ignore_vblank:
+                    self.status |= 0x80
         elif self.scanline == 241:
             if self.cycle == 1:
                 if not self.ignore_vblank:
-                    self.status = set_bit(self.status, StatusBit.InVblank)
-                if self.nmi_on_vblank == 1 and not self.ignore_nmi:
+                    self.status |= 0x80
+                if self.nmi_on_vblank == 1:
                     # request NMI from CPU!
                     self._nes.cpu.nmi_requested = 1
                     # self.cycle += 21
                 self.render_output()
         elif self.scanline == 260:
             if self.cycle == 340:
-                self.scanline = -2
+                self.cycle = -1
+                self.scanline = -1
                 self.frame_count += 1
 
         if self.cycle >= 340:
@@ -737,7 +764,7 @@ class PPU(object):
                 self.colors[fb_row] = rgb_palette[palette % 64]
                 self.values[fb_row] = pxvalue
                 self.pindexes[fb_row] = -1
-
+                self.increment_frame_xy()
             # shift in a new tile
             attr = attr_buffer
             low, high, attr_buffer = self.get_tile_attributes()
@@ -745,13 +772,22 @@ class PPU(object):
             self.shift16_2 = ((self.shift16_2 << 8) & 0xffff) | high
 
     def get_tile_attributes(self):
-        attr_addr = (0x23c0 | (self.vram_addr & 0xc00) |
-                     self.attr_loc[self.vram_addr & 0x3ff])
-        shift = self.attr_shift[self.vram_addr & 0x3ff]
-        attr = ((self.vram.read(attr_addr) >> shift) & 0x3) << 2
+        # attr_addr = (0x23c0 | (self.vram_addr & 0xc00) |
+        #              self.attr_loc[self.vram_addr & 0x3ff])
+        # shift = self.attr_shift[self.vram_addr & 0x3ff]
+        # attr = ((self.vram.read(attr_addr) >> shift) & 0x3) << 2
+        attr = self.vram.nametable.at_byte(self.nametable_addr, self.frame_x, self.frame_y)
 
-        index = self.vram.read(self.vram_addr)
+        index = self.vram.nametable.nt_byte(self.nametable_addr, self.frame_x, self.frame_y)
         tile = self.get_bg_tbl_address(index)
+        # if self.nametable_addr == 0:
+        #     tile = 0x2000 | (self.vram_addr & 0xfff)
+        # elif self.nametable_addr == 1:
+        #     tile = 0x2400 | (self.vram_addr & 0xfff)
+        # elif self.nametable_addr == 2:
+        #     tile = 0x2800 | (self.vram_addr & 0xfff)
+        # else:
+        #     tile = 0x2c00 | (self.vram_addr & 0xfff)
 
         # flip 10th bit on wraparound
         if (self.vram_addr & 0x1f) == 0x1f:
@@ -767,7 +803,7 @@ class PPU(object):
         if not pixel:
             return self.vram.read(0x3f00)
 
-        return self.vram.read(0x3f00 + attribute + pixel)
+        return self.vram.read(0x3f00 + (attribute & 0xffff) + pixel)
 
     def get_bg_tbl_address(self, v):
         if self.background_tbl_addr:
@@ -908,7 +944,7 @@ class PPU(object):
     def render_output(self):
         for i in range(len(self.colors)-1, -1, -1):
             y = i / 256
-            x = i - (y * 256)
+            x = i % 256
             color = self.colors[i]
 
             # overscan
@@ -962,3 +998,12 @@ class PPU(object):
             self.vram_addr = ((self.vram_addr & 0x7be0) |
                               (self.vram_addr_buffer & 0x41f))
         # print "vram_addr after: ", bin(self.vram_addr)
+
+    def increment_frame_xy(self):
+        self.frame_x += 1
+        if self.frame_x == 257:
+            self.frame_x = 0
+            self.frame_y += 1
+        if self.frame_y == 241:
+            self.frame_x = 0
+            self.frame_y = 0
