@@ -31,6 +31,9 @@ class CPU:
             elif 0x2000 <= addr < 0x4000:
                 offset = addr % 0x8
                 return self._nes.ppu.read_register(0x2000 + offset)
+            # Controller ports
+            elif addr == 0x4016 or addr == 0x4017:
+                return self._nes.cpu.controller.read(addr)
             # Unmirrored I/O registers, Expansion ROM, and Save RAM
             elif 0x4000 <= addr < 0x8000:
                 return self._memory[addr] & 0xff
@@ -56,6 +59,8 @@ class CPU:
             # Unmirrored I/O registers
             elif addr == 0x4014:
                 self._nes.ppu.write_register(0x4014, value)
+            elif addr == 0x4016:
+                self._nes.cpu.controller.write(value)
             elif 0x4000 <= addr < 0x4020:
                 self._memory[addr] = value
             # Expansion ROM cannot be written to
@@ -106,12 +111,52 @@ class CPU:
             extra_cycles = self._instruction(self._cpu, self._addressing, op1, op2)
             return self._cycles + extra_cycles
 
+    class Controller:
+        def __init__(self, cpu):
+            self._cpu = cpu
+            self._shiftreg = [0,0]
+            self._controllerstatus = [0,0]
+            # self._shift = [0,0]
+            self._strobe = 0
+            self.buttons = {
+                'up': 4,
+                'down': 5,
+                'left': 6,
+                'right': 7,
+                'a': 0,
+                'b': 1,
+                'select': 2,
+                'start': 3
+            }
+        def button_change(self, gamepad, button, updown):
+            curr = self._controllerstatus[gamepad-1]
+            curr &= ~(1<<self.buttons[button])  # clear button bit
+            if updown:
+                curr |= 1<<self.buttons[button]  # set button bit if pressed
+            self._controllerstatus[gamepad-1] = curr
+
+        def write(self, val):
+            if self._strobe and not val&1:
+                self._shiftreg[0] = ~0 & self._controllerstatus[0]
+                self._shiftreg[1] = ~0 & self._controllerstatus[1]
+            self._strobe = val&1
+
+        def read(self, reg):
+            reg -= 0x4016
+            if self._strobe:
+                return self._controllerstatus[reg] & 1
+            else:            
+                ret = self._shiftreg[reg] & 1
+                self._shiftreg[reg] >>= 1
+                return ret
+
 
     def __init__(self, nes, cart):
         self._nes = nes
         self.memory = CPU.Memory(nes)
         self._cycles = 0
         self._cart = cart
+        self.controller = CPU.Controller(self)
 
         # interrupt flags
         self.irq_requested = 0
