@@ -158,12 +158,12 @@ class PPU(object):
 
             def nt_byte(self, nametable, x, y):
                 x = (x / 8) - 1
-                y = (y / 8) - 1
+                y = (y / 8) #- 1
                 return self.nametables[nametable][y * 32 + x]
 
             def at_byte(self, nametable, x, y):
-                x = (x / 32) - 1
-                y = (y / 30) - 1
+                x = (x / 32) #- 1
+                y = (y / 30) #- 1
                 return self.attrtables[nametable][y * 8 + x]
 
             def set_mirroring(self, mirroring):
