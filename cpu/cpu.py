@@ -425,10 +425,10 @@ class CPU:
         self.memory._memory[0x000a] = 0xdf
         self.memory._memory[0x000f] = 0xbf
 
-    def execute(self, debug=False):
+    def execute(self, debug=True):
         global scanlines
         # fetch
-
+        cycles = 0
         # check for interrupts
         if self.irq_requested:
             if not self.get_status('interrupt'):
@@ -437,6 +437,7 @@ class CPU:
         elif self.nmi_requested:
             self.nmi()
             self.nmi_requested = 0
+            cycles += 7
 
         pc = self.registers['pc'].read()
         opcode = self.memory.read(pc)
@@ -458,7 +459,7 @@ class CPU:
                                                             self.opcodes[opcode]._instruction.__doc__,
                             self.registers['a'].read(), self.registers['x'].read(), self.registers['y'].read(),
                             self.registers['p'].read(), self.registers['sp'].read(), self._cycles, scanlines))
-        cycles = self.opcodes[opcode](ops[0], ops[1])
+        cycles += self.opcodes[opcode](ops[0], ops[1])
 
         temp = self._cycles
         self._cycles = (self._cycles + cycles * 3) % 341 # times 3 for ppu multiplier
