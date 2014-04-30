@@ -16,16 +16,8 @@ pal = open('palette.txt', 'a')
 
 ''' Constants '''
 MirrorType = enum('Horizontal', 'Vertical', 'SingleUpper', 'SingleLower')
-# PatternTablePos = (0x0000, 0x1000)
 PATTERN_TABLE_SIZE = 0x1000
-# AttrTablePos = (0x23c0, 0x27c0, 0x2bc0, 0x2fc0)
-# ATTR_TABLE_SIZE = 0x40
-# NameTablePos = (0x2000, 0x2400, 0x2800, 0x2c00)
-# NTMirrorPos = (0x3000, 0x3400, 0x3800, 0x3c00)
 NAMETABLE_SIZE = 0x400
-# PaletteRamPos = 0x3f00
-# PALLETE_RAM_SIZE = 0x20
-# status register
 StatusBit = enum(SpriteOverflow=5, Sprite0Hit=6, InVblank=7)
 
 rgb_palette = [
@@ -661,7 +653,7 @@ class PPU(object):
             self.vram_addr += 1
 
     def step(self):
-        self.pr.enable()
+        # self.pr.enable()
         if self.scanline == -1:
             if self.cycle == 1:
                 self.status = clear_bit(self.status, StatusBit.InVblank)
@@ -677,12 +669,6 @@ class PPU(object):
                 '''
                 if self.show_background or self.show_sprites:
                     self.vram_addr = self.vram_addr_buffer
-                    # self.vram_addr = ((self.vram_addr & 0x41f) |
-                    #                   (self.vram_addr_buffer & 0x7be0))
-            # elif self.frame_count % 2 == 1 and self.cycle == 339:
-            #     self.scanline = 0
-            #     self.cycle = 0
-            #     return
         elif 0 <= self.scanline < 240:
             if self.cycle == 254:
                 if self.show_background:
@@ -691,20 +677,16 @@ class PPU(object):
                         if self.frame_y % 8 == 7:
                             self.vram.nametable.nt_changed[self.frame_y / 8] = 0
                         self.create_tile_row()
-                        # print 'time not saved, nt'
                     elif self.vram.nametable.at_changed[self.frame_y / 32]:
                         if self.frame_y % 8 == 7:
                             self.vram.nametable.at_changed[self.frame_y / 32] = 0
                         self.create_tile_row()
-                        # print 'time not saved, at'
                     else:
-                        # print 'time saved'
                         self.frame_y = (self.frame_y + 1) % 240
                 if self.show_sprites:
                     self.evaluate_sprites()
             elif self.cycle == 256:
                 if self.show_background:
-                    # self.y_increment()
                     self.end_scanline()
             elif self.cycle == 257:
                 if self.show_background or self.show_sprites:
@@ -734,7 +716,7 @@ class PPU(object):
             self.scanline += 1
 
         self.cycle += 1
-        self.pr.disable()
+        # self.pr.disable()
 
     def create_tile_row(self):
         # get the first tile layer
@@ -775,10 +757,12 @@ class PPU(object):
             for bit in range(8):
                 # fb_row = self.scanline*256 + ((tile8 * 8) - bit)
                 x = (tile8 * 8) - bit
-                y = self.scanline
+                if tile8 == 0:
+                    y = self.scanline - 8
+                else:
+                    y = self.scanline
                 if self.values[x][y] != 0:
                     continue
-
 
                 # a pixel value is taken by layering a bit from each of the
                 # 16-bit shift registers; the bit used is computed with k
@@ -828,34 +812,6 @@ class PPU(object):
             low, high = self.vram.read(tile), self.vram.read(tile + 8)
             self.shift16_1 = ((self.shift16_1 << 8) & 0xffff) | low
             self.shift16_2 = ((self.shift16_2 << 8) & 0xffff) | high
-
-    def get_tile_attributes(self):
-        # attr_addr = (0x23c0 | (self.vram_addr & 0xc00) |
-        #              self.attr_loc[self.vram_addr & 0x3ff])
-        # shift = self.attr_shift[self.vram_addr & 0x3ff]
-        # attr = ((self.vram.read(attr_addr) >> shift) & 0x3) << 2
-        attr = self.vram.nametable.at_byte(self.nametable_addr, self.frame_x, self.frame_y)
-
-        index = self.vram.nametable.nt_byte(self.nametable_addr, self.frame_x, self.frame_y)
-        tile = self.get_bg_tbl_address(index)
-        # if self.nametable_addr == 0:
-        #     tile = 0x2000 | (self.vram_addr & 0xfff)
-        # elif self.nametable_addr == 1:
-        #     tile = 0x2400 | (self.vram_addr & 0xfff)
-        # elif self.nametable_addr == 2:
-        #     tile = 0x2800 | (self.vram_addr & 0xfff)
-        # else:
-        #     tile = 0x2c00 | (self.vram_addr & 0xfff)
-
-        # flip 10th bit on wraparound
-        if (self.vram_addr & 0x1f) == 0x1f:
-            self.vram_addr ^= 0x41f
-        else:
-            self.vram_addr += 1
-
-        # print tile, tile+8
-        # print self.vram.read(tile), self.vram.read(tile + 8)
-        return self.vram.read(tile), self.vram.read(tile + 8), attr
 
     def get_background_entry(self, attribute, pixel):
         if not pixel:
@@ -951,8 +907,6 @@ class PPU(object):
             if x_coord > 255:
                 continue
 
-            # fb_row = y * 256 + x_coord
-
             # store the 0th and 1st bits
             pixel = (tiles[0] >> b) & 0x1
             pixel += ((tiles[1] >> b & 0x1) << 1)
@@ -978,6 +932,7 @@ class PPU(object):
                     # that this should be skipped
                     continue
 
+                # lookup pixel's color, taking sprites into account
                 pal = self.vram.read(0x3f10 + (palette_index * 0x4) + pixel)
                 self.colors[x_coord][y] = rgb_palette[pal % 64]
                 self.values[x_coord][y] = pixel
@@ -990,7 +945,7 @@ class PPU(object):
                 return 0x1000 | ((tile >> 1) * 0x20)
             else:
                 return (tile >> 1) * 0x20
-
+        # selecting the sprite nametable
         if self.sprite_tbl_addr:
             table = 0x1000
         else:
@@ -999,21 +954,6 @@ class PPU(object):
         return tile * 0x10 + table
 
     def render_output(self):
-        # for i in range(len(self.colors)-1, -1, -1):
-        #     y = i / 256
-        #     x = i % 256
-        #     color = self.colors[i]
-        #
-        #     # overscan
-        #     # if y < 8 or y > 231 or x < 8 or x > 247:
-        #     #     continue
-        #     # else:
-        #     #     y -= 8
-        #     #     x -= 8
-        #
-        #     self.frame_buffer[x][y] = color
-        #     self.values[i] = 0
-        #     self.pindexes[i] = -1
         if type(self.display) == int:
             self.display = 1
         else:
