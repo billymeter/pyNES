@@ -146,7 +146,8 @@ class CPU:
         def read(self, reg):
             reg -= 0x4016
             if self._strobe:
-                return self._controllerstatus[reg] & 1
+                return (self._controllerstatus[reg] & 1) | 0x40  # bit and MSB of address
+                
             else:
                 ret = self._shiftreg[reg] & 1
                 self._shiftreg[reg] >>= 1
