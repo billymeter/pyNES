@@ -1,10 +1,7 @@
-import sys
-import os
 import threading
 import ConfigParser
 from wx.lib.pubsub import pub
 from view.wx_view import *
-from view.game_display import *
 from view.options_dialogs import *
 import nes
 from utils import key_to_pykey

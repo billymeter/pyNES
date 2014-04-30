@@ -35,70 +35,6 @@ rgb_palette = [
     0xF7D8A5, 0xE4E594, 0xCFEF96, 0xBDF4AB, 0xB3F3CC,
     0xB5EBF2, 0xB8B8B8, 0x000000, 0x000000,
 ]
-               # [(0x1D << 2, 0x1D << 2, 0x1D << 2),
-               # (0x09 << 2, 0x06 << 2, 0x23 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x2A << 2),
-               # (0x11 << 2, 0x00 << 2, 0x27 << 2),
-               # (0x23 << 2, 0x00 << 2, 0x1D << 2),
-               # (0x2A << 2, 0x00 << 2, 0x04 << 2),
-               # (0x29 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x1F << 2, 0x02 << 2, 0x00 << 2),
-               # (0x10 << 2, 0x0B << 2, 0x00 << 2),
-               # (0x00 << 2, 0x11 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x14 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x0F << 2, 0x05 << 2),
-               # (0x06 << 2, 0x0F << 2, 0x17 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x2F << 2, 0x2F << 2, 0x2F << 2),
-               # (0x00 << 2, 0x1C << 2, 0x3B << 2),
-               # (0x08 << 2, 0x0E << 2, 0x3B << 2),
-               # (0x20 << 2, 0x00 << 2, 0x3C << 2),
-               # (0x2F << 2, 0x00 << 2, 0x2F << 2),
-               # (0x39 << 2, 0x00 << 2, 0x16 << 2),
-               # (0x36 << 2, 0x0A << 2, 0x00 << 2),
-               # (0x32 << 2, 0x13 << 2, 0x03 << 2),
-               # (0x22 << 2, 0x1C << 2, 0x00 << 2),
-               # (0x00 << 2, 0x25 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x2A << 2, 0x00 << 2),
-               # (0x00 << 2, 0x24 << 2, 0x0E << 2),
-               # (0x00 << 2, 0x20 << 2, 0x22 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x3F << 2, 0x3F << 2, 0x3F << 2),
-               # (0x0F << 2, 0x2F << 2, 0x3F << 2),
-               # (0x17 << 2, 0x25 << 2, 0x3F << 2),
-               # (0x33 << 2, 0x22 << 2, 0x3F << 2),
-               # (0x3D << 2, 0x1E << 2, 0x3F << 2),
-               # (0x3F << 2, 0x1D << 2, 0x2D << 2),
-               # (0x3F << 2, 0x1D << 2, 0x18 << 2),
-               # (0x3F << 2, 0x26 << 2, 0x0E << 2),
-               # (0x3C << 2, 0x2F << 2, 0x0F << 2),
-               # (0x20 << 2, 0x34 << 2, 0x04 << 2),
-               # (0x13 << 2, 0x37 << 2, 0x12 << 2),
-               # (0x16 << 2, 0x3E << 2, 0x26 << 2),
-               # (0x00 << 2, 0x3A << 2, 0x36 << 2),
-               # (0x1E << 2, 0x1E << 2, 0x1E << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x3F << 2, 0x3F << 2, 0x3F << 2),
-               # (0x2A << 2, 0x39 << 2, 0x3F << 2),
-               # (0x31 << 2, 0x35 << 2, 0x3F << 2),
-               # (0x35 << 2, 0x32 << 2, 0x3F << 2),
-               # (0x3F << 2, 0x31 << 2, 0x3F << 2),
-               # (0x3F << 2, 0x31 << 2, 0x36 << 2),
-               # (0x3F << 2, 0x2F << 2, 0x2C << 2),
-               # (0x3F << 2, 0x36 << 2, 0x2A << 2),
-               # (0x3F << 2, 0x39 << 2, 0x28 << 2),
-               # (0x38 << 2, 0x3F << 2, 0x28 << 2),
-               # (0x2A << 2, 0x3C << 2, 0x2F << 2),
-               # (0x2C << 2, 0x3F << 2, 0x33 << 2),
-               # (0x27 << 2, 0x3F << 2, 0x3C << 2),
-               # (0x31 << 2, 0x31 << 2, 0x31 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2),
-               # (0x00 << 2, 0x00 << 2, 0x00 << 2)]
 
 
 class PPU(object):
@@ -364,12 +300,6 @@ class PPU(object):
 
         self.frame_x = 0
         self.frame_y = 0
-
-        # self.attr_loc = [0] * 0x400
-        # self.attr_shift = [0] * 0x400
-        # for i in range(0x400):
-        #     self.attr_loc[i] = ((i >> 2) & 0x07) | (((i >> 4) & 0x38) | 0x3C0)
-        #     self.attr_shift[i] = ((i >> 4) & 0x04) | (i & 0x02)
 
     def read_register(self, address):
         if address == 0x2002:
@@ -660,16 +590,10 @@ class PPU(object):
                 self.status = clear_bit(self.status, StatusBit.SpriteOverflow)
                 self.status = clear_bit(self.status, StatusBit.Sprite0Hit)
             elif self.cycle == 304:
-                '''
-                From http://wiki._nesdev.com/w/index.php/PPU_scrolling:
-                At the beginning of each frame, the contents of
-                vram_addr_buffer copied into vram_addr, as long as background
-                or sprites are enabled. This takes place on PPU cycle 304 of
-                the pre-render scanline
-                '''
                 if self.show_background or self.show_sprites:
                     self.vram_addr = self.vram_addr_buffer
         elif 0 <= self.scanline < 240:
+            # handle all 256 cycles of rendering at once
             if self.cycle == 254:
                 if self.show_background:
                     # self.create_tile_row()
@@ -692,10 +616,6 @@ class PPU(object):
                 if self.show_background or self.show_sprites:
                     self.vram_addr = ((self.vram_addr & ~0x41f) |
                                       (self.vram_addr_buffer & 0x41f))
-        # elif self.scanline == 240:
-        #     if self.cycle == 329:
-        #         if not self.ignore_vblank:
-        #             self.status |= 0x80
         elif self.scanline == 241:
             if self.cycle == 1:
                 if not self.ignore_vblank:
@@ -823,10 +743,6 @@ class PPU(object):
             table = 0x1000
         else:
             table = 0
-
-        # addr = (v << 4) | self.vram_addr >> 12 | table
-        # if addr < 0x00 or addr >= 0x2000:
-        #     print "addr: ", hex(addr)
 
         return (v << 4) | (self.vram_addr >> 12) | table
 

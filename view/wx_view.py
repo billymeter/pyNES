@@ -23,10 +23,6 @@ class MainView(wx.Frame):
         conf_menu = wx.Menu()
         m_input = conf_menu.Append(id=wx.ID_ANY, text="Input...",
                                    help="Configure Input")
-        m_video = conf_menu.Append(id=wx.ID_ANY, text="Video...",
-                                   help="Configure video")
-        m_sound = conf_menu.Append(id=wx.ID_ANY, text="Sound...",
-                                   help="Configure sound")
         self.SetMenuBar(menu_bar)
 
         # Status bar
@@ -47,8 +43,6 @@ class MainView(wx.Frame):
 
         # Bind options menu events
         self.Bind(wx.EVT_MENU, self.OnOptionsInput, m_input)
-        self.Bind(wx.EVT_MENU, self.OnOptionsVideo, m_video)
-        self.Bind(wx.EVT_MENU, self.Kill, m_sound)
         menu_bar.Append(conf_menu, "&Options")
 
         # Bind window behavior events

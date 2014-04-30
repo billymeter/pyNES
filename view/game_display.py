@@ -30,7 +30,7 @@ class Display(wx.Window):
             'a': 0,
             'b': 0,
             'select': 0,
-            'start': 0
+            'start': 0,
         }
         self.gamepad2 = {
             'up': 0,
@@ -57,6 +57,9 @@ class Display(wx.Window):
             if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RSHIFT:
+                    for i in range(32):
+                        self.nes.ppu.vram.nametable.nt_changed[i] = 1
                 for button in self.gamepad1:
                     if event.key == self.gamepad1[button]:
                         self.nes.parse_input(1, button, 1)
