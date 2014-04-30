@@ -115,7 +115,7 @@ class CPU:
             return self._cycles + extra_cycles
 
     class Controller:
-        def __init__(self):
+        def __init__(self, cpu):
             self._shiftreg = [0,0]
             self._controllerstatus = [0,0]
             # self._shift = [0,0]
