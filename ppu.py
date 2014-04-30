@@ -361,11 +361,11 @@ class PPU(object):
         self.frame_x = 0
         self.frame_y = 0
 
-        self.attr_loc = [0] * 0x400
-        self.attr_shift = [0] * 0x400
-        for i in range(0x400):
-            self.attr_loc[i] = ((i >> 2) & 0x07) | (((i >> 4) & 0x38) | 0x3C0)
-            self.attr_shift[i] = ((i >> 4) & 0x04) | (i & 0x02)
+        # self.attr_loc = [0] * 0x400
+        # self.attr_shift = [0] * 0x400
+        # for i in range(0x400):
+        #     self.attr_loc[i] = ((i >> 2) & 0x07) | (((i >> 4) & 0x38) | 0x3C0)
+        #     self.attr_shift[i] = ((i >> 4) & 0x04) | (i & 0x02)
 
     def read_register(self, address):
         if address == 0x2002:
@@ -394,6 +394,7 @@ class PPU(object):
             self.ppudata_write(v)
         elif address == 0x4014:
             self.dma_write(v)
+            return  # don't want to write this to status
         self.status = (self.status & ~0x1f) | (v & 0x1f)
 
     def ppuctrl_write(self, value):
@@ -623,8 +624,14 @@ class PPU(object):
 
     def dma_write(self, v):
         """ Handle a write to $4014 """
-        self.cycle += 1541 % 340
-        self.scanline += 4
+        if self.frame_count % 2:
+            self.cycle += (513 * 3) % 341
+            self.scanline += 4
+            self._nes.cpu._cycles = (self._nes.cpu._cycles + 513) % 341
+        else:
+            self.cycle += (513 * 3) % 341
+            self.scanline += 4
+            self._nes.cpu._cycles = (self._nes.cpu._cycles + 514) % 341
 
         base_address = v * 0x100
         for i in range(0, 0x100):
@@ -724,28 +731,41 @@ class PPU(object):
         self.shift16_1 = ((self.shift16_1 << 8) & 0xffff) | low
         self.shift16_2 = ((self.shift16_2 << 8) & 0xffff) | high
 
+        left_latch = 0
         # for each tile in the row
-        for x in range(32):
+        for tile8 in range(32):
             # for each pixel in the row of the tile
-            for k in range(8):
-                fb_row = self.scanline*256 + ((x * 8) - k)
+            for bit in range(8):
+                fb_row = self.scanline*256 + ((tile8 * 8) - bit)
                 if self.values[fb_row] != 0:
                     continue
 
                 # a pixel value is taken by layering a bit from each of the
                 # 16-bit shift registers; the bit used is computed with k
                 # and fine x
-                current = (15 - k - self.fine_x)
-                pxvalue = (((self.shift16_1 >> k) & 1) |
-                           (((self.shift16_2 >> k) & 1) << 1))
+                current = (15 - bit - self.fine_x)
+                pxvalue = (((self.shift16_1 >> bit) & 1) |
+                           (((self.shift16_2 >> bit) & 1) << 1))
 
                 # attr corresponds to the first tile, while attr_buffer
                 # corresponds to the second; if we're taking bit 8 or higher,
                 # then it's the second tile
                 if current >= 8:
-                    palette = self.get_background_entry(attr, pxvalue)
+                    if (self.frame_y / 16) % 2 == 0:
+                        palette = self.get_background_entry(((attr >> (2 * (left_latch % 2))) & 0x3) << 2, pxvalue)
+                    elif left_latch == 0:
+                        palette = self.get_background_entry(((attr >> 4) & 0x3) << 2, pxvalue)
+                    else:
+                        palette = self.get_background_entry(((attr >> 6) & 0x3) << 2, pxvalue)
+                    # palette = self.get_background_entry(attr, pxvalue)
                 else:
-                    palette = self.get_background_entry(attr_buffer, pxvalue)
+                    if (self.frame_y / 16) % 2 == 0:
+                        palette = self.get_background_entry(((attr_buffer >> (2 * (left_latch % 2))) & 0x3) << 2, pxvalue)
+                    elif left_latch == 0:
+                        palette = self.get_background_entry(((attr_buffer >> 4) & 0x3) << 2, pxvalue)
+                    else:
+                        palette = self.get_background_entry(((attr_buffer >> 6) & 0x3) << 2, pxvalue)
+                    # palette = self.get_background_entry(attr_buffer, pxvalue)
 
                 # import random
                 # palette = random.randrange(64)
@@ -753,6 +773,8 @@ class PPU(object):
                 self.values[fb_row] = pxvalue
                 self.pindexes[fb_row] = -1
                 self.increment_frame_xy()
+            if (tile8 + 1) % 2 == 0:
+                left_latch = not left_latch
             # shift in a new tile
             attr = attr_buffer
             low, high, attr_buffer = self.get_tile_attributes()
