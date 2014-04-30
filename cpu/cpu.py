@@ -61,6 +61,9 @@ class CPU:
                 self._nes.ppu.write_register(0x4014, value)
             elif addr == 0x4016:
                 self._nes.cpu.controller.write(value)
+                # a write to 4016 writes to both 4016 and 4017
+                self._memory[addr] = value
+                self._memory[0x4017] = value
             elif 0x4000 <= addr < 0x4020:
                 self._memory[addr] = value
             # Expansion ROM cannot be written to
@@ -112,8 +115,7 @@ class CPU:
             return self._cycles + extra_cycles
 
     class Controller:
-        def __init__(self, cpu):
-            self._cpu = cpu
+        def __init__(self):
             self._shiftreg = [0,0]
             self._controllerstatus = [0,0]
             # self._shift = [0,0]
@@ -145,7 +147,7 @@ class CPU:
             reg -= 0x4016
             if self._strobe:
                 return self._controllerstatus[reg] & 1
-            else:            
+            else:
                 ret = self._shiftreg[reg] & 1
                 self._shiftreg[reg] >>= 1
                 return ret
