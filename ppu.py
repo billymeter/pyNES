@@ -636,7 +636,7 @@ class PPU(object):
         base_address = v * 0x100
         for i in range(0, 0x100):
             data = self._nes.cpu.memory.read(base_address + i)
-            self.sram64.write(i, data)
+            self.sram64.write((self.sprite_ram_addr + i) % 0x100, data)
             self.update_sprite_buffer(i, data)
 
     def increment_vram_address(self):
@@ -694,10 +694,10 @@ class PPU(object):
             #     if self.show_background or self.show_sprites:
             #         self.vram_addr = ((self.vram_addr & 0x7be0) |
             #                           (self.vram_addr_buffer & 0x41f))
-        elif self.scanline == 240:
-            if self.cycle == 329:
-                if not self.ignore_vblank:
-                    self.status |= 0x80
+        # elif self.scanline == 240:
+        #     if self.cycle == 329:
+        #         if not self.ignore_vblank:
+        #             self.status |= 0x80
         elif self.scanline == 241:
             if self.cycle == 1:
                 if not self.ignore_vblank:
