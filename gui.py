@@ -32,12 +32,17 @@ class EmulatorThread(threading.Thread):
             cycles = self.nes.cpu.execute()
             for i in range(3 * cycles):
                 self.nes.ppu.step()
-            if self.nes.ppu.frame_count == 20 and self.nes.ppu.scanline == 1:
-                s = StringIO.StringIO()
-                sortby = 'cumulative'
-                ps = pstats.Stats(self.nes.ppu.pr, stream=s).sort_stats(sortby)
-                ps.print_stats()
-                print s.getvalue()
+            # if self.nes.ppu.frame_count == 100 and self.nes.ppu.scanline == 1:
+            #     s = StringIO.StringIO()
+            #     sortby = 'cumulative'
+            #     ps = pstats.Stats(self.nes.ppu.pr, stream=s).sort_stats(sortby)
+            #     ps.print_stats()
+            #     print s.getvalue()
+            #     s = StringIO.StringIO()
+            #     sortby = 'cumulative'
+            #     ps = pstats.Stats(self.nes.cpu.pr, stream=s).sort_stats(sortby)
+            #     ps.print_stats()
+            #     print s.getvalue()
 
     def save_game(self):
         self.nes.save_state()
