@@ -6,6 +6,7 @@ from utils import *
 import logging
 import numpy as np
 import cProfile, pstats, StringIO
+import pygame
 
 logging.basicConfig(filename='errors.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -114,6 +115,8 @@ class PPU(object):
             def __init__(self):
                 self.nametables = [[], [], [], []]
                 self.attrtables = [[], [], [], []]
+                self.nt_changed = [0] * 32
+                self.at_changed = [0] * 32
                 self._nametables = [bytearray(0x3c0), bytearray(0x3c0)]
                 self._attrtables = [bytearray(0x40), bytearray(0x40)]
                 self._mirroring = None
@@ -141,20 +144,28 @@ class PPU(object):
             def write(self, addr, value):
                 if 0x2000 <= addr < 0x23c0:
                     self.nametables[0][addr - 0x2000] = value
+                    self.nt_changed[(addr - 0x2000) / 32] = 1
                 elif addr < 0x2400:
                     self.attrtables[0][addr - 0x23c0] = value
+                    self.at_changed[(addr - 0x23c0) / 8] = 1
                 elif addr < 0x27c0:
                     self.nametables[1][addr - 0x2400] = value
+                    self.nt_changed[(addr - 0x2400) / 32] = 1
                 elif addr < 0x2800:
                     self.attrtables[1][addr - 0x27c0] = value
+                    self.at_changed[(addr - 0x27c0) / 8] = 1
                 elif addr < 0x2bc0:
                     self.nametables[2][addr - 0x2800] = value
+                    self.nt_changed[(addr - 0x2800) / 32] = 1
                 elif addr < 0x2c00:
                     self.attrtables[2][addr - 0x2bc0] = value
+                    self.at_changed[(addr - 0x2bc0) / 8] = 1
                 elif addr < 0x2fc0:
                     self.nametables[3][addr - 0x2c00] = value
+                    self.nt_changed[(addr - 0x2c00) / 32] = 1
                 elif addr < 0x3000:
                     self.attrtables[3][addr - 0x2fc0] = value
+                    self.at_changed[(addr - 0x2fc0) / 8] = 1
 
             def nt_byte(self, nametable, x, y):
                 x = (x / 8) - 1
@@ -361,7 +372,6 @@ class PPU(object):
 
         self.frame_x = 0
         self.frame_y = 0
-        self.nt_changed = [0] * 32
 
         # self.attr_loc = [0] * 0x400
         # self.attr_shift = [0] * 0x400
@@ -573,7 +583,6 @@ class PPU(object):
             self.y_increment()
         else:
             self.vram.write(self.vram_addr, v)
-            self.nt_changed[(self.vram_addr & 0x3e0) >> 5] = 1
             self.increment_vram_address()
 
     def coarse_x_increment(self):
@@ -676,12 +685,21 @@ class PPU(object):
             #     return
         elif 0 <= self.scanline < 240:
             if self.cycle == 254:
-                if self.show_background and self.nt_changed[self.frame_y / 8]:
-                    if self.frame_y % 8 == 7:
-                        self.nt_changed[self.frame_y / 8] = 0
-                    self.create_tile_row()
-                else:
-                    self.frame_y = (self.frame_y + 1) % 240
+                if self.show_background:
+                    # self.create_tile_row()
+                    if self.vram.nametable.nt_changed[self.frame_y / 8]:
+                        if self.frame_y % 8 == 7:
+                            self.vram.nametable.nt_changed[self.frame_y / 8] = 0
+                        self.create_tile_row()
+                        # print 'time not saved, nt'
+                    elif self.vram.nametable.at_changed[self.frame_y / 32]:
+                        if self.frame_y % 8 == 7:
+                            self.vram.nametable.at_changed[self.frame_y / 32] = 0
+                        self.create_tile_row()
+                        # print 'time not saved, at'
+                    else:
+                        # print 'time saved'
+                        self.frame_y = (self.frame_y + 1) % 240
                 if self.show_sprites:
                     self.evaluate_sprites()
             elif self.cycle == 256:
@@ -723,6 +741,13 @@ class PPU(object):
         attr = self.vram.nametable.at_byte(self.nametable_addr, self.frame_x, self.frame_y)
         index = self.vram.nametable.nt_byte(self.nametable_addr, self.frame_x, self.frame_y)
         tile = self.get_bg_tbl_address(index)
+
+        # flip 10th bit on wraparound
+        if (self.vram_addr & 0x1f) == 0x1f:
+            self.vram_addr ^= 0x41f
+        else:
+            self.vram_addr += 1
+
         low, high = self.vram.read(tile), self.vram.read(tile + 8)
         self.shift16_1, self.shift16_2 = low, high
 
@@ -730,6 +755,13 @@ class PPU(object):
         attr_buffer = self.vram.nametable.at_byte(self.nametable_addr, self.frame_x, self.frame_y)
         index = self.vram.nametable.nt_byte(self.nametable_addr, self.frame_x, self.frame_y)
         tile = self.get_bg_tbl_address(index)
+
+        # flip 10th bit on wraparound
+        if (self.vram_addr & 0x1f) == 0x1f:
+            self.vram_addr ^= 0x41f
+        else:
+            self.vram_addr += 1
+
         low, high = self.vram.read(tile), self.vram.read(tile + 8)
 
         # shift the first tile to make room for the second
@@ -786,6 +818,13 @@ class PPU(object):
             # shift in a new tile
             index = self.vram.nametable.nt_byte(self.nametable_addr, self.frame_x, self.frame_y)
             tile = self.get_bg_tbl_address(index)
+
+            # flip 10th bit on wraparound
+            if (self.vram_addr & 0x1f) == 0x1f:
+                self.vram_addr ^= 0x41f
+            else:
+                self.vram_addr += 1
+
             low, high = self.vram.read(tile), self.vram.read(tile + 8)
             self.shift16_1 = ((self.shift16_1 << 8) & 0xffff) | low
             self.shift16_2 = ((self.shift16_2 << 8) & 0xffff) | high
@@ -975,21 +1014,12 @@ class PPU(object):
         #     self.frame_buffer[x][y] = color
         #     self.values[i] = 0
         #     self.pindexes[i] = -1
-        self.display.NewFrame(self.colors)
+        if type(self.display) == int:
+            self.display = 1
+        else:
+            self.display.NewFrame(self.colors)
         self.values.fill(0)
         self.pindexes.fill(-1)
-
-    def update_sprite_buffer(self, address, v):
-        i = address / 4
-        bit = address % 4
-        if bit == 0:
-            self.sprite_data['y'][i] = v
-        elif bit == 1:
-            self.sprite_data['tiles'][i] = v
-        elif bit == 2:
-            self.sprite_data['attributes'][i] = v
-        elif bit == 3:
-            self.sprite_data['x'][i] = v
 
     def end_scanline(self):
         # wraparound
