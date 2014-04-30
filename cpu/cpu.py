@@ -6,6 +6,7 @@ import numpy as np
 import logging
 import instructions
 from addressmodes import *
+import apu
 
 f=open("cpu.log","w")
 
@@ -16,7 +17,8 @@ class CPU:
     CPU emulation
     '''
     class Memory:
-        def __init__(self, nes):
+        def __init__(self, nes, cpu):
+            self.cpu = cpu
             self._nes = nes
             self._memory = bytearray(0x10000)
             self._memory[0x100:0x200] = [0xff] * 0xff
@@ -33,7 +35,7 @@ class CPU:
                 return self._nes.ppu.read_register(0x2000 + offset)
             # Controller ports
             elif addr == 0x4016 or addr == 0x4017:
-                return self._nes.cpu.controller.read(addr)
+                return self.cpu.controller.read(addr)
             # Unmirrored I/O registers, Expansion ROM, and Save RAM
             elif 0x4000 <= addr < 0x8000:
                 return self._memory[addr] & 0xff
@@ -60,7 +62,7 @@ class CPU:
             elif addr == 0x4014:
                 self._nes.ppu.write_register(0x4014, value)
             elif addr == 0x4016:
-                self._nes.cpu.controller.write(value)
+                self.cpu.controller.write(value)
                 # a write to 4016 writes to both 4016 and 4017
                 self._memory[addr] = value
                 self._memory[0x4017] = value
@@ -156,10 +158,12 @@ class CPU:
 
     def __init__(self, nes, cart):
         self._nes = nes
-        self.memory = CPU.Memory(nes)
+        self.memory = CPU.Memory(nes, self)
         self._cycles = 0
         self._cart = cart
         self.controller = CPU.Controller(self)
+        self.apu = apu.APU(self)
+        self.apu.testtone()
 
         # interrupt flags
         self.irq_requested = 0
