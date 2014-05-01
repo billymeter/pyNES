@@ -1,10 +1,7 @@
-import sys
-import os
 import threading
 import ConfigParser
 from wx.lib.pubsub import pub
 from view.wx_view import *
-from view.game_display import *
 from view.options_dialogs import *
 import nes
 from utils import key_to_pykey
@@ -21,22 +18,31 @@ class EmulatorThread(threading.Thread):
 
     def load_emulator(self, rom_path, display):
         with open(rom_path, 'rb') as rom:
-            self.nes = nes.NES(rom.read())
+            self.nes = nes.NES(rom.read(), display)
         self.rom_path = rom_path
-        self.nes.ppu.display = display
         display.nes = self.nes
 
     def run(self):
+        import StringIO, pstats
         self.running = True
         while self.running:
-            while self.paused:
-                if self.save:
-                    self.nes.save_state()
-                    self.save = False
-            self.nes.step()
-        if self.save:
-            self.nes.save_state()
-            self.save = False
+            cycles = self.nes.cpu.execute()
+            for i in range(3 * cycles):
+                self.nes.ppu.step()
+            # if self.nes.ppu.frame_count == 100 and self.nes.ppu.scanline == 1:
+            #     s = StringIO.StringIO()
+            #     sortby = 'cumulative'
+            #     ps = pstats.Stats(self.nes.ppu.pr, stream=s).sort_stats(sortby)
+            #     ps.print_stats()
+            #     print s.getvalue()
+            #     s = StringIO.StringIO()
+            #     sortby = 'cumulative'
+            #     ps = pstats.Stats(self.nes.cpu.pr, stream=s).sort_stats(sortby)
+            #     ps.print_stats()
+            #     print s.getvalue()
+
+    def save_game(self):
+        self.nes.save_state()
 
 
 class Controller(object):
@@ -93,8 +99,12 @@ class Controller(object):
 
     def start_emulation(self, rom_path):
         """ Initialize emulation thread """
-        self.emu_thread.load_emulator(rom_path, self.main_view.display)
-        self.emu_thread.start()
+        if self.emu_thread.running:
+            self.emu_thread.save_game()
+            self.emu_thread.load_emulator(rom_path, self.main_view.display)
+        else:
+            self.emu_thread.load_emulator(rom_path, self.main_view.display)
+            self.emu_thread.start()
 
     def stop_emulation(self):
         """ Stop emulation thread """
@@ -102,7 +112,8 @@ class Controller(object):
 
     def pause_emulation(self):
         """ Pause emulation thread """
-        self.emu_thread.paused = True
+        # self.emu_thread.paused = True
+        pass
 
     def unpause_emulation(self):
         """ Unpause emulation thread """
