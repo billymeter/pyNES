@@ -428,7 +428,7 @@ class CPU:
         self.memory._memory[0x000a] = 0xdf
         self.memory._memory[0x000f] = 0xbf
 
-    def execute(self, debug=True):
+    def execute(self, debug=False):
         global scanlines
         # fetch
         cycles = 0

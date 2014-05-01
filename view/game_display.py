@@ -58,8 +58,7 @@ class Display(wx.Window):
                 return
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RSHIFT:
-                    for i in range(32):
-                        self.nes.ppu.vram.nametable.nt_changed[i] = 1
+                    self.nes.ppu.render_bg_flag = not self.nes.ppu.render_bg_flag
                 for button in self.gamepad1:
                     if event.key == self.gamepad1[button]:
                         self.nes.parse_input(1, button, 1)
@@ -77,7 +76,6 @@ class Display(wx.Window):
 
     def Redraw(self):
         pygame.display.update()
-
 
     def NewScanline(self, buffer, y):
         for x in range(256):
