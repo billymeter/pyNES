@@ -29,7 +29,10 @@ class APU:
         """
 
         self.fiveframe = 0
-        self.disable_frame_int = 0
+        self.disable_frame_int = 1
+
+        self._clock = 0
+        self._fast_clock = 0
 
     def read(self, reg):  # 0x4015 only
         ret = Byte(0)
@@ -42,13 +45,14 @@ class APU:
         ret[6] = self.frame_interrupt 
         self.frame_interrupt = 0
         ret[7] = self.DMC.interrupt 
+        # print "irq reset"
         return int(ret)
 
     def write(self, reg, value):
         value = Byte(value)
         reg &= 0xFF
         if reg < 8:
-            self.pulse[reg % 4].write(reg, value)
+            self.pulse[reg // 4].write(reg, value)
         elif reg in [0x8, 0xA, 0xB]:
             self.triangle.write(reg, value)
         elif reg in [0xC, 0xE, 0xF]:
@@ -64,10 +68,38 @@ class APU:
         elif reg == 0x17:
             self.fiveframe = value[7]
             self.disable_frame_int = value[6]
+            if self.disable_frame_int:
+                self.frame_interrupt = 0
+            # print(value)
+            # print self.disable_frame_int, self.fiveframe
 
 
+    def clock(self, cycles):
+        self._fast_clock += 2*cycles
+        if self._fast_clock > 14915:  # I think this needs changing
+            self._fast_clock -= 14915
+            # clock envelopes and triangle's linear counter
+            self.fast_clock()
+            self._clock += 1
+            self._clock %= 5 if self.fiveframe else 4
+            if self._clock < 4:
 
+                if self._clock % 2 == self.fiveframe:
+                    # clock length counters and sweep units
+                    self.slow_clock()
+                    self.slow_clock()
+                if self._clock == 3 and not self.fiveframe and not self.disable_frame_int:
+                        # print "irq set"
+                        self.frame_interrupt = 1
 
+    def slow_clock(self):
+        # clock length counters and sweep units
+        # TODO: EVERYTHING
+        pass
+    def fast_clock(self):
+        # clock envelopes and triangle's linear counter
+        # TODO: EVERYTHING
+        pass
 
 
 
@@ -87,7 +119,7 @@ class APU:
         self.play_floats(raw)
         
     def testtone(self):
-        self.sinetest(440.0, 0.5)
+        self.sinetest(440.0, 0.1)
         # raw_input()
 
 class Byte():
@@ -121,11 +153,29 @@ class Channel():
     def __init__(self, apu):
         self.apu = apu
         self.enable(0)
+        
         self._enabled = 0
-        self.length_counter = 0
-        self.envelope = 0
+
+        self.duty = 0
+        self.loop_envelope = 0
         self.const_vol = 0
-        self._clock = 0
+        self.volume = 0
+
+        self.sweep = 0
+        self.sweep_en = 0
+        self.sweep_period = 0
+        self.sweep_negative = 0
+        self.sweep_shift = 0
+        self.sweep_start = 0
+
+        self.timer = 0
+        self.length_counter = 0
+        self.length_counter = 0
+        self.envelope_start = 0
+        self.envelope_counter = 0
+        self.envelope = 0
+        
+        
         
     def enable(self, val = None):
         if val is not None:
@@ -135,10 +185,8 @@ class Channel():
         else:
             return self._enabled and self.length_counter > 0
 
-    def clock(self):
+    def fast_clock(self):
         # clock envelopes and triangle's linear counter
-        self._clock += 1
-        self._clock %= 5 if self.apu.fiveframe else 4
 
         if self.length_counter and not self.loop_envelope:
             self.length_counter -= 1
@@ -151,13 +199,6 @@ class Channel():
             self.envelope_counter = 15
         elif self.envelope_counter:
             self.envelope_counter -= 1
-
-        if self._clock % 2 == self.apu.fiveframe:
-            self.slow_clock()
-        if self._clock == 3 and self.apu.fiveframe:
-            if not self.apu.disable_frame_int:
-                # TODO: ASSERT INTERRUPT
-                pass
 
 
     def slow_clock(self):

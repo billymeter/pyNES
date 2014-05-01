@@ -33,6 +33,8 @@ class CPU:
             elif 0x2000 <= addr < 0x4000:
                 offset = addr % 0x8
                 return self._nes.ppu.read_register(0x2000 + offset)
+            elif addr == 0x4015:
+                return self.cpu.apu.read(addr)
             # Controller ports
             elif addr == 0x4016 or addr == 0x4017:
                 return self.cpu.controller.read(addr)
@@ -66,7 +68,9 @@ class CPU:
                 # a write to 4016 writes to both 4016 and 4017
                 self._memory[addr] = value
                 self._memory[0x4017] = value
-            elif 0x4000 <= addr < 0x4020:
+            elif 0x4000 <= addr < 0x4018:
+                self.cpu.apu.write(addr, value)
+            elif 0x4018 <= addr < 0x4020:
                 self._memory[addr] = value
             # Expansion ROM cannot be written to
             elif 0x4020 <= addr < 0x6000:
@@ -474,7 +478,7 @@ class CPU:
             scanlines += 1
             if scanlines == 261:
                 scanlines = -1
-
+        # self.apu.clock(cycles)
         return cycles
 
     def run(self):
