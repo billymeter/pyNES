@@ -1,18 +1,11 @@
 '''
 Picture Processing Unit
 '''
-from collections import namedtuple
 from utils import *
-import logging
 import numpy as np
 import cProfile, pstats, StringIO
-import pygame
 
-logging.basicConfig(filename='errors.log', level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-f = open("ppu.log", 'w')
-pal = open('palette.txt', 'a')
+# f = open("ppu.log", 'w')
 
 ''' Constants '''
 MirrorType = enum('Horizontal', 'Vertical', 'SingleUpper', 'SingleLower')
