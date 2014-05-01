@@ -293,6 +293,7 @@ class PPU(object):
 
         self.frame_x = 0
         self.frame_y = 0
+        self.render_bg_flag = 0
 
     def read_register(self, address):
         if address == 0x2002:
@@ -867,6 +868,9 @@ class PPU(object):
             self.display = 1
         else:
             self.display.NewFrame(self.colors)
+        if self.render_bg_flag:
+            for i in range(32):
+                self.vram.nametable.nt_changed[i] = 1
         self.values.fill(0)
         self.pindexes.fill(-1)
 
