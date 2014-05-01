@@ -478,7 +478,7 @@ class CPU:
             scanlines += 1
             if scanlines == 261:
                 scanlines = -1
-        self.apu.clock(cycles)
+        # self.apu.clock(cycles)
         return cycles
 
     def run(self):

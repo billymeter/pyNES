@@ -45,7 +45,7 @@ class APU:
         ret[6] = self.frame_interrupt 
         self.frame_interrupt = 0
         ret[7] = self.DMC.interrupt 
-        print "irq reset"
+        # print "irq reset"
         return int(ret)
 
     def write(self, reg, value):
@@ -76,9 +76,10 @@ class APU:
 
     def clock(self, cycles):
         self._fast_clock += 2*cycles
-        if self._fast_clock >= 14915:
+        if self._fast_clock > 14915:  # I think this needs changing
             self._fast_clock -= 14915
             # clock envelopes and triangle's linear counter
+            self.fast_clock()
             self._clock += 1
             self._clock %= 5 if self.fiveframe else 4
             if self._clock < 4:
@@ -86,12 +87,17 @@ class APU:
                 if self._clock % 2 == self.fiveframe:
                     # clock length counters and sweep units
                     self.slow_clock()
+                    self.slow_clock()
                 if self._clock == 3 and not self.fiveframe and not self.disable_frame_int:
                         # print "irq set"
                         self.frame_interrupt = 1
 
     def slow_clock(self):
         # clock length counters and sweep units
+        # TODO: EVERYTHING
+        pass
+    def fast_clock(self):
+        # clock envelopes and triangle's linear counter
         # TODO: EVERYTHING
         pass
 
@@ -179,7 +185,7 @@ class Channel():
         else:
             return self._enabled and self.length_counter > 0
 
-    def clock(self):
+    def fast_clock(self):
         # clock envelopes and triangle's linear counter
 
         if self.length_counter and not self.loop_envelope:
