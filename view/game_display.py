@@ -18,6 +18,8 @@ class Display(wx.Window):
 
         pygame.display.init()
         self.screen = pygame.display.set_mode((256, 240), pygame.HWSURFACE)
+        self.surface = pygame.surfarray.pixels2d(self.screen)
+        # self.surface = pygame.PixelArray(self.screen)
         self.size = self.GetSizeTuple()
 
         self.gamepad1 = {
@@ -28,7 +30,7 @@ class Display(wx.Window):
             'a': 0,
             'b': 0,
             'select': 0,
-            'start': 0
+            'start': 0,
         }
         self.gamepad2 = {
             'up': 0,
@@ -55,6 +57,8 @@ class Display(wx.Window):
             if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RSHIFT:
+                    self.nes.ppu.render_bg_flag = not self.nes.ppu.render_bg_flag
                 for button in self.gamepad1:
                     if event.key == self.gamepad1[button]:
                         self.nes.parse_input(1, button, 1)
@@ -68,14 +72,20 @@ class Display(wx.Window):
                 for button in self.gamepad2:
                     if event.key == self.gamepad2[button]:
                         self.nes.parse_input(2, button, 0)
-        self.Redraw()
+        # self.Redraw()
 
     def Redraw(self):
         pygame.display.update()
 
+    def NewScanline(self, buffer, y):
+        for x in range(256):
+            self.surface[x, y] = buffer[x, y]
+        pygame.display.update(pygame.Rect(0, y-1, 256, 2))
+
     def NewFrame(self, buffer):
-            # pygame.pixelcopy.array_to_surface(self.screen, buffer)
-            pygame.surfarray.blit_array(self.screen, buffer)
+        # pygame.pixelcopy.array_to_surface(self.screen, buffer)
+        pygame.surfarray.blit_array(self.screen, buffer)
+        pygame.display.update()
 
     def OnPaint(self, event):
         self.Redraw()

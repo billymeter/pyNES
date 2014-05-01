@@ -4,12 +4,15 @@ The entry point for the emulator
 from cpu import cpu
 import ppu
 import cartridge
+import cProfile
+import pstats
+import StringIO
 
 
 class NES(object):
-    def __init__(self, rom=None):
+    def __init__(self, rom=None, display=None):
         if rom:
-            self.ppu = ppu.PPU(self)
+            self.ppu = ppu.PPU(self, display)
             self.rom = cartridge.Cartridge(self, rom)
             self.cpu = cpu.CPU(self, self.rom)
             self.halt_cpu = 0
